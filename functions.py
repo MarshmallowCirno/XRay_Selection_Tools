@@ -220,9 +220,8 @@ def select_elems_in_rectangle(context, mode, xmin, xmax, ymin, ymax, select_all_
                                     
                 do_elem_selection(bm.faces)
 
-            # flush face selection after deselecting edges
-            if mode in ('SUB', 'AND', 'XOR'):
-                bm.select_flush(False)
+            # flush face selection after selecting/deselecting edges and vertices
+            bm.select_flush_mode()
                                     
             # to do
             # numpy https://blender.stackexchange.com/questions/6155/how-to-convert-coordinates-from-vertex-to-world-space
