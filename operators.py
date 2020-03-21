@@ -165,8 +165,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def set_visual_display(self, context):
         '''Disable modifiers and set x-ray state'''
         # if xray already enabled, nothing should be changed here
-        if (context.space_data.shading.type == 'SOLID' and not self.init_show_xray)\
-        or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe):
+        if (context.space_data.shading.type == 'SOLID' and not self.init_show_xray) or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe):
             # if user wants to use xray, enable it
             if self.show_xray:
                 context.space_data.shading.show_xray = True
