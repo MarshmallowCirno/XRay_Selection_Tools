@@ -24,6 +24,11 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         description = "Wait for mouse input or initialize box selection immediately (enable when assigning the operator to a keyboard key)", 
         default = False
     )
+    show_xray: bpy.props.BoolProperty(                        
+        name = "Show X-Ray",
+        description = "Enable x-ray shading during selection",
+        default = True
+    )
 
     @classmethod
     def poll(cls, context):
@@ -31,14 +36,17 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
 
     def invoke(self, context, event):
         self.init_show_xray = context.space_data.shading.show_xray
+        self.init_show_xray_wireframe = context.space_data.shading.show_xray_wireframe
       
         context.window_manager.modal_handler_add(self)
         self.select_box_xray(context)
         return {'RUNNING_MODAL'}
         
     def select_box_xray(self, context):
-        if not self.init_show_xray:
-           context.space_data.shading.show_xray = True    
+        if self.show_xray and ((context.space_data.shading.type == 'SOLID' and not self.init_show_xray)\
+        or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe)):
+           context.space_data.shading.show_xray = True
+           context.space_data.shading.show_xray_wireframe = True
 
         bpy.ops.view3d.select_box('INVOKE_DEFAULT', mode=self.mode, wait_for_input=self.wait_for_input)
 
@@ -50,8 +58,8 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def finish(self, context):
-        if not self.init_show_xray:
-            context.space_data.shading.show_xray = False
+        context.space_data.shading.show_xray = self.init_show_xray
+        context.space_data.shading.show_xray_wireframe = self.init_show_xray_wireframe
 
         
 class MESH_OT_select_box_xray(bpy.types.Operator):
@@ -121,7 +129,9 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
             # save initial x-ray properties to restore them later
             self.init_show_xray = context.space_data.shading.show_xray
             self.init_xray_alpha = context.space_data.shading.xray_alpha
-            self.init_show_faces = context.space_data.overlay.show_faces
+            self.init_show_xray_wireframe = context.space_data.shading.show_xray_wireframe
+            self.init_xray_alpha_wireframe = context.space_data.shading.xray_alpha_wireframe
+            self.init_backwire_opacity = context.space_data.overlay.backwire_opacity
             
             # elements that can't be selected with default box select should be selected with custom selection
             self.custom_selection = (self.select_all_faces and context.tool_settings.mesh_select_mode[2]) or (self.select_all_edges and context.tool_settings.mesh_select_mode[1])
@@ -155,16 +165,21 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def set_visual_display(self, context):
         '''Disable modifiers and set x-ray state'''
         # if xray already enabled, nothing should be changed here
-        if not self.init_show_xray:
+        if (context.space_data.shading.type == 'SOLID' and not self.init_show_xray)\
+        or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe):
             # if user wants to use xray, enable it
             if self.show_xray:
                 context.space_data.shading.show_xray = True
-            # otherwise use it, but hide shading
+                context.space_data.shading.show_xray_wireframe = True
+            # otherwise if it's not custom selection enable it, but hide shading
             # custom selection don't need it
             elif not self.custom_selection:
                 context.space_data.shading.show_xray = True
+                context.space_data.shading.show_xray_wireframe = True
                 context.space_data.shading.xray_alpha = 1
-                context.space_data.overlay.show_faces = False
+                context.space_data.shading.xray_alpha_wireframe = 1
+                context.space_data.overlay.backwire_opacity = 0
+                
         # hide modifiers
         if self.init_mod_states:
             for mod, state in self.init_mod_states:
@@ -188,16 +203,11 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def finish(self, context, event):
         # if select through was disabled, nothing was changed and nothing to restore
         if self.select_through:
-            # if xray was already enabled, nothing to restore
-            if not self.init_show_xray:
-                # if xray shading was enabled by user preferences, disable it
-                if self.show_xray:
-                    context.space_data.shading.show_xray = False
-                # otherwise if xray was still used without alpha, disable it and restore alpha
-                elif not self.custom_selection:
-                    context.space_data.shading.show_xray = False
-                    context.space_data.shading.xray_alpha = self.init_xray_alpha
-                    context.space_data.overlay.show_faces = self.init_show_faces
+            context.space_data.shading.show_xray = self.init_show_xray
+            context.space_data.shading.xray_alpha = self.init_xray_alpha
+            context.space_data.shading.show_xray_wireframe = self.init_show_xray_wireframe
+            context.space_data.shading.xray_alpha_wireframe = self.init_xray_alpha_wireframe
+            context.space_data.overlay.backwire_opacity = self.init_backwire_opacity
 
             # default "box select" wasn't used, select manually
             if self.custom_selection:
