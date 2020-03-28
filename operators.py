@@ -1,6 +1,5 @@
 import bpy
 from .functions import select_elems_in_rectangle
-from .keymaps import addon_keymaps
 
 
 class OBJECT_OT_select_box_xray(bpy.types.Operator):
@@ -116,6 +115,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def __init__(self):
         self.init_mod_states = []
         self.custom_selection = False
+        self.init_gesture_box_keymaps = []
+        self.new_gesture_box_keymaps = []
         
     def invoke(self, context, event):
         # if select through is disabled, use default "box select" without any optional features
@@ -151,16 +152,24 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         return {'RUNNING_MODAL'}
                
     def disable_box_selection(self):
-        '''Disable default "box select" tool confirmation by adding "cancel" key to its modal keymaps, 
-        since actual selection will be made with the addon and default "box select" only needed for drawing fast rectangle shader'''
-        kc = bpy.context.window_manager.keyconfigs.addon
+        '''Temporary disable the default "box select" tool confirmation by adding the "cancel" keys to its modal keymaps
+        and deactivating default confirmation keymaps, since actual selection will be made with the addon 
+        and the default "box select" only needed for drawing the fast rectangle shader'''
+        kc = bpy.context.window_manager.keyconfigs.user
+        # save default keymap states and deactivate them
+        km = kc.keymaps["Gesture Box"]
+        for kmi in km.keymap_items:
+            self.init_gesture_box_keymaps.append((kmi.id, kmi.active))
+            kmi.active = False
+        
+        # add the new cancel keymaps
         km = kc.keymaps.new(name="Gesture Box", space_type='EMPTY', region_type='WINDOW', modal=True)
         kmi = km.keymap_items.new_modal('CANCEL', 'LEFTMOUSE', 'RELEASE', any=True)
-        addon_keymaps.append((km, kmi))
+        self.new_gesture_box_keymaps.append(kmi.id)
         kmi = km.keymap_items.new_modal('CANCEL', 'RIGHTMOUSE', 'RELEASE', any=True)
-        addon_keymaps.append((km, kmi))
+        self.new_gesture_box_keymaps.append(kmi.id)
         kmi = km.keymap_items.new_modal('CANCEL', 'MIDDLEMOUSE', 'RELEASE', any=True)
-        addon_keymaps.append((km, kmi))
+        self.new_gesture_box_keymaps.append(kmi.id)
 
     def set_visual_display(self, context):
         '''Disable modifiers and set x-ray state'''
@@ -185,7 +194,6 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 mod.show_in_editmode = False
 
     def modal(self, context, event):
-    
         if event.value == 'RELEASE' or event.type in ('ESC', 'RIGHTMOUSE'):
             self.finish(context, event)
             return {'FINISHED'}
@@ -193,12 +201,18 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         return {'RUNNING_MODAL'}
         
     def restore_box_selection(self):
-        '''Restore default "box select" keymap'''
-        for km, kmi in reversed(addon_keymaps):
-            if km.name == "Gesture Box":
-                addon_keymaps.remove((km, kmi))
-                km.keymap_items.remove(kmi)
-
+        '''Restore initial "box select" keymaps'''
+        kc = bpy.context.window_manager.keyconfigs.user
+        km = kc.keymaps["Gesture Box"]
+        
+        for id, active in self.init_gesture_box_keymaps:
+            kmi = km.keymap_items.from_id(id)
+            kmi.active = active
+            
+        for id in self.new_gesture_box_keymaps:
+            kmi = km.keymap_items.from_id(id)
+            km.keymap_items.remove(kmi)
+        
     def finish(self, context, event):
         # if select through was disabled, nothing was changed and nothing to restore
         if self.select_through:
