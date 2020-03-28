@@ -64,14 +64,22 @@ class ToolSelectBoxXrayObject(bpy.types.WorkSpaceTool):
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True , icon_only=True)
         
+        layout.prop(props, "show_xray")
+
 
 def register():
+    if bpy.app.version < (2, 83, 11):
         register_tool_fixed(ToolSelectBoxXrayMesh, after={"builtin.select_box"}, separator=False, group=False)
         register_tool_fixed(ToolSelectBoxXrayObject, after={"builtin.select_box"}, separator=False, group=False)
+    else:
+        bpy.utils.register_tool(ToolSelectBoxXrayMesh, after={"builtin.select_box"}, separator=False, group=False)
+        bpy.utils.register_tool(ToolSelectBoxXrayObject, after={"builtin.select_box"}, separator=False, group=False)
 
 
 def unregister():
+    if bpy.app.version < (2, 83, 11):
         unregister_tool_fixed(ToolSelectBoxXrayMesh)
         unregister_tool_fixed(ToolSelectBoxXrayObject)
-
-
+    else:
+        bpy.utils.unregister_tool(ToolSelectBoxXrayMesh)
+        bpy.utils.unregister_tool(ToolSelectBoxXrayObject)
