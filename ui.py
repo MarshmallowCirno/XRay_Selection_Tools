@@ -17,9 +17,11 @@ class SELBOXXRAY_preferences(bpy.types.AddonPreferences):
         
         def draw_keymap_items(kc, km):
             count = len([tuple for tuple in addon_keymaps if tuple[0].name == km.name]) 
-            kmis = [kmi for kmi in km.keymap_items if kmi.idname in ("mesh.select_box_xray", "object.select_box_xray")][:count] # get only first keyitems from keymap, skipping user created keymaps, that going after addon created keyitems
+            # get only first keyitems from keymap, skipping user created keymaps, that goes after addon created keyitems
+            kmis = [kmi for kmi in km.keymap_items if kmi.idname in {"mesh.select_box_xray", "object.select_box_xray",\
+            "mesh.select_lasso_xray", "object.select_lasso_xray", "mesh.select_circle_xray", "object.select_circle_xray"}][:count] 
             for kmi in reversed(kmis): # reverse order, as addon adds them from bottom to top
-                rna_keymap_ui.draw_kmi(["ADDON", "USER", "DEFAULT"], kc, km, kmi, col, 0)
+                rna_keymap_ui.draw_kmi(['ADDON', 'USER', 'DEFAULT'], kc, km, kmi, col, 0)
             
         col.label(text="Mesh")
         km = kc.keymaps.get("Mesh")

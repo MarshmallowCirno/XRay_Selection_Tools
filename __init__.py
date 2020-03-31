@@ -20,7 +20,7 @@
 bl_info = {
     "name": "Select Box (X-Ray)",
     "author": "MarshmallowCirno",
-    "version": (2, 0, 3),
+    "version": (2, 0, 4),
     "blender": (2, 82, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Select items using box selection. Upon selection temporary enable x-ray, hide mirror and solidify modifiers in edit mode",
@@ -34,7 +34,9 @@ if "bpy" in locals():
     import importlib
     reloadable_modules = [
         "functions",
-        "operators",
+        "op_box",
+        "op_circle",
+        "op_lasso",
         "tools",
         "ui",
         "keymaps",
@@ -44,21 +46,25 @@ if "bpy" in locals():
         if module in locals():
             importlib.reload(locals()[module])
 else:
-    from . import operators, tools, ui, keymaps
+    from . import op_box, op_circle, op_lasso, tools, ui, keymaps
 
 
 import bpy
 
 
 def register():
-    operators.register()
+    op_box.register()
+    op_circle.register()
+    op_lasso.register()
     ui.register()
     tools.register()
     keymaps.register()
 
 
 def unregister():
-    operators.unregister()
+    op_box.unregister()
+    op_circle.unregister()
+    op_lasso.unregister()
     ui.unregister()
     tools.unregister()
     keymaps.unregister()
