@@ -112,8 +112,8 @@ def register_tool_fixed(tool_cls, *, after=None, separator=False, group=False):
                                 i = skip_to_end_of_group(tools, i)
                                 tools[i + 1:i + 1] = tool_def_insert
                             else:
-                                #j = skip_to_end_of_group(item, j) 
-                                item = item[:j] + tool_def_insert + item[j:]
+                                j = skip_to_end_of_group(item, j) 
+                                item = item[:j + 1] + tool_def_insert + item[j + 1:]
                                 tools[i] = item
                             changed = True
                             break
