@@ -16,10 +16,10 @@ class ToolSelectBoxXrayMesh(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "mesh.select_box_xray"
     bl_keymap = (
-        ("mesh.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {}),
-        ("mesh.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("mesh.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True}, {"properties": [("mode", 'AND')]}),
         ("mesh.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True}, {"properties": [("mode", 'SUB')]}),
-        ("mesh.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True} , {"properties": [("mode", 'AND')]})
+        ("mesh.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("mesh.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
     )
 
     def draw_settings(context, layout, tool):
@@ -52,10 +52,10 @@ class ToolSelectBoxXrayObject(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "object.select_box_xray"
     bl_keymap = (
-        ("object.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {}),
-        ("object.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("object.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True}, {"properties": [("mode", 'AND')]}),
         ("object.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True}, {"properties": [("mode", 'SUB')]}),
-        ("object.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True} , {"properties": [("mode", 'AND')]})
+        ("object.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("object.select_box_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
     )
 
     def draw_settings(context, layout, tool):
@@ -78,10 +78,10 @@ class ToolSelectBoxXrayCurve(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_box"
     bl_keymap = (
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True}, {"properties": [("mode", 'AND')]}),
         ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True}, {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True} , {"properties": [("mode", 'AND')]})
+        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
     )
 
     def draw_settings(context, layout, tool):
@@ -102,9 +102,9 @@ class ToolSelectCircleXrayMesh(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "mesh.select_lasso_xray"
     bl_keymap = (
-        ("mesh.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS'}, {"properties": [("wait_for_input", False)]}),
+        ("mesh.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
         ("mesh.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True}, {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("mesh.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, {"properties": [("mode", 'SUB'), ("wait_for_input", False)]})
+        ("mesh.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS'}, {"properties": [("wait_for_input", False)]})
     )
     
     def draw_cursor(_context, tool, xy):
@@ -141,9 +141,9 @@ class ToolSelectCircleXrayObject(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "object.select_circle_xray"
     bl_keymap = (
-        ("object.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS'}, {"properties": [("wait_for_input", False)]}),
+        ("object.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
         ("object.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True}, {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("object.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, {"properties": [("mode", 'SUB'), ("wait_for_input", False)]})
+        ("object.select_circle_xray", {"type": 'LEFTMOUSE', "value": 'PRESS'}, {"properties": [("wait_for_input", False)]})
     )
 
     def draw_cursor(_context, tool, xy):
@@ -173,9 +173,9 @@ class ToolSelectCircleXrayCurve(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_circle"
     bl_keymap = (
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'}, {"properties": [("wait_for_input", False)]}),
+        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
         ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True}, {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True}, {"properties": [("mode", 'SUB'), ("wait_for_input", False)]})
+        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'}, {"properties": [("wait_for_input", False)]})
     )
 
     def draw_cursor(_context, tool, xy):
@@ -204,10 +204,10 @@ class ToolSelectLassoXrayMesh(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "mesh.select_lasso_xray"
     bl_keymap = (
-        ("mesh.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {}),
-        ("mesh.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("mesh.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True}, {"properties": [("mode", 'AND')]}),
         ("mesh.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True}, {"properties": [("mode", 'SUB')]}),
-        ("mesh.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True} , {"properties": [("mode", 'AND')]})
+        ("mesh.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("mesh.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
     )
 
     def draw_settings(context, layout, tool):
@@ -236,10 +236,10 @@ class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "object.select_lasso_xray"
     bl_keymap = (
-        ("object.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {}),
-        ("object.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("object.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True}, {"properties": [("mode", 'AND')]}),
         ("object.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True}, {"properties": [("mode", 'SUB')]}),
-        ("object.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True} , {"properties": [("mode", 'AND')]})
+        ("object.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("object.select_lasso_xray", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
     )
 
     def draw_settings(context, layout, tool):
@@ -262,10 +262,10 @@ class ToolSelectLassoXrayCurve(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_lasso"
     bl_keymap = (
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True}, {"properties": [("mode", 'AND')]}),
         ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True}, {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True} , {"properties": [("mode", 'AND')]})
+        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True}, {"properties": [("mode", 'ADD')]}),
+        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
     )
 
     def draw_settings(context, layout, tool):
