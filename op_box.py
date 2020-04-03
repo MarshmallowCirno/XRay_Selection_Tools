@@ -42,7 +42,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         return {'RUNNING_MODAL'}
         
     def select_box_xray(self, context):
-        if self.show_xray and ((context.space_data.shading.type == 'SOLID' and not self.init_show_xray)\
+        if self.show_xray and ((context.space_data.shading.type in {'SOLID','MATERIAL','RENDERED'} and not self.init_show_xray)\
         or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe)):
            context.space_data.shading.show_xray = True
            context.space_data.shading.show_xray_wireframe = True
@@ -174,7 +174,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def set_visual_display(self, context):
         '''Disable modifiers and set x-ray state'''
         # if xray already enabled, nothing should be changed here
-        if (context.space_data.shading.type == 'SOLID' and not self.init_show_xray) or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe):
+        if (context.space_data.shading.type in {'SOLID','MATERIAL','RENDERED'} and not self.init_show_xray) or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe):
             # if user wants to use xray, enable it
             if self.show_xray:
                 context.space_data.shading.show_xray = True
