@@ -20,7 +20,7 @@ class SELBOXXRAY_preferences(bpy.types.AddonPreferences):
             # get only first keyitems from keymap, skipping user created keymaps, that goes after addon created keyitems
             kmis = [kmi for kmi in km.keymap_items if kmi.idname in {"mesh.select_box_xray", "object.select_box_xray",\
             "mesh.select_lasso_xray", "object.select_lasso_xray", "mesh.select_circle_xray", "object.select_circle_xray"}][:count] 
-            for kmi in reversed(kmis): # reverse order, as addon adds them from bottom to top
+            for kmi in kmis:
                 rna_keymap_ui.draw_kmi(['ADDON', 'USER', 'DEFAULT'], kc, km, kmi, col, 0)
             
         col.label(text="Mesh")
