@@ -101,7 +101,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             # save initial modifier states to restore them later
             if self.hide_modifiers:
                 mods_to_hide = ('MIRROR', 'SOLIDIFY') if self.show_xray else ('MIRROR')
-                for ob in context.selected_objects:
+                sel_obs = context.selected_objects if context.selected_objects else context.object
+                for ob in sel_obs:
                     self.init_mod_states.extend([(m, m.show_in_editmode) for m in ob.modifiers if m.type in mods_to_hide])
                     
             # save initial x-ray properties to restore them later
