@@ -26,7 +26,8 @@ bl_info = {
     "description": "Select items using box selection. Upon selection temporary enable x-ray, hide mirror and solidify modifiers in edit mode",
     "warning": "Beta version",
     "category": "3D View",
-    "wiki_url": "",
+    "wiki_url": "https://gumroad.com/l/DaLdj",
+    "tracker_url": "https://blenderartists.org/t/box-select-x-ray/1212316/1",
 }
 
 
