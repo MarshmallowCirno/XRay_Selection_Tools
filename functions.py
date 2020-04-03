@@ -122,7 +122,7 @@ def select_elems_in_rectangle(context, mode, xmin, xmax, ymin, ymax, select_all_
                     elem.tag = False
                     
     # main loop
-    sel_obs = context.selected_objects if context.selected_objects else context.object
+    sel_obs = context.selected_objects if context.selected_objects else [context.object]
     for ob in sel_obs:
         if ob.type == 'MESH':
             me = ob.data
