@@ -20,7 +20,7 @@
 bl_info = {
     "name": "Select Box (X-Ray)",
     "author": "MarshmallowCirno",
-    "version": (2, 0, 5),
+    "version": (2, 0, 6),
     "blender": (2, 82, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Select items using box selection. Upon selection temporary enable x-ray, hide mirror and solidify modifiers in edit mode",
