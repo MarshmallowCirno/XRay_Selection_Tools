@@ -18,6 +18,11 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         ],
         default = 'SET'
     )
+    wait_for_input: bpy.props.BoolProperty(                        
+        name = "Wait for input",
+        description = "Wait for mouse input or initialize lasso selection immediately (enable when assigning the operator to a keyboard key)", 
+        default = False
+    )
     show_xray: bpy.props.BoolProperty(                        
         name = "Show X-Ray",
         description = "Enable x-ray shading during selection",
@@ -28,33 +33,54 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
     def poll(cls, context):
         return (context.area.type == 'VIEW_3D' and context.mode == 'OBJECT')
 
+    def __init__(self):
+        self.started = not self.wait_for_input
+
     def invoke(self, context, event):
         self.init_show_xray = context.space_data.shading.show_xray
         self.init_show_xray_wireframe = context.space_data.shading.show_xray_wireframe
       
+        self.set_visual_display(context)
+      
         context.window_manager.modal_handler_add(self)
-        self.select_lasso_xray(context)
+        
+        if self.started:
+            bpy.ops.view3d.select_lasso('INVOKE_DEFAULT', mode=self.mode)
+        else:
+            context.window.cursor_modal_set('CROSSHAIR')
+            context.workspace.status_text_set(text="RMB, ESC: Cancel  |  LMB: Begin") 
         return {'RUNNING_MODAL'}
         
-    def select_lasso_xray(self, context):
+    def set_visual_display(self, context):
         if self.show_xray and ((context.space_data.shading.type in {'SOLID','MATERIAL','RENDERED'} and not self.init_show_xray)\
         or (context.space_data.shading.type == 'WIREFRAME' and not self.init_show_xray_wireframe)):
            context.space_data.shading.show_xray = True
            context.space_data.shading.show_xray_wireframe = True
-
-        bpy.ops.view3d.select_lasso('INVOKE_DEFAULT', mode=self.mode)
-
-    def modal(self, context, event):
-        if event.value == 'RELEASE' or event.type in ('ESC', 'RIGHTMOUSE'):
+           
+    def modal(self, context, event): 
+        if event.type in {'ESC', 'RIGHTMOUSE'}:
             self.finish(context)
             return {'FINISHED'}
+    
+        if self.started:
+            if event.value == 'RELEASE':
+                self.finish(context)
+                return {'FINISHED'}
+        else:
+            if event.value == 'PRESS' and event.type in {'LEFTMOUSE','MIDDLEMOUSE'}:
+                self.started = True
+                if event.shift:
+                    self.mode = 'SUB'
+                bpy.ops.view3d.select_lasso('INVOKE_DEFAULT', mode=self.mode)
         
         return {'RUNNING_MODAL'}
 
     def finish(self, context):
         context.space_data.shading.show_xray = self.init_show_xray
         context.space_data.shading.show_xray_wireframe = self.init_show_xray_wireframe
-
+        context.window.cursor_modal_restore()
+        context.workspace.status_text_set(text=None)
+        
         
 class MESH_OT_select_lasso_xray(bpy.types.Operator):
     '''Select items using lasso selection with x-ray'''
@@ -71,6 +97,11 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
              ('AND', "Intersect", "Intersect existing selection", 'SELECT_INTERSECT', 5)
         ],
         default = 'SET'
+    )
+    wait_for_input: bpy.props.BoolProperty(                        
+        name = "Wait for input",
+        description = "Wait for mouse input or initialize lasso selection immediately (enable when assigning the operator to a keyboard key)", 
+        default = False
     )
     show_xray: bpy.props.BoolProperty(                        
         name = "Show X-Ray",
@@ -94,6 +125,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         
     def __init__(self):
         self.init_mod_states = []
+        self.started = not self.wait_for_input
         
     def invoke(self, context, event):
         # if select through is disabled, use default "lasso select" without any optional features
@@ -116,8 +148,13 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             self.set_visual_display(context)
             
         context.window_manager.modal_handler_add(self)
+        
         # start default lasso select modal
-        bpy.ops.view3d.select_lasso('INVOKE_DEFAULT', mode=self.mode)
+        if self.started:
+            bpy.ops.view3d.select_lasso('INVOKE_DEFAULT', mode=self.mode)
+        else:
+            context.window.cursor_modal_set('CROSSHAIR')
+            context.workspace.status_text_set(text="RMB, ESC: Cancel  |  LMB: Begin") 
         return {'RUNNING_MODAL'}
 
     def set_visual_display(self, context):
@@ -142,13 +179,24 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                 mod.show_in_editmode = False
 
     def modal(self, context, event):
-        if event.value == 'RELEASE' or event.type in ('ESC', 'RIGHTMOUSE'):
-            self.finish(context, event)
+        if event.type in {'ESC', 'RIGHTMOUSE'}:
+            self.finish(context)
             return {'FINISHED'}
-        
+    
+        if self.started:
+            if event.value == 'RELEASE':
+                self.finish(context)
+                return {'FINISHED'}
+        else:
+            if event.value == 'PRESS' and event.type in {'LEFTMOUSE','MIDDLEMOUSE'}:
+                self.started = True
+                if event.shift:
+                    self.mode = 'SUB'
+                bpy.ops.view3d.select_lasso('INVOKE_DEFAULT', mode=self.mode)
+                
         return {'RUNNING_MODAL'}
         
-    def finish(self, context, event):
+    def finish(self, context):
         # if select through was disabled, nothing was changed and nothing to restore
         if self.select_through:
             context.space_data.shading.show_xray = self.init_show_xray
@@ -162,7 +210,10 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                 for mod, state in self.init_mod_states:
                     mod.show_in_editmode = state
                     
-                    
+        context.window.cursor_modal_restore()
+        context.workspace.status_text_set(text=None)
+
+
 classes = (
     OBJECT_OT_select_lasso_xray,
     MESH_OT_select_lasso_xray

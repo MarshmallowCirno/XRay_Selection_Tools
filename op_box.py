@@ -1,5 +1,7 @@
-import bpy
+import bpy, gpu, bgl
 from .functions import select_elems_in_rectangle
+from gpu_extras.batch import batch_for_shader
+from bgl import glEnable, glDisable, GL_BLEND
 
 
 class OBJECT_OT_select_box_xray(bpy.types.Operator):
@@ -115,8 +117,42 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def __init__(self):
         self.init_mod_states = []
         self.custom_selection = False
+        self.custom_preselection = False
         self.init_gesture_box_keymaps = []
         self.new_gesture_box_keymaps = []
+        
+        self.vertex_shader = '''
+            in vec2 pos;
+            in float len;
+            
+            uniform mat4 u_ViewProjectionMatrix;
+            uniform float u_X;
+            uniform float u_Y;
+            
+            out float v_Len;
+
+            void main()
+            {
+                v_Len = len;
+                gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
+            }
+        '''
+        # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
+        # https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
+        self.fragment_shader = '''
+            in float v_Len;
+            
+            vec4 col = vec4(1.0, 1.0, 1.0, 1.0);
+            float dash_size = 4;
+            float gap_size = 4;
+
+            void main()
+            {
+                if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
+                    col = vec4(0.5, 0.5, 0.5, 1.0);
+                gl_FragColor = col;
+            }
+        '''
         
     def invoke(self, context, event):
         # if select through is disabled, use default "box select" without any optional features
@@ -141,17 +177,84 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 # save initial mouse location to calculate box coordinates for custom selection
                 self.init_mouse_x = event.mouse_region_x
                 self.init_mouse_y = event.mouse_region_y
+
                 # disable confirmation in default box selection 
                 self.disable_box_selection()
                 
+                self.custom_preselection = self.wait_for_input
+
             # disable modifiers and set x-ray state
             self.set_visual_display(context)
             
         context.window_manager.modal_handler_add(self)
-        # start default box select modal
-        bpy.ops.view3d.select_box('INVOKE_DEFAULT', mode=self.mode, wait_for_input=self.wait_for_input)
+            
+        if self.custom_preselection:
+            context.window.cursor_modal_set('CROSSHAIR')
+            context.workspace.status_text_set(text="RMB, ESC: Cancel  |  LMB: Begin") 
+            
+            # create crossed lines shader
+            width = context.region.width
+            height = context.region.height
+
+            vertices = ((0, -height),
+                        (0, height),
+                        (-width, 0),
+                        (width, 0))
+            lengths = (0, 2*height, 0, 2*width)
+            
+            self.mouse_x = event.mouse_region_x
+            self.mouse_y = event.mouse_region_y
+            
+            self.shader = gpu.types.GPUShader(self.vertex_shader, self.fragment_shader)
+            self.batch = batch_for_shader(self.shader, 'LINES', {"pos":vertices, "len":lengths})
+            
+            self.handler = context.space_data.draw_handler_add(self.draw_shader,(context,),'WINDOW','POST_PIXEL')
+            context.region.tag_redraw()
+        else:
+            bpy.ops.view3d.select_box('INVOKE_DEFAULT', mode=self.mode, wait_for_input=self.wait_for_input)
+        return {'RUNNING_MODAL'}
+                
+    def modal(self, context, event):
+        # cancel modal
+        if event.type in {'ESC', 'RIGHTMOUSE'}:
+            if self.custom_preselection:
+                self.finish_custom_preselection(context)
+            self.finish(context, event)
+            return {'FINISHED'}
+            
+        if self.custom_preselection:
+            # update shader
+            if event.type == 'MOUSEMOVE':
+                self.mouse_x = event.mouse_region_x
+                self.mouse_y = event.mouse_region_y
+                context.region.tag_redraw()
+        
+            # do preselection, start selection
+            if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
+                self.custom_preselection = False
+                self.finish_custom_preselection(context)
+                # set new starting box corner coordinates
+                self.init_mouse_x = event.mouse_region_x
+                self.init_mouse_y = event.mouse_region_y
+                if event.shift:
+                    self.mode = 'SUB'
+                bpy.ops.view3d.select_box('INVOKE_DEFAULT', mode=self.mode, wait_for_input=False)
+        else:
+            # finish selection
+            if event.value == 'RELEASE':
+                self.finish(context, event)
+                return {'FINISHED'}
+
         return {'RUNNING_MODAL'}
                
+    def draw_shader(self, context):
+        self.shader.bind()
+        matrix = gpu.matrix.get_projection_matrix()
+        self.shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.shader.uniform_float("u_X", self.mouse_x)
+        self.shader.uniform_float("u_Y", self.mouse_y)
+        self.batch.draw(self.shader)
+        
     def disable_box_selection(self):
         '''Temporary disable the default "box select" tool confirmation by adding the "cancel" keys to its modal keymaps
         and deactivating default confirmation keymaps, since actual selection will be made with the addon 
@@ -160,8 +263,9 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         # save default keymap states and deactivate them
         km = kc.keymaps["Gesture Box"]
         for kmi in km.keymap_items:
-            self.init_gesture_box_keymaps.append((kmi.id, kmi.active))
-            kmi.active = False
+            if kmi.propvalue != 'BEGIN':
+                self.init_gesture_box_keymaps.append((kmi.id, kmi.active))
+                kmi.active = False
         
         # add the new cancel keymaps
         km = kc.keymaps.new(name="Gesture Box", space_type='EMPTY', region_type='WINDOW', modal=True)
@@ -188,19 +292,12 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 context.space_data.shading.xray_alpha = 1
                 context.space_data.shading.xray_alpha_wireframe = 1
                 context.space_data.overlay.backwire_opacity = 0
-                
+
         # hide modifiers
         if self.init_mod_states:
             for mod, state in self.init_mod_states:
                 mod.show_in_editmode = False
 
-    def modal(self, context, event):
-        if event.value == 'RELEASE' or event.type in ('ESC', 'RIGHTMOUSE'):
-            self.finish(context, event)
-            return {'FINISHED'}
-        
-        return {'RUNNING_MODAL'}
-        
     def restore_box_selection(self):
         '''Restore initial "box select" keymaps'''
         kc = bpy.context.window_manager.keyconfigs.user
@@ -232,6 +329,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 xmax = max(self.init_mouse_x, event.mouse_region_x)
                 ymin = min(self.init_mouse_y, event.mouse_region_y)
                 ymax = max(self.init_mouse_y, event.mouse_region_y)
+
                 # do selection
                 select_elems_in_rectangle(context, mode=self.mode, select_all_edges=self.select_all_edges, \
                 select_all_faces=self.select_all_faces, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
@@ -243,7 +341,14 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 for mod, state in self.init_mod_states:
                     mod.show_in_editmode = state
                     
-                    
+    def finish_custom_preselection(self, context):
+        context.window.cursor_modal_restore()
+        context.workspace.status_text_set(text=None)
+
+        context.space_data.draw_handler_remove(self.handler, 'WINDOW')
+        context.region.tag_redraw()
+
+
 classes = (
     OBJECT_OT_select_box_xray,
     MESH_OT_select_box_xray
