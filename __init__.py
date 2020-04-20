@@ -47,7 +47,7 @@ if "bpy" in locals():
         if module in locals():
             importlib.reload(locals()[module])
 else:
-    from . import op_box, op_circle, op_lasso, tools, ui, keymaps
+    from . import op_box, op_circle, op_lasso, tools, tools_dummy, ui, keymaps
 
 
 import bpy
@@ -59,6 +59,7 @@ def register():
     op_lasso.register()
     ui.register()
     tools.register()
+    tools_dummy.register()
     keymaps.register()
 
 
@@ -68,4 +69,5 @@ def unregister():
     op_lasso.unregister()
     ui.unregister()
     tools.unregister()
+    tools_dummy.unregister()
     keymaps.unregister()
