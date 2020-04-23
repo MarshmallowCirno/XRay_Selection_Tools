@@ -215,7 +215,7 @@ def select_elems_in_rectangle(context, mode, xmin, xmax, ymin, ymax, select_all_
                             if not face.tag:
                                 # check if selection rectangle vert is outside of the face bounding box
                                 poly = [vert_dict[vert]["co"] for vert in face.verts if vert_dict[vert]["co"] is not None]
-                                if co_inside_poly((xmin, ymin), poly):
+                                if poly and co_inside_poly((xmin, ymin), poly):
                                     #tag the face for selection op
                                     face.tag = True
                                     
