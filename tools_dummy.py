@@ -401,7 +401,7 @@ class ToolSelectLassoXrayPose(bpy.types.WorkSpaceTool):
 
 
 def register():
-    if bpy.app.version < (2, 83, 11):
+    if bpy.app.version < (2, 83, 0):
         register_tool_fixed(ToolSelectBoxXrayCurve, after={"builtin.select_box"}, separator=False, group=False)
         register_tool_fixed(ToolSelectBoxXrayArmature, after={"builtin.select_box"}, separator=False, group=False)
         register_tool_fixed(ToolSelectBoxXrayMetaball, after={"builtin.select_box"}, separator=False, group=False)
@@ -440,7 +440,7 @@ def register():
 
 
 def unregister():          
-    if bpy.app.version < (2, 83, 11):
+    if bpy.app.version < (2, 83, 0):
         unregister_tool_fixed(ToolSelectBoxXrayCurve)
         unregister_tool_fixed(ToolSelectBoxXrayArmature)
         unregister_tool_fixed(ToolSelectBoxXrayMetaball)        
