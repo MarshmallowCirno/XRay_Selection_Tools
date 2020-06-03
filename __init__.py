@@ -16,14 +16,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
 bl_info = {
     "name": "Select Box (X-Ray)",
     "author": "MarshmallowCirno",
-    "version": (2, 0, 9),
+    "version": (2, 0, 10),
     "blender": (2, 82, 0),
     "location": "Toolbar > Selection Tools",
-    "description": "Select items using box selection. Upon selection temporary enable x-ray, hide mirror and solidify modifiers in edit mode",
+    "description": "Select items using box selection. Upon selection temporary enable x-ray, "
+                   "hide mirror and solidify modifiers in edit mode",
     "warning": "Beta version",
     "category": "3D View",
     "wiki_url": "https://gumroad.com/l/DaLdj",
@@ -31,43 +31,42 @@ bl_info = {
 }
 
 
+utils_modules = (
+            "functions.modal",
+            "functions.intersect",
+            "utils")
+
+
+registrable_modules = (
+            "mesh.op_box",
+            "mesh.op_circle",
+            "mesh.op_lasso",
+            "object.op_box",
+            "object.op_circle",
+            "object.op_lasso",
+            "ui",
+            "tools",
+            "tools_dummy",
+            "keymaps")
+
+
+import bpy, importlib
+
+    
 if "bpy" in locals():
-    import importlib
-    reloadable_modules = [
-        "functions",
-        "op_box",
-        "op_circle",
-        "op_lasso",
-        "tools",
-        "ui",
-        "keymaps",
-        "utils"
-    ]
-    for module in reloadable_modules:
+    for module in utils_modules + registrable_modules:
         if module in locals():
             importlib.reload(locals()[module])
-else:
-    from . import op_box, op_circle, op_lasso, tools, tools_dummy, ui, keymaps
 
 
-import bpy
+imported_modules = [importlib.import_module("." + module, package=__package__) for module in registrable_modules]
 
 
 def register():
-    op_box.register()
-    op_circle.register()
-    op_lasso.register()
-    ui.register()
-    tools.register()
-    tools_dummy.register()
-    keymaps.register()
+    for module in imported_modules:
+        module.register()
 
 
 def unregister():
-    op_box.unregister()
-    op_circle.unregister()
-    op_lasso.unregister()
-    ui.unregister()
-    tools.unregister()
-    tools_dummy.unregister()
-    keymaps.unregister()
+    for module in imported_modules:
+        module.unregister()
