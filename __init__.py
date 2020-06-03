@@ -19,12 +19,12 @@
 bl_info = {
     "name": "Select Box (X-Ray)",
     "author": "MarshmallowCirno",
-    "version": (2, 0, 10),
-    "blender": (2, 82, 0),
+    "version": (2, 0, 11),
+    "blender": (2, 83, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Select items using box selection. Upon selection temporary enable x-ray, "
                    "hide mirror and solidify modifiers in edit mode",
-    "warning": "Beta version",
+    "warning": "",
     "category": "3D View",
     "wiki_url": "https://gumroad.com/l/DaLdj",
     "tracker_url": "https://blenderartists.org/t/box-select-x-ray/1212316/1",
