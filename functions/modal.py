@@ -42,14 +42,15 @@ def toggle_overlays(self, context):
 
 def toggle_modifiers(self):
     """Hide modifiers in editmode or restore initial visibility"""
-    if self.select_through:
-        for mod, show_in_editmode in self.init_mods:
-            if mod.show_in_editmode:
-                mod.show_in_editmode = False
-    else:
-        for mod, show_in_editmode in self.init_mods:
-            if mod.show_in_editmode != show_in_editmode:
-                mod.show_in_editmode = show_in_editmode
+    if self.init_mods:
+        if self.select_through:
+            for mod, show_in_editmode in self.init_mods:
+                if mod.show_in_editmode:
+                    mod.show_in_editmode = False
+        else:
+            for mod, show_in_editmode in self.init_mods:
+                if mod.show_in_editmode != show_in_editmode:
+                    mod.show_in_editmode = show_in_editmode
 
 
 def restore_overlays(self, context):
@@ -61,9 +62,10 @@ def restore_overlays(self, context):
     
 
 def restore_modifiers(self):
-    for mod, show_in_editmode in self.init_mods:
-        if mod.show_in_editmode != show_in_editmode:
-            mod.show_in_editmode = show_in_editmode
+    if self.init_mods:
+        for mod, show_in_editmode in self.init_mods:
+            if mod.show_in_editmode != show_in_editmode:
+                mod.show_in_editmode = show_in_editmode
 
 
 def get_select_through_toggle_keys():
@@ -84,10 +86,10 @@ def get_alter_mode_toggle_keys():
 
 
 def toggle_alter_mode(self, event):
-    if event.ctrl and self.preferences.alter_mode_toggle_key == 'CTRL' or \
-            event.alt and self.preferences.alter_mode_toggle_key == 'ALT' or \
-            event.shift and self.preferences.alter_mode_toggle_key == 'SHIFT':
-        self.mode = self.preferences.alter_mode
+    if event.ctrl and self.alter_mode_toggle_key == 'CTRL' or \
+            event.alt and self.alter_mode_toggle_key == 'ALT' or \
+            event.shift and self.alter_mode_toggle_key == 'SHIFT':
+        self.mode = self.alter_mode
 
 
 def sync_select_through(self, context):
