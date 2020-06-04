@@ -55,7 +55,7 @@ class SELBOXXRAY_preferences(bpy.types.AddonPreferences):
 
     def draw_general(self, box):
         row = box.row()
-        row.label(text="Key operators (B, C, L) settings in edit mode")
+        row.label(text="Keyboard operators (by default mapped to B, C, L) settings in edit mode")
 
         row = box.row()
         row.label(text="Toggle selection through by holding this key")
