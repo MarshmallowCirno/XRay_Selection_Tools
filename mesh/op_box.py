@@ -80,9 +80,11 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.disabled_inbuilt_box_select_confirmation = False
         self.init_gesture_box_keymaps = []
         self.new_gesture_box_keymaps = []
-        self.preferences = get_preferences()
         self.select_through_toggle_keys = get_select_through_toggle_keys()
         self.alter_mode_toggle_keys = get_alter_mode_toggle_keys()
+        self.select_through_toggle_key = get_preferences().select_through_toggle_key
+        self.alter_mode_toggle_key = get_preferences().alter_mode_toggle_key
+        self.alter_mode = get_preferences().alter_mode
 
         # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
         # https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
@@ -125,8 +127,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         # use custom wait_for_input if keyboard version of operator is used
         # and toggle key is set
         self.override_wait_for_input = \
-            self.wait_for_input and (self.preferences.select_through_toggle_key != 'DISABLED' or
-                                     self.preferences.alter_mode_toggle_key != 'SHIFT')
+            self.wait_for_input and (self.select_through_toggle_key != 'DISABLED' or
+                                     self.alter_mode_toggle_key != 'SHIFT')
 
         # skip if overlays and modifiers visibility wouldn't be changed
         if self.select_through or self.override_wait_for_input:
@@ -198,11 +200,11 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         """Set cursor and status text, draw wait_for_input shader"""
         self.custom_wait_for_input_stage = True
         context.window.cursor_modal_set('CROSSHAIR')
-        context.workspace.status_text_set(
-            text="RMB, ESC: Cancel  |  LMB: ADD  |  "
-                 "%s+LMB: %s" % (self.preferences.alter_mode_toggle_key,
-                                 self.preferences.alter_mode))
-
+        status_text = "RMB, ESC: Cancel  |  LMB: ADD  |  %s+LMB: %s" \
+                      % (self.alter_mode_toggle_key, self.alter_mode)
+        if self.select_through_toggle_key != 'DISABLED':
+            status_text += "  |  %s: Toggle Select Through" % self.select_through_toggle_key
+        context.workspace.status_text_set(text=status_text)
         sync_select_through(self, context)
 
         self.build_crosshair_shader(context)
