@@ -54,11 +54,12 @@ def toggle_modifiers(self):
 
 
 def restore_overlays(self, context):
-    context.space_data.shading.show_xray = self.init_overlays["show_xray"]
-    context.space_data.shading.xray_alpha = self.init_overlays["xray_alpha"]
-    context.space_data.shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
-    context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
-    context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+    if self.init_overlays:
+        context.space_data.shading.show_xray = self.init_overlays["show_xray"]
+        context.space_data.shading.xray_alpha = self.init_overlays["xray_alpha"]
+        context.space_data.shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
+        context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
+        context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
     
 
 def restore_modifiers(self):
