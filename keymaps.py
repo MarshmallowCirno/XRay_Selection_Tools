@@ -36,6 +36,7 @@ def register_keymaps():
         kmi.properties.select_all_edges = False
         kmi.properties.show_xray = True
         kmi.properties.hide_modifiers = True
+        kmi.properties.show_crosshair = True
         kmi.active = False
         addon_keymaps.append((km, kmi))
 
@@ -47,6 +48,7 @@ def register_keymaps():
         kmi.properties.select_all_edges = False
         kmi.properties.show_xray = True
         kmi.properties.hide_modifiers = True
+        kmi.properties.show_crosshair = True
         kmi.active = False
         addon_keymaps.append((km, kmi))
 
@@ -58,6 +60,7 @@ def register_keymaps():
         kmi.properties.select_all_edges = False
         kmi.properties.show_xray = True
         kmi.properties.hide_modifiers = True
+        kmi.properties.show_crosshair = True
         kmi.active = False
         addon_keymaps.append((km, kmi))
         
@@ -87,6 +90,7 @@ def register_keymaps():
         kmi.properties.select_all_edges = False
         kmi.properties.show_xray = True
         kmi.properties.hide_modifiers = True
+        kmi.properties.show_crosshair = True
         kmi.active = True
         addon_keymaps.append((km, kmi))
 
@@ -111,6 +115,7 @@ def register_keymaps():
         kmi.properties.mode = 'SUB'
         kmi.properties.wait_for_input = False
         kmi.properties.show_xray = True
+        kmi.properties.show_crosshair = True
         kmi.active = False
         addon_keymaps.append((km, kmi))
 
@@ -118,6 +123,7 @@ def register_keymaps():
         kmi.properties.mode = 'ADD'
         kmi.properties.wait_for_input = False
         kmi.properties.show_xray = True
+        kmi.properties.show_crosshair = True
         kmi.active = False
         addon_keymaps.append((km, kmi))
         
@@ -125,6 +131,7 @@ def register_keymaps():
         kmi.properties.mode = 'SET'
         kmi.properties.wait_for_input = False
         kmi.properties.show_xray = True
+        kmi.properties.show_crosshair = True
         kmi.active = False
         addon_keymaps.append((km, kmi))
         
@@ -146,6 +153,7 @@ def register_keymaps():
         kmi.properties.mode = 'ADD'
         kmi.properties.wait_for_input = True
         kmi.properties.show_xray = True
+        kmi.properties.show_crosshair = True
         kmi.active = True
         addon_keymaps.append((km, kmi))
 

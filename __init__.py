@@ -16,10 +16,17 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+
+import importlib
+from .mesh import mesh_op_box, mesh_op_circle, mesh_op_lasso
+from .object import object_op_box, object_op_circle, object_op_lasso
+from . import ui, tools, tools_dummy, keymaps
+
+
 bl_info = {
     "name": "Select Box (X-Ray)",
     "author": "MarshmallowCirno",
-    "version": (2, 0, 13),
+    "version": (2, 0, 14),
     "blender": (2, 83, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Select items using box selection. Upon selection temporary enable x-ray, "
@@ -31,42 +38,50 @@ bl_info = {
 }
 
 
-utils_modules = (
-            "functions.modal",
-            "functions.intersect",
-            "utils")
+reloadable_modules = (
+    "functions.mesh_modal",
+    "functions.object_modal",
+    "functions.intersect",
+    "utils"
+    "mesh.op_box",
+    "mesh.op_circle",
+    "mesh.op_lasso",
+    "object.op_box",
+    "object.op_circle",
+    "object.op_lasso",
+    "ui",
+    "tools",
+    "tools_dummy",
+    "keymaps")
 
 
-registrable_modules = (
-            "mesh.op_box",
-            "mesh.op_circle",
-            "mesh.op_lasso",
-            "object.op_box",
-            "object.op_circle",
-            "object.op_lasso",
-            "ui",
-            "tools",
-            "tools_dummy",
-            "keymaps")
-
-
-import bpy, importlib
-
-    
 if "bpy" in locals():
-    for module in utils_modules + registrable_modules:
+    for module in reloadable_modules:
         if module in locals():
             importlib.reload(locals()[module])
 
 
-imported_modules = [importlib.import_module("." + module, package=__package__) for module in registrable_modules]
-
-
 def register():
-    for module in imported_modules:
-        module.register()
+    mesh_op_box.register()
+    mesh_op_circle.register()
+    mesh_op_lasso.register()
+    object_op_box.register()
+    object_op_circle.register()
+    object_op_lasso.register()
+    ui.register()
+    tools.register()
+    tools_dummy.register()
+    keymaps.register()
 
 
 def unregister():
-    for module in imported_modules:
-        module.unregister()
+    mesh_op_box.unregister()
+    mesh_op_circle.unregister()
+    mesh_op_lasso.unregister()
+    object_op_box.unregister()
+    object_op_circle.unregister()
+    object_op_lasso.unregister()
+    ui.unregister()
+    tools.unregister()
+    tools_dummy.unregister()
+    keymaps.unregister()
