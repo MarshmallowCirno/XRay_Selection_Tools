@@ -296,7 +296,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
             not self.show_crosshair or \
             self.override_selection
 
-        self.init_mods = gather_modifiers(context)  # save initial modifier states
+        self.init_mods = gather_modifiers(self, context)  # save initial modifier states
         self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
 
         # sync operator properties with current shading

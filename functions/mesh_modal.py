@@ -10,9 +10,15 @@ def gather_overlays(context):
     return overlays
 
 
-def gather_modifiers(context):
+def gather_modifiers(self, context):
     mods = []
-    mods_to_hide = {'MIRROR', 'SOLIDIFY'}
+    mods_to_hide = []
+
+    if self.hide_mirror:
+        mods_to_hide.append('MIRROR')
+    if self.hide_solidify:
+        mods_to_hide.append('SOLIDIFY')
+
     sel_obs = context.selected_objects if context.selected_objects else [context.object]
     for ob in sel_obs:
         mods.extend([(m, m.show_in_editmode) for m in ob.modifiers if m.type in mods_to_hide])

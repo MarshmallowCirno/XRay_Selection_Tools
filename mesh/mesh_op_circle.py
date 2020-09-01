@@ -247,7 +247,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             self.select_through and self.select_through_color[:] != (1.0, 1.0, 1.0) or \
             self.override_intersect_tests
 
-        self.init_mods = gather_modifiers(context)  # save initial modifier states
+        self.init_mods = gather_modifiers(self, context)  # save initial modifier states
         self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
 
         # sync operator properties with current shading
