@@ -1,6 +1,6 @@
 import bpy
 import os
-from .utils import register_tool_fixed, unregister_tool_fixed
+from .legacy_register import register_tool_fixed, unregister_tool_fixed
 
 
 icon_dir = os.path.join(os.path.dirname(__file__), "icon")
@@ -17,13 +17,22 @@ class ToolSelectBoxXrayCurve(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_box"
     bl_keymap = (
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -44,13 +53,22 @@ class ToolSelectBoxXrayArmature(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_box"
     bl_keymap = (
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -71,13 +89,22 @@ class ToolSelectBoxXrayMetaball(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_box"
     bl_keymap = (
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -98,13 +125,22 @@ class ToolSelectBoxXrayLattice(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_box"
     bl_keymap = (
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -125,13 +161,22 @@ class ToolSelectBoxXrayPose(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_box"
     bl_keymap = (
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -152,13 +197,22 @@ class ToolSelectBoxXrayGrease(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_box"
     bl_keymap = (
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_box", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_box",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -179,12 +233,18 @@ class ToolSelectCircleXrayCurve(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_circle"
     bl_keymap = (
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("wait_for_input", False)]})
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS'},
+            {})
     )
 
     def draw_cursor(context, tool, xy):
@@ -213,12 +273,18 @@ class ToolSelectCircleXrayArmature(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_circle"
     bl_keymap = (
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("wait_for_input", False)]})
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS'},
+            {})
     )
 
     def draw_cursor(context, tool, xy):
@@ -247,12 +313,18 @@ class ToolSelectCircleXrayMetaball(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_circle"
     bl_keymap = (
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("wait_for_input", False)]})
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS'},
+            {})
     )
 
     def draw_cursor(context, tool, xy):
@@ -281,12 +353,18 @@ class ToolSelectCircleXrayLattice(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_circle"
     bl_keymap = (
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("wait_for_input", False)]})
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS'},
+            {})
     )
 
     def draw_cursor(context, tool, xy):
@@ -315,12 +393,18 @@ class ToolSelectCircleXrayPose(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_circle"
     bl_keymap = (
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("wait_for_input", False)]})
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS'},
+            {})
     )
 
     def draw_cursor(context, tool, xy):
@@ -349,12 +433,18 @@ class ToolSelectCircleXrayGrease(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_circle"
     bl_keymap = (
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
-         {"properties": [("mode", 'SUB'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
-         {"properties": [("mode", 'ADD'), ("wait_for_input", False)]}),
-        ("view3d.select_circle", {"type": 'LEFTMOUSE', "value": 'PRESS'},
-         {"properties": [("wait_for_input", False)]})
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_circle",
+            {"type": 'LEFTMOUSE', "value": 'PRESS'},
+            {})
     )
 
     def draw_cursor(context, tool, xy):
@@ -383,13 +473,22 @@ class ToolSelectLassoXrayCurve(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_lasso"
     bl_keymap = (
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -410,13 +509,22 @@ class ToolSelectLassoXrayArmature(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_lasso"
     bl_keymap = (
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -437,13 +545,22 @@ class ToolSelectLassoXrayMetaball(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_lasso"
     bl_keymap = (
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -464,13 +581,22 @@ class ToolSelectLassoXrayLattice(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_lasso"
     bl_keymap = (
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -491,13 +617,22 @@ class ToolSelectLassoXrayPose(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_lasso"
     bl_keymap = (
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):
@@ -518,13 +653,22 @@ class ToolSelectLassoXrayGrease(bpy.types.WorkSpaceTool):
     bl_widget = None
     bl_operator = "view3d.select_lasso"
     bl_keymap = (
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
-         {"properties": [("mode", 'AND')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
-         {"properties": [("mode", 'SUB')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
-         {"properties": [("mode", 'ADD')]}),
-        ("view3d.select_lasso", {"type": 'EVT_TWEAK_L', "value": 'ANY'}, {})
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"properties": [("mode", 'AND')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"properties": [("mode", 'SUB')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"properties": [("mode", 'ADD')]}),
+        (
+            "view3d.select_lasso",
+            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {})
     )
 
     def draw_settings(context, layout, tool):

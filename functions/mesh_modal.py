@@ -36,8 +36,10 @@ def toggle_overlays(self, context):
                 context.space_data.overlay.backwire_opacity = 0
             else:
                 context.space_data.shading.xray_alpha = self.init_overlays["show_xray_wireframe"]
-                context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
-                context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+                context.space_data.shading.xray_alpha_wireframe =\
+                    self.init_overlays["xray_alpha_wireframe"]
+                context.space_data.overlay.backwire_opacity = \
+                    self.init_overlays["backwire_opacity"]
 
 
 def toggle_modifiers(self):
@@ -58,9 +60,10 @@ def restore_overlays(self, context):
         context.space_data.shading.show_xray = self.init_overlays["show_xray"]
         context.space_data.shading.xray_alpha = self.init_overlays["xray_alpha"]
         context.space_data.shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
-        context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
+        context.space_data.shading.xray_alpha_wireframe = \
+            self.init_overlays["xray_alpha_wireframe"]
         context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
-    
+
 
 def restore_modifiers(self):
     if self.init_mods:
@@ -69,37 +72,51 @@ def restore_modifiers(self):
                 mod.show_in_editmode = show_in_editmode
 
 
-def get_select_through_toggle_keys():
+def get_select_through_toggle_key_list():
     return {
         'CTRL': {'LEFT_CTRL', 'RIGHT_CTRL'},
         'ALT': {'LEFT_ALT', 'RIGHT_ALT'},
         'SHIFT': {'LEFT_SHIFT', 'RIGHT_SHIFT'},
         'DISABLED': {'DISABLED'}
-    }[get_preferences().select_through_toggle_key]
+    }[get_preferences().me_select_through_toggle_key]
 
 
-def get_alter_mode_toggle_keys():
-    return {
-        'CTRL': {'LEFT_CTRL', 'RIGHT_CTRL'},
-        'ALT': {'LEFT_ALT', 'RIGHT_ALT'},
-        'SHIFT': {'LEFT_SHIFT', 'RIGHT_SHIFT'}
-    }[get_preferences().alter_mode_toggle_key]
+def toggle_alt_mode(self, event):
+    if event.ctrl and self.alt_mode_toggle_key == 'CTRL' or \
+            event.alt and self.alt_mode_toggle_key == 'ALT' or \
+            event.shift and self.alt_mode_toggle_key == 'SHIFT':
+        self.curr_mode = self.alt_mode
+    else:
+        self.curr_mode = self.mode
 
 
-def toggle_alter_mode(self, event):
-    if event.ctrl and self.alter_mode_toggle_key == 'CTRL' or \
-            event.alt and self.alter_mode_toggle_key == 'ALT' or \
-            event.shift and self.alter_mode_toggle_key == 'SHIFT':
-        self.mode = self.alter_mode
-
-
-def sync_select_through(self, context):
-    """Sync operator parameters to context shading. So if xray already enabled
+def sync_properties(self, context):
+    """Sync operator parameters to current context shading. So if xray already enabled
     make sure it would be possible to toggle it regardless of operator parameters"""
-    # second time during select_through toggling
     if context.space_data.shading.type in {'SOLID', 'MATERIAL', 'RENDERED'} and \
             context.space_data.shading.show_xray or \
             context.space_data.shading.type == 'WIREFRAME' and \
             context.space_data.shading.show_xray_wireframe:
         self.show_xray = True
         self.select_through = True
+
+
+def set_properties(self):
+    if not self.override_global_props:
+        self.select_through = get_preferences().me_select_through
+        self.select_through_toggle_key = get_preferences().me_select_through_toggle_key
+        self.select_through_toggle_type = get_preferences().me_select_through_toggle_type
+        self.default_color = get_preferences().me_default_color
+        self.select_through_color = get_preferences().me_select_through_color
+        self.show_xray = get_preferences().me_show_xray
+        self.select_all_edges = get_preferences().me_select_all_edges
+        self.select_all_faces = get_preferences().me_select_all_faces
+        self.hide_mirror = get_preferences().me_hide_mirror
+        self.hide_solidify = get_preferences().me_hide_solidify
+        self.show_crosshair = get_preferences().me_show_crosshair
+        self.show_lasso_icon = get_preferences().me_show_lasso_icon
+
+
+def update_shader_color(self, context):
+    if self.select_through_color != self.default_color:
+        context.region.tag_redraw()

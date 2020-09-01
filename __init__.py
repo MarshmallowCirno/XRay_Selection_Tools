@@ -17,48 +17,55 @@
 # ##### END GPL LICENSE BLOCK #####
 
 
-import importlib
-from .mesh import mesh_op_box, mesh_op_circle, mesh_op_lasso
-from .object import object_op_box, object_op_circle, object_op_lasso
-from . import ui, tools, tools_dummy, keymaps
-
-
 bl_info = {
-    "name": "Select Box (X-Ray)",
+    "name": "X-Ray Selection Tools",
     "author": "MarshmallowCirno",
-    "version": (2, 0, 14),
+    "version": (3, 0, 0),
     "blender": (2, 83, 0),
     "location": "Toolbar > Selection Tools",
-    "description": "Select items using box selection. Upon selection temporary enable x-ray, "
-                   "hide mirror and solidify modifiers in edit mode",
+    "description": "Box, lasso and circle selection tools with x-ray",
     "warning": "",
     "category": "3D View",
-    "wiki_url": "https://gumroad.com/l/DaLdj",
+    "doc_url": "https://gumroad.com/l/DaLdj",
     "tracker_url": "https://blenderartists.org/t/box-select-x-ray/1212316/1",
 }
 
 
 reloadable_modules = (
-    "functions.mesh_modal",
-    "functions.object_modal",
-    "functions.intersect",
-    "utils"
-    "mesh.op_box",
-    "mesh.op_circle",
-    "mesh.op_lasso",
-    "object.op_box",
-    "object.op_circle",
-    "object.op_lasso",
-    "ui",
+    "intersect",
+    "mesh_modal",
+    "object_modal",
+    "mesh_op_box",
+    "mesh_op_circle",
+    "mesh_op_lasso",
+    "object_op_box",
+    "object_op_circle",
+    "object_op_lasso",
+    "global_op",
+    "help",
+    "keymaps",
+    "legacy_register",
     "tools",
     "tools_dummy",
-    "keymaps")
+    "ui"
+)
 
 
+# when bpy is already in local, we know this is not the initial import...
 if "bpy" in locals():
+    # ...so we need to reload our submodule(s) using importlib
+    import importlib
     for module in reloadable_modules:
         if module in locals():
             importlib.reload(locals()[module])
+else:
+    from .functions import intersect, mesh_modal, object_modal
+    from .mesh import mesh_op_box, mesh_op_circle, mesh_op_lasso
+    from .object import object_op_box, object_op_circle, object_op_lasso
+    from . import global_op, help, keymaps, tools, tools_dummy, ui
+
+
+import bpy
 
 
 def register():
@@ -68,6 +75,8 @@ def register():
     object_op_box.register()
     object_op_circle.register()
     object_op_lasso.register()
+    global_op.register()
+    help.register()
     ui.register()
     tools.register()
     tools_dummy.register()
@@ -81,6 +90,8 @@ def unregister():
     object_op_box.unregister()
     object_op_circle.unregister()
     object_op_lasso.unregister()
+    global_op.unregister()
+    help.unregister()
     ui.unregister()
     tools.unregister()
     tools_dummy.unregister()

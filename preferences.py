@@ -7,5 +7,4 @@ def get_addon_name():
 
 
 def get_preferences():
-    name = get_addon_name()
     return bpy.context.preferences.addons[__package__].preferences
