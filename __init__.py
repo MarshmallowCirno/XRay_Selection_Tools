@@ -20,7 +20,7 @@
 bl_info = {
     "name": "X-Ray Selection Tools",
     "author": "MarshmallowCirno",
-    "version": (3, 0, 1),
+    "version": (3, 1, 0),
     "blender": (2, 83, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Box, lasso and circle selection tools with x-ray",
@@ -35,19 +35,19 @@ reloadable_modules = (
     "intersect",
     "mesh_modal",
     "object_modal",
-    "mesh_op_box",
-    "mesh_op_circle",
-    "mesh_op_lasso",
-    "object_op_box",
-    "object_op_circle",
-    "object_op_lasso",
-    "global_op",
+    "mesh_ot_box",
+    "mesh_ot_circle",
+    "mesh_ot_lasso",
+    "mesh_ot_global",
+    "object_ot_box",
+    "object_ot_circle",
+    "object_ot_lasso",
     "help",
-    "keymaps",
-    "legacy_register",
+    "ot_keymap",
     "tools",
     "tools_dummy",
-    "ui"
+    "tools_keymap",
+    "ui_preferences",
 )
 
 
@@ -60,39 +60,40 @@ if "bpy" in locals():
             importlib.reload(locals()[module])
 else:
     from .functions import intersect, mesh_modal, object_modal
-    from .mesh import mesh_op_box, mesh_op_circle, mesh_op_lasso
-    from .object import object_op_box, object_op_circle, object_op_lasso
-    from . import global_op, help, keymaps, tools, tools_dummy, ui
+    from .mesh import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_global
+    from .object import object_ot_box, object_ot_circle, object_ot_lasso
+    from . import help, ot_keymap, tools, tools_dummy, ui_preferences
 
 
 import bpy
 
 
 def register():
-    mesh_op_box.register()
-    mesh_op_circle.register()
-    mesh_op_lasso.register()
-    object_op_box.register()
-    object_op_circle.register()
-    object_op_lasso.register()
-    global_op.register()
+    mesh_ot_box.register()
+    mesh_ot_circle.register()
+    mesh_ot_lasso.register()
+    mesh_ot_global.register()
+    object_ot_box.register()
+    object_ot_circle.register()
+    object_ot_lasso.register()
     help.register()
-    ui.register()
+    ui_preferences.register()
+    ot_keymap.register()
     tools.register()
     tools_dummy.register()
-    keymaps.register()
 
 
 def unregister():
-    mesh_op_box.unregister()
-    mesh_op_circle.unregister()
-    mesh_op_lasso.unregister()
-    object_op_box.unregister()
-    object_op_circle.unregister()
-    object_op_lasso.unregister()
-    global_op.unregister()
+    mesh_ot_box.unregister()
+    mesh_ot_circle.unregister()
+    mesh_ot_lasso.unregister()
+    mesh_ot_global.unregister()
+    object_ot_box.unregister()
+    object_ot_circle.unregister()
+    object_ot_lasso.unregister()
     help.unregister()
-    ui.unregister()
+    ui_preferences.unregister()
+    ot_keymap.unregister()
+    tools.reset_active_tool()
     tools.unregister()
     tools_dummy.unregister()
-    keymaps.unregister()

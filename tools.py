@@ -1,7 +1,8 @@
 import bpy
 import os
-from .legacy_register import register_tool_fixed, unregister_tool_fixed
+from .functions.legacy_tool_registration import register_tool_legacy, unregister_tool_legacy
 from .preferences import get_preferences
+from .tools_keymap import get_tool_keymap_from_prefs
 
 icon_dir = os.path.join(os.path.dirname(__file__), "icon")
 
@@ -242,41 +243,53 @@ class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
         row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
 
 
+box_tools = (
+    ToolSelectBoxXrayMesh,
+    ToolSelectBoxXrayObject
+)
+circle_tools = (
+    ToolSelectCircleXrayMesh,
+    ToolSelectCircleXrayObject
+)
+lasso_tools = (
+    ToolSelectLassoXrayMesh,
+    ToolSelectLassoXrayObject
+)
+
+
 def register():
+    ToolSelectBoxXrayMesh.bl_keymap = get_tool_keymap_from_prefs("mesh.select_box_xray")
+    ToolSelectBoxXrayObject.bl_keymap = get_tool_keymap_from_prefs("object.select_box_xray")
+
+    ToolSelectCircleXrayMesh.bl_keymap = get_tool_keymap_from_prefs("mesh.select_circle_xray")
+    ToolSelectCircleXrayObject.bl_keymap = get_tool_keymap_from_prefs("object.select_circle_xray")
+
+    ToolSelectLassoXrayMesh.bl_keymap = get_tool_keymap_from_prefs("mesh.select_lasso_xray")
+    ToolSelectLassoXrayObject.bl_keymap = get_tool_keymap_from_prefs("object.select_lasso_xray")
+
     if bpy.app.version < (2, 83, 0):
-        register_tool_fixed(ToolSelectBoxXrayMesh,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectBoxXrayObject,
-                            after={"builtin.select_box"}, separator=False, group=False)
-
-        register_tool_fixed(ToolSelectCircleXrayMesh,
-                            after={"builtin.select_circle"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectCircleXrayObject,
-                            after={"builtin.select_circle"}, separator=False, group=False)
-
-        register_tool_fixed(ToolSelectLassoXrayMesh,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectLassoXrayObject,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
+        for tool in box_tools:
+            register_tool_legacy(tool, after={"builtin.select_box"},
+                                 separator=False, group=False)
+        for tool in circle_tools:
+            register_tool_legacy(tool, after={"builtin.select_circle"},
+                                 separator=False, group=False)
+        for tool in lasso_tools:
+            register_tool_legacy(tool, after={"builtin.select_lasso"},
+                                 separator=False, group=False)
     else:
-        bpy.utils.register_tool(ToolSelectBoxXrayMesh,
-                                after={"builtin.select_box"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectBoxXrayObject,
-                                after={"builtin.select_box"}, separator=False, group=False)
-
-        bpy.utils.register_tool(ToolSelectCircleXrayMesh,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectCircleXrayObject,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-
-        bpy.utils.register_tool(ToolSelectLassoXrayMesh,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectLassoXrayObject,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
+        for tool in box_tools:
+            bpy.utils.register_tool(tool, after={"builtin.select_box"},
+                                    separator=False, group=False)
+        for tool in circle_tools:
+            bpy.utils.register_tool(tool, after={"builtin.select_circle"},
+                                    separator=False, group=False)
+        for tool in lasso_tools:
+            bpy.utils.register_tool(tool, after={"builtin.select_lasso"},
+                                    separator=False, group=False)
 
 
-def unregister():
-    # reset active tool
+def reset_active_tool():
     for workspace in bpy.data.workspaces:
         for screen in workspace.screens:
             for area in screen.areas:
@@ -288,21 +301,13 @@ def unregister():
     cls = ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
     cls._tool_group_active = {"bultin.select": 1}
 
+
+def unregister():
+    import itertools
+
     if bpy.app.version < (2, 83, 0):
-        unregister_tool_fixed(ToolSelectBoxXrayMesh)
-        unregister_tool_fixed(ToolSelectBoxXrayObject)
-
-        unregister_tool_fixed(ToolSelectCircleXrayMesh)
-        unregister_tool_fixed(ToolSelectCircleXrayObject)
-
-        unregister_tool_fixed(ToolSelectLassoXrayMesh)
-        unregister_tool_fixed(ToolSelectLassoXrayObject)
+        for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
+            unregister_tool_legacy(tool)
     else:
-        bpy.utils.unregister_tool(ToolSelectBoxXrayMesh)
-        bpy.utils.unregister_tool(ToolSelectBoxXrayObject)
-
-        bpy.utils.unregister_tool(ToolSelectCircleXrayMesh)
-        bpy.utils.unregister_tool(ToolSelectCircleXrayObject)
-
-        bpy.utils.unregister_tool(ToolSelectLassoXrayMesh)
-        bpy.utils.unregister_tool(ToolSelectLassoXrayObject)
+        for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
+            bpy.utils.unregister_tool(tool)

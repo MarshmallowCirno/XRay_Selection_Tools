@@ -1,7 +1,7 @@
 import bpy
 
 
-def register_tool_fixed(tool_cls, *, after=None, separator=False, group=False): 
+def register_tool_legacy(tool_cls, *, after=None, separator=False, group=False):
     # fix https://developer.blender.org/T60766
     """
     Register a tool in the toolbar.
@@ -127,7 +127,7 @@ def register_tool_fixed(tool_cls, *, after=None, separator=False, group=False):
         tools.extend(tool_def_insert)
 
 
-def unregister_tool_fixed(tool_cls):
+def unregister_tool_legacy(tool_cls):
     # fix https://developer.blender.org/T60766
     space_type = tool_cls.bl_space_type
     context_mode = tool_cls.bl_context_mode

@@ -11,8 +11,9 @@ def draw_select_all_edges_info_popup(self, context):
         "slower than the default selection)."
     lines = textwrap.fill(text, 120)
     lines = lines.splitlines()
+    col = layout.column(align=True)
     for n in lines:
-        layout.label(text=n)
+        col.label(text=n)
 
 
 def draw_select_all_faces_info_popup(self, context):
@@ -24,8 +25,9 @@ def draw_select_all_faces_info_popup(self, context):
         "a selection border (this is slower than the default selection)."
     lines = textwrap.fill(text, 120)
     lines = lines.splitlines()
+    col = layout.column(align=True)
     for n in lines:
-        layout.label(text=n)
+        col.label(text=n)
 
 
 def draw_wait_for_input_cursor_info_popup(self, context):
@@ -35,11 +37,27 @@ def draw_wait_for_input_cursor_info_popup(self, context):
         "starting selection with a hotkey."
     lines = textwrap.fill(text, 120)
     lines = lines.splitlines()
+    col = layout.column(align=True)
     for n in lines:
-        layout.label(text=n)
+        col.label(text=n)
 
 
-class XRAYSEL_PT_show_info_popup(bpy.types.Operator):
+def draw_tools_keymap_info_popup(self, context):
+    layout = self.layout
+    text = \
+        "Tools key modifiers that change selection mode when held down before you use a box, " \
+        "lasso or circle tool in the toolbar. Deactivating selection mode here will remove " \
+        "its shortcut from all xray selection tools. Note that difference and intersect mode " \
+        "don't work with circle selection and their shortcuts won't be added to circle select " \
+        "tool, even if modes are active here."
+    lines = textwrap.fill(text, 120)
+    lines = lines.splitlines()
+    col = layout.column(align=True)
+    for n in lines:
+        col.label(text=n)
+
+
+class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
     bl_idname = "xraysel.show_info_popup"
     bl_label = "Select X-Ray"
 
@@ -55,11 +73,14 @@ class XRAYSEL_PT_show_info_popup(bpy.types.Operator):
         elif self.button == "wait_for_input_cursor":
             context.window_manager.popover(draw_wait_for_input_cursor_info_popup,
                                            ui_units_x=30, keymap=None, from_active_button=True)
+        elif self.button == "tools_keymap":
+            context.window_manager.popover(draw_tools_keymap_info_popup,
+                                           ui_units_x=31, keymap=None, from_active_button=True)
         return {'FINISHED'}
 
 
 classes = (
-    XRAYSEL_PT_show_info_popup,
+    XRAYSEL_OT_show_info_popup,
 )
 
 

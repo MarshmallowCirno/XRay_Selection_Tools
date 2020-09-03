@@ -1,4 +1,4 @@
-from .. preferences import get_preferences
+from ..preferences import get_preferences
 
 
 def gather_overlays(context):

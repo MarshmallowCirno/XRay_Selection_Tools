@@ -1,6 +1,7 @@
 import bpy
 import os
-from .legacy_register import register_tool_fixed, unregister_tool_fixed
+from .functions.legacy_tool_registration import register_tool_legacy, unregister_tool_legacy
+from .tools_keymap import get_tool_keymap_from_prefs
 
 
 icon_dir = os.path.join(os.path.dirname(__file__), "icon")
@@ -40,8 +41,8 @@ class ToolSelectBoxXrayCurve(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-            
-            
+
+
 class ToolSelectBoxXrayArmature(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode = 'EDIT_ARMATURE'
@@ -76,8 +77,8 @@ class ToolSelectBoxXrayArmature(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
-        
+
+
 class ToolSelectBoxXrayMetaball(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode = 'EDIT_METABALL'
@@ -112,8 +113,8 @@ class ToolSelectBoxXrayMetaball(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
-        
+
+
 class ToolSelectBoxXrayLattice(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode = 'EDIT_LATTICE'
@@ -148,8 +149,8 @@ class ToolSelectBoxXrayLattice(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
-        
+
+
 class ToolSelectBoxXrayPose(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode = 'POSE'
@@ -258,7 +259,7 @@ class ToolSelectCircleXrayCurve(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
+
         layout.prop(tool.operator_properties("view3d.select_circle"), "radius")
 
 
@@ -298,7 +299,7 @@ class ToolSelectCircleXrayArmature(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
+
         layout.prop(tool.operator_properties("view3d.select_circle"), "radius")
 
 
@@ -338,7 +339,7 @@ class ToolSelectCircleXrayMetaball(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
+
         layout.prop(tool.operator_properties("view3d.select_circle"), "radius")
 
 
@@ -378,7 +379,7 @@ class ToolSelectCircleXrayLattice(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
+
         layout.prop(tool.operator_properties("view3d.select_circle"), "radius")
 
 
@@ -418,7 +419,7 @@ class ToolSelectCircleXrayPose(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
+
         layout.prop(tool.operator_properties("view3d.select_circle"), "radius")
 
 
@@ -496,8 +497,8 @@ class ToolSelectLassoXrayCurve(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
-        
+
+
 class ToolSelectLassoXrayArmature(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode = 'EDIT_ARMATURE'
@@ -532,8 +533,8 @@ class ToolSelectLassoXrayArmature(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(props, "mode", text="", expand=True, icon_only=True)
-        
-        
+
+
 class ToolSelectLassoXrayMetaball(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode = 'EDIT_METABALL'
@@ -678,127 +679,68 @@ class ToolSelectLassoXrayGrease(bpy.types.WorkSpaceTool):
         row.prop(props, "mode", text="", expand=True, icon_only=True)
 
 
+box_tools = (
+    ToolSelectBoxXrayCurve,
+    ToolSelectBoxXrayArmature,
+    ToolSelectBoxXrayMetaball,
+    ToolSelectBoxXrayLattice,
+    ToolSelectBoxXrayPose,
+    ToolSelectBoxXrayGrease,
+)
+circle_tools = (
+    ToolSelectCircleXrayCurve,
+    ToolSelectCircleXrayArmature,
+    ToolSelectCircleXrayMetaball,
+    ToolSelectCircleXrayLattice,
+    ToolSelectCircleXrayPose,
+    ToolSelectCircleXrayGrease
+)
+lasso_tools = (
+    ToolSelectLassoXrayCurve,
+    ToolSelectLassoXrayArmature,
+    ToolSelectLassoXrayMetaball,
+    ToolSelectLassoXrayLattice,
+    ToolSelectLassoXrayPose,
+    ToolSelectLassoXrayGrease
+)
+
+
 def register():
+    for tool in box_tools:
+        tool.bl_keymap = get_tool_keymap_from_prefs("view3d.select_box")
+    for tool in circle_tools:
+        tool.bl_keymap = get_tool_keymap_from_prefs("view3d.select_circle")
+    for tool in lasso_tools:
+        tool.bl_keymap = get_tool_keymap_from_prefs("view3d.select_lasso")
+
     if bpy.app.version < (2, 83, 0):
-        register_tool_fixed(ToolSelectBoxXrayCurve,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectBoxXrayArmature,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectBoxXrayMetaball,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectBoxXrayLattice,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectBoxXrayPose,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectBoxXrayGrease,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        
-        register_tool_fixed(ToolSelectCircleXrayCurve,
-                            after={"builtin.select_circle"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectCircleXrayArmature,
-                            after={"builtin.select_circle"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectCircleXrayMetaball,
-                            after={"builtin.select_circle"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectCircleXrayLattice,
-                            after={"builtin.select_circle"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectCircleXrayPose,
-                            after={"builtin.select_circle"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectCircleXrayGrease,
-                            after={"builtin.select_box"}, separator=False, group=False)
-        
-        register_tool_fixed(ToolSelectLassoXrayCurve,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectLassoXrayArmature,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectLassoXrayMetaball,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectLassoXrayLattice,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectLassoXrayPose,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
-        register_tool_fixed(ToolSelectLassoXrayGrease,
-                            after={"builtin.select_lasso"}, separator=False, group=False)
+        for tool in box_tools:
+            register_tool_legacy(tool, after={"builtin.select_box"},
+                                 separator=False, group=False)
+        for tool in circle_tools:
+            register_tool_legacy(tool, after={"builtin.select_circle"},
+                                 separator=False, group=False)
+        for tool in lasso_tools:
+            register_tool_legacy(tool, after={"builtin.select_lasso"},
+                                 separator=False, group=False)
     else:
-        bpy.utils.register_tool(ToolSelectBoxXrayCurve,
-                                after={"builtin.select_box"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectBoxXrayArmature,
-                                after={"builtin.select_box"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectBoxXrayMetaball,
-                                after={"builtin.select_box"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectBoxXrayLattice,
-                                after={"builtin.select_box"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectBoxXrayPose,
-                                after={"builtin.select_box"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectBoxXrayGrease,
-                                after={"builtin.select_box"}, separator=False, group=False)
-        
-        bpy.utils.register_tool(ToolSelectCircleXrayCurve,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectCircleXrayArmature,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectCircleXrayMetaball,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectCircleXrayLattice,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectCircleXrayPose,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectCircleXrayGrease,
-                                after={"builtin.select_circle"}, separator=False, group=False)
-        
-        bpy.utils.register_tool(ToolSelectLassoXrayCurve,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectLassoXrayArmature,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectLassoXrayMetaball,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectLassoXrayLattice,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectLassoXrayPose,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
-        bpy.utils.register_tool(ToolSelectLassoXrayGrease,
-                                after={"builtin.select_lasso"}, separator=False, group=False)
+        for tool in box_tools:
+            bpy.utils.register_tool(tool, after={"builtin.select_box"},
+                                    separator=False, group=False)
+        for tool in circle_tools:
+            bpy.utils.register_tool(tool, after={"builtin.select_circle"},
+                                    separator=False, group=False)
+        for tool in lasso_tools:
+            bpy.utils.register_tool(tool, after={"builtin.select_lasso"},
+                                    separator=False, group=False)
 
 
-def unregister():          
+def unregister():
+    import itertools
+
     if bpy.app.version < (2, 83, 0):
-        unregister_tool_fixed(ToolSelectBoxXrayCurve)
-        unregister_tool_fixed(ToolSelectBoxXrayArmature)
-        unregister_tool_fixed(ToolSelectBoxXrayMetaball)        
-        unregister_tool_fixed(ToolSelectBoxXrayLattice)
-        unregister_tool_fixed(ToolSelectBoxXrayPose)
-        unregister_tool_fixed(ToolSelectBoxXrayGrease)
-        
-        unregister_tool_fixed(ToolSelectCircleXrayCurve)
-        unregister_tool_fixed(ToolSelectCircleXrayArmature)
-        unregister_tool_fixed(ToolSelectCircleXrayMetaball)
-        unregister_tool_fixed(ToolSelectCircleXrayLattice)
-        unregister_tool_fixed(ToolSelectCircleXrayPose)
-        unregister_tool_fixed(ToolSelectCircleXrayGrease)
-        
-        unregister_tool_fixed(ToolSelectLassoXrayCurve)
-        unregister_tool_fixed(ToolSelectLassoXrayArmature)
-        unregister_tool_fixed(ToolSelectLassoXrayMetaball)
-        unregister_tool_fixed(ToolSelectLassoXrayLattice)
-        unregister_tool_fixed(ToolSelectLassoXrayPose)
-        unregister_tool_fixed(ToolSelectLassoXrayGrease)
+        for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
+            unregister_tool_legacy(tool)
     else:
-        bpy.utils.unregister_tool(ToolSelectBoxXrayCurve)
-        bpy.utils.unregister_tool(ToolSelectBoxXrayArmature)
-        bpy.utils.unregister_tool(ToolSelectBoxXrayMetaball)        
-        bpy.utils.unregister_tool(ToolSelectBoxXrayLattice)
-        bpy.utils.unregister_tool(ToolSelectBoxXrayPose)
-        bpy.utils.unregister_tool(ToolSelectBoxXrayGrease)
-        
-        bpy.utils.unregister_tool(ToolSelectCircleXrayCurve)
-        bpy.utils.unregister_tool(ToolSelectCircleXrayArmature)
-        bpy.utils.unregister_tool(ToolSelectCircleXrayMetaball)
-        bpy.utils.unregister_tool(ToolSelectCircleXrayLattice)
-        bpy.utils.unregister_tool(ToolSelectCircleXrayPose)
-        bpy.utils.unregister_tool(ToolSelectCircleXrayGrease)
-        
-        bpy.utils.unregister_tool(ToolSelectLassoXrayCurve)
-        bpy.utils.unregister_tool(ToolSelectLassoXrayArmature)
-        bpy.utils.unregister_tool(ToolSelectLassoXrayMetaball)
-        bpy.utils.unregister_tool(ToolSelectLassoXrayLattice)
-        bpy.utils.unregister_tool(ToolSelectLassoXrayPose)
-        bpy.utils.unregister_tool(ToolSelectLassoXrayGrease)
+        for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
+            bpy.utils.unregister_tool(tool)
