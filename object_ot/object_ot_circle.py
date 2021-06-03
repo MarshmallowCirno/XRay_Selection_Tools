@@ -9,6 +9,69 @@ from .. functions.object_modal import *
 from ..functions.object_intersect_circle import select_obs_in_circle
 
 
+fill_vertex_shader = '''
+    in vec2 pos;
+
+    uniform mat4 u_ViewProjectionMatrix;
+    uniform float u_X;
+    uniform float u_Y;
+
+    void main()
+    {
+        gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
+    }
+'''
+fill_fragment_shader = '''
+    out vec4 fragColor;
+
+    uniform vec4 u_FillColor;
+
+    void main()
+    {
+        fragColor = u_FillColor;
+    }
+'''
+border_vertex_shader = '''
+    in vec2 pos;
+    in float len;
+    out float v_Len;
+
+    uniform mat4 u_ViewProjectionMatrix;
+    uniform float u_X;
+    uniform float u_Y;
+
+    void main()
+    {
+        v_Len = len;
+        gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
+    }
+'''
+border_fragment_shader = '''
+    in float v_Len;
+    out vec4 fragColor;
+
+    uniform vec4 u_SegmentColor;
+    uniform vec4 u_GapColor;
+    uniform bvec4 u_Dashed;
+
+    float dash_size = 2;
+    float gap_size = 2;
+    vec4 col = u_SegmentColor;
+
+    void main()
+    {
+         if (u_Dashed == true)
+            if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
+                col = u_GapColor;
+
+        fragColor = col;
+    }
+'''
+border_shader = gpu.types.GPUShader(border_vertex_shader, border_fragment_shader)
+fill_shader = gpu.types.GPUShader(fill_vertex_shader, fill_fragment_shader)
+
+
+# noinspection PyTypeChecker
 class OBJECT_OT_select_circle_xray(bpy.types.Operator):
     """Select items using circle selection with x-ray"""
     bl_idname = "object.select_circle_xray"
@@ -118,74 +181,12 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         self.xray_toggle_key_list = get_xray_toggle_key_list()
 
         self.handler = None
-        self.border_shader = None
         self.border_batch = None
         self.shadow_batch = None
-        self.fill_shader = None
         self.fill_batch = None
         self.unif_segment_color = None
         self.unif_gap_color = None
         self.unif_fill_color = None
-
-        self.border_vertex_shader = '''
-            in vec2 pos;
-            in float len;
-            out float v_Len;
-
-            uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-
-            void main()
-            {
-                v_Len = len;
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
-            }
-        '''
-        self.border_fragment_shader = '''
-            in float v_Len;
-            out vec4 fragColor;
-
-            uniform vec4 u_SegmentColor;
-            uniform vec4 u_GapColor;
-            uniform bvec4 u_Dashed;
-
-            float dash_size = 2;
-            float gap_size = 2;
-            vec4 col = u_SegmentColor;
-
-            void main()
-            {
-                 if (u_Dashed == true)
-                    if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
-                        col = u_GapColor;
-
-                fragColor = col;
-            }
-        '''
-
-        self.fill_vertex_shader = '''
-            in vec2 pos;
-
-            uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-
-            void main()
-            {
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
-            }
-        '''
-        self.fill_fragment_shader = '''
-            out vec4 fragColor;
-
-            uniform vec4 u_FillColor;
-
-            void main()
-            {
-                fragColor = u_FillColor;
-            }
-        '''
 
     def invoke(self, context, event):
         set_properties(self, tool=1)
@@ -390,19 +391,17 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         segment = (Vector(vertices[0]) - Vector(vertices[1])).length
         lengths = [segment * i for i in range(32)]
 
-        self.border_shader = gpu.types.GPUShader(self.border_vertex_shader, self.border_fragment_shader)
-        self.unif_segment_color = self.border_shader.uniform_from_name("u_SegmentColor")
-        self.unif_gap_color = self.border_shader.uniform_from_name("u_GapColor")
-        self.border_batch = batch_for_shader(self.border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.unif_segment_color = border_shader.uniform_from_name("u_SegmentColor")
+        self.unif_gap_color = border_shader.uniform_from_name("u_GapColor")
+        self.border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         shadow_vertices = self.get_circle_verts_orig(self.radius - 1)
-        self.shadow_batch = batch_for_shader(self.border_shader, 'LINE_STRIP', {"pos": shadow_vertices, "len": lengths})
+        self.shadow_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": shadow_vertices, "len": lengths})
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_shader = gpu.types.GPUShader(self.fill_vertex_shader, self.fill_fragment_shader)
-        self.unif_fill_color = self.fill_shader.uniform_from_name("u_FillColor")
-        self.fill_batch = batch_for_shader(self.fill_shader, 'TRI_FAN', {"pos": vertices})
+        self.unif_fill_color = fill_shader.uniform_from_name("u_FillColor")
+        self.fill_batch = batch_for_shader(fill_shader, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -414,44 +413,44 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         if self.behavior == 'CONTAIN':
             # fill
             glEnable(GL_BLEND)
-            self.fill_shader.bind()
-            self.fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.fill_shader.uniform_float("u_X", self.last_mouse_region_x)
-            self.fill_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            self.fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
-            self.fill_batch.draw(self.fill_shader)
+            fill_shader.bind()
+            fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            fill_shader.uniform_float("u_X", self.last_mouse_region_x)
+            fill_shader.uniform_float("u_Y", self.last_mouse_region_y)
+            fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
+            self.fill_batch.draw(fill_shader)
             glDisable(GL_BLEND)
 
             # solid circle shadow
-            self.border_shader.bind()
-            self.border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.border_shader.uniform_float("u_X", self.last_mouse_region_x)
-            self.border_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            self.border_shader.uniform_bool("u_Dashed", (0, 0, 0, 0))
-            self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *shadow_color), 4)
-            self.shadow_batch.draw(self.border_shader)
+            border_shader.bind()
+            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_shader.uniform_float("u_X", self.last_mouse_region_x)
+            border_shader.uniform_float("u_Y", self.last_mouse_region_y)
+            border_shader.uniform_bool("u_Dashed", (0, 0, 0, 0))
+            border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *shadow_color), 4)
+            self.shadow_batch.draw(border_shader)
             # solid circle
-            self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
-            self.border_batch.draw(self.border_shader)
+            border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+            self.border_batch.draw(border_shader)
         else:
             glEnable(GL_BLEND)
-            self.fill_shader.bind()
-            self.fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.fill_shader.uniform_float("u_X", self.last_mouse_region_x)
-            self.fill_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            self.fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
-            self.fill_batch.draw(self.fill_shader)
+            fill_shader.bind()
+            fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            fill_shader.uniform_float("u_X", self.last_mouse_region_x)
+            fill_shader.uniform_float("u_Y", self.last_mouse_region_y)
+            fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
+            self.fill_batch.draw(fill_shader)
             glDisable(GL_BLEND)
 
             # dashed circle
-            self.border_shader.bind()
-            self.border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.border_shader.uniform_float("u_X", self.last_mouse_region_x)
-            self.border_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            self.border_shader.uniform_bool("u_Dashed", (1, 1, 1, 1))
-            self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
-            self.border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
-            self.border_batch.draw(self.border_shader)
+            border_shader.bind()
+            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_shader.uniform_float("u_X", self.last_mouse_region_x)
+            border_shader.uniform_float("u_Y", self.last_mouse_region_y)
+            border_shader.uniform_bool("u_Dashed", (1, 1, 1, 1))
+            border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+            border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
+            self.border_batch.draw(border_shader)
 
 
 classes = (

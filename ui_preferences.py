@@ -2,9 +2,9 @@ import bpy
 import textwrap
 import rna_keymap_ui
 from .ot_keymap import me_keyboard_keymap, me_mouse_keymap, ob_keyboard_keymap, ob_mouse_keymap, \
-    select_through_toggle_keymap
-from .ot_keymap import toggle_me_keyboard_keymap, toggle_me_mouse_keymap, \
-    toggle_ob_keyboard_keymap, toggle_ob_mouse_keymap, toggle_select_through_toggle_keymap
+    toggles_keymap
+from .ot_keymap import toggle_me_keyboard_keymap, toggle_me_mouse_keymap, toggle_ob_keyboard_keymap, \
+    toggle_ob_mouse_keymap, toggle_toggles_keymap
 from .tools_keymap import populate_prefs_keymaps_of_tools, update_keymaps_of_tools
 from .preferences import get_preferences
 
@@ -232,11 +232,11 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         update=toggle_ob_mouse_keymap,
         default=False
     )
-    enable_select_through_toggle_keymap: bpy.props.BoolProperty(
-        name="Select Through Toggle for All Tools",
+    enable_toggles_keymap: bpy.props.BoolProperty(
+        name="Preferences Toggles Shortcuts",
         description="Activate to add shortcuts to blender keymap, deactivate to remove "
                     "shortcuts from blender keymap",
-        update=toggle_select_through_toggle_keymap,
+        update=toggle_toggles_keymap,
         default=False
     )
 
@@ -382,7 +382,6 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         row.prop(self, "ob_show_lasso_icon", text="Show Lasso Icon", icon='RESTRICT_SELECT_OFF')
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"
 
-
     def draw_adv_keymap(self, box):
         col = box.column()
 
@@ -435,13 +434,13 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             self.draw_keymap_items(kmi_col, "Object Mode", ob_mouse_keymap, {'MOUSE', 'TWEAK'}, True)
 
         km_col = col.column(align=True)
-        icon = 'CHECKBOX_HLT' if self.enable_select_through_toggle_keymap else 'CHECKBOX_DEHLT'
-        km_col.prop(self, "enable_select_through_toggle_keymap",
-                    text="Select Through Toggle for All Tools", icon=icon)
-        if self.enable_select_through_toggle_keymap:
+        icon = 'CHECKBOX_HLT' if self.enable_toggles_keymap else 'CHECKBOX_DEHLT'
+        km_col.prop(self, "enable_toggles_keymap",
+                    text="Preferences Toggles Shortcuts", icon=icon)
+        if self.enable_toggles_keymap:
             sub_box = km_col.box()
             kmi_col = sub_box.column(align=True)
-            self.draw_keymap_items(kmi_col, "Mesh", select_through_toggle_keymap, {'MOUSE', 'TWEAK', 'KEYBOARD'}, True)
+            self.draw_keymap_items(kmi_col, "Mesh", toggles_keymap, {'MOUSE', 'TWEAK', 'KEYBOARD'}, True)
 
         # Tool Modifier Keys
         box.separator()

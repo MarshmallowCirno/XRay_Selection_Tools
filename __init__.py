@@ -20,7 +20,7 @@
 bl_info = {
     "name": "X-Ray Selection Tools",
     "author": "MarshmallowCirno",
-    "version": (4, 0, 0),
+    "version": (4, 0, 1),
     "blender": (2, 92, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Box, lasso and circle selection tools with x-ray",

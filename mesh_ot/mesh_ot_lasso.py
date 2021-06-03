@@ -13,6 +13,90 @@ from ..functions.mesh_intersect import select_mesh_elems
 from ..functions.polygon_tests import polygon_bbox
 
 
+icon_vertex_shader = '''
+    in vec2 pos;
+
+    uniform mat4 u_ViewProjectionMatrix;
+    uniform float u_X;
+    uniform float u_Y;
+    uniform float u_Scale;
+
+    void main() 
+    { 
+        gl_Position = u_ViewProjectionMatrix  * vec4(pos.x * u_Scale + u_X, 
+        pos.y * u_Scale + u_Y, 0.0f, 1.0f); 
+    } 
+'''
+icon_fragment_shader = '''
+    out vec4 fragColor;
+
+    uniform vec4 u_SegmentColor;
+
+    void main()
+    {
+        fragColor = u_SegmentColor;
+    }
+'''
+fill_vertex_shader = '''
+    in vec2 pos;
+
+    uniform mat4 u_ViewProjectionMatrix;
+    uniform float u_X;
+    uniform float u_Y;
+
+    void main()
+    {
+        gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
+    }
+'''
+fill_fragment_shader = '''
+    out vec4 fragColor;
+
+    uniform vec4 u_FillColor;
+
+    void main()
+    {
+        fragColor = u_FillColor;
+    }
+'''
+border_vertex_shader = '''
+    in vec2 pos;
+    in float len;
+    out float v_Len;
+
+    uniform mat4 u_ViewProjectionMatrix;
+
+    void main()
+    {
+        v_Len = len;
+        gl_Position = u_ViewProjectionMatrix * vec4(pos.x, pos.y, 0.0f, 1.0f);
+    }
+'''
+border_fragment_shader = '''
+    in float v_Len;
+    out vec4 fragColor;
+
+    uniform vec4 u_SegmentColor;
+    uniform vec4 u_GapColor;
+
+    float dash_size = 1;
+    float gap_size = 1;
+    vec4 col = u_SegmentColor;
+
+    void main()
+    {
+        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
+           col = u_GapColor;
+
+        fragColor = col;
+    }
+'''
+icon_shader = gpu.types.GPUShader(icon_vertex_shader, icon_fragment_shader)
+fill_shader = gpu.types.GPUShader(fill_vertex_shader, fill_fragment_shader)
+border_shader = gpu.types.GPUShader(border_vertex_shader, border_fragment_shader)
+
+
+# noinspection PyTypeChecker
 class MESH_OT_select_lasso_xray(bpy.types.Operator):
     """Select items using lasso selection with x-ray"""
     bl_idname = "mesh.select_lasso_xray"
@@ -180,92 +264,10 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         self.select_through_toggle_key_list = get_select_through_toggle_key_list()
 
         self.handler = None
-        self.icon_shader = None
         self.icon_batch = None
-        self.border_shader = None
-        self.fill_shader = None
         self.unif_segment_color = None
         self.unif_gap_color = None
         self.unif_fill_color = None
-
-        self.icon_vertex_shader = '''
-            in vec2 pos;
-
-            uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-            uniform float u_Scale;
-
-            void main() 
-            { 
-                gl_Position = u_ViewProjectionMatrix  * vec4(pos.x * u_Scale + u_X, 
-                pos.y * u_Scale + u_Y, 0.0f, 1.0f); 
-            } 
-        '''
-        self.icon_fragment_shader = '''
-            out vec4 fragColor;
-
-            uniform vec4 u_SegmentColor;
-
-            void main()
-            {
-                fragColor = u_SegmentColor;
-            }
-        '''
-        self.border_vertex_shader = '''
-            in vec2 pos;
-            in float len;
-            out float v_Len;
-    
-            uniform mat4 u_ViewProjectionMatrix;
-    
-            void main()
-            {
-                v_Len = len;
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x, pos.y, 0.0f, 1.0f);
-            }
-        '''
-        self.border_fragment_shader = '''
-            in float v_Len;
-            out vec4 fragColor;
-    
-            uniform vec4 u_SegmentColor;
-            uniform vec4 u_GapColor;
-    
-            float dash_size = 1;
-            float gap_size = 1;
-            vec4 col = u_SegmentColor;
-
-            void main()
-            {
-                if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
-                   col = u_GapColor;
-    
-                fragColor = col;
-            }
-        '''
-        self.fill_vertex_shader = '''
-            in vec2 pos;
-
-            uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-
-            void main()
-            {
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
-            }
-        '''
-        self.fill_fragment_shader = '''
-            out vec4 fragColor;
-
-            uniform vec4 u_FillColor;
-
-            void main()
-            {
-                fragColor = u_FillColor;
-            }
-        '''
 
     def invoke(self, context, event):
         set_properties(self, tool=2)
@@ -469,9 +471,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        self.icon_shader = gpu.types.GPUShader(self.icon_vertex_shader, self.icon_fragment_shader)
-        self.unif_segment_color = self.icon_shader.uniform_from_name("u_SegmentColor")
-        self.icon_batch = batch_for_shader(self.icon_shader, 'LINES', {"pos": vertices})
+        self.unif_segment_color = icon_shader.uniform_from_name("u_SegmentColor")
+        self.icon_batch = batch_for_shader(icon_shader, 'LINES', {"pos": vertices})
 
     def draw_icon_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -480,20 +481,18 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         else:
             segment_color = (*self.default_color, 1)
 
-        self.icon_shader.bind()
-        self.icon_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.icon_shader.uniform_float("u_X", self.last_mouse_region_x)
-        self.icon_shader.uniform_float("u_Y", self.last_mouse_region_y)
-        self.icon_shader.uniform_float("u_Scale", 25)
-        self.icon_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
-        self.icon_batch.draw(self.icon_shader)
+        icon_shader.bind()
+        icon_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        icon_shader.uniform_float("u_X", self.last_mouse_region_x)
+        icon_shader.uniform_float("u_Y", self.last_mouse_region_y)
+        icon_shader.uniform_float("u_Scale", 25)
+        icon_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+        self.icon_batch.draw(icon_shader)
 
     def build_lasso_shader(self):
-        self.border_shader = gpu.types.GPUShader(self.border_vertex_shader, self.border_fragment_shader)
-        self.fill_shader = gpu.types.GPUShader(self.fill_vertex_shader, self.fill_fragment_shader)
-        self.unif_segment_color = self.border_shader.uniform_from_name("u_SegmentColor")
-        self.unif_gap_color = self.border_shader.uniform_from_name("u_GapColor")
-        self.unif_fill_color = self.fill_shader.uniform_from_name("u_FillColor")
+        self.unif_segment_color = border_shader.uniform_from_name("u_SegmentColor")
+        self.unif_gap_color = border_shader.uniform_from_name("u_GapColor")
+        self.unif_fill_color = fill_shader.uniform_from_name("u_FillColor")
 
     def draw_lasso_shader(self):
         # create batches
@@ -509,9 +508,9 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                          (self.lasso_xmax, self.lasso_ymin),
                          (self.lasso_xmax, self.lasso_ymax))
 
-        border_batch = batch_for_shader(self.border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
-        fill_batch = batch_for_shader(self.fill_shader, 'TRI_FAN', {"pos": vertices})
-        stencil_batch = batch_for_shader(self.fill_shader, 'TRI_FAN', {"pos": bbox_vertices})
+        border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        fill_batch = batch_for_shader(fill_shader, 'TRI_FAN', {"pos": vertices})
+        stencil_batch = batch_for_shader(fill_shader, 'TRI_FAN', {"pos": bbox_vertices})
 
         matrix = gpu.matrix.get_projection_matrix()
         if self.select_through:
@@ -530,26 +529,26 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         glStencilFunc(GL_ALWAYS, 0, 1)
         glStencilOp(GL_KEEP, GL_KEEP, GL_INVERT)
         glStencilMask(1)
-        self.fill_shader.bind()
-        self.fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
-        fill_batch.draw(self.fill_shader)
+        fill_shader.bind()
+        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
+        fill_batch.draw(fill_shader)
         glStencilFunc(GL_EQUAL, 1, 1)
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP)
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)
 
         # fill
         glEnable(GL_BLEND)
-        stencil_batch.draw(self.fill_shader)
+        stencil_batch.draw(fill_shader)
         glDisable(GL_BLEND)
         glDisable(GL_STENCIL_TEST)
 
         # dashed lasso
-        self.border_shader.bind()
-        self.border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
-        self.border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
-        border_batch.draw(self.border_shader)
+        border_shader.bind()
+        border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+        border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
+        border_batch.draw(border_shader)
 
 
 classes = (

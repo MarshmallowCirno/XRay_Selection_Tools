@@ -7,6 +7,109 @@ from ..functions.mesh_intersect import select_mesh_elems
 from ..functions.mesh_modal import *
 
 
+# https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
+# https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
+crosshair_vertex_shader = '''
+    in vec2 pos;
+    in float len;
+    out float v_Len;
+
+    uniform mat4 u_ViewProjectionMatrix;
+    uniform float u_X;
+    uniform float u_Y;
+
+    void main()
+    {
+        v_Len = len;
+        gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
+    }
+'''
+crosshair_fragment_shader = '''
+    in float v_Len;
+    out vec4 fragColor;
+
+    uniform vec4 u_SegmentColor;
+    uniform vec4 u_GapColor;
+
+    float dash_size = 4;
+    float gap_size = 4;
+    vec4 col = u_SegmentColor;
+
+    void main()
+    {
+        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
+            col = u_GapColor;
+
+        fragColor = col;
+    }
+'''
+fill_vertex_shader = '''
+    in vec2 pos;
+
+    uniform mat4 u_ViewProjectionMatrix;
+    uniform float u_X;
+    uniform float u_Y;
+    uniform float u_Height;
+    uniform float u_Width;
+
+    void main()
+    {
+        gl_Position = u_ViewProjectionMatrix * vec4(pos.x * u_Width + u_X, 
+        pos.y * u_Height + u_Y, 0.0f, 1.0f);
+    }
+'''
+fill_fragment_shader = '''
+    out vec4 fragColor;
+
+    uniform vec4 u_FillColor;
+
+    void main()
+    {
+        fragColor = u_FillColor;
+    }
+'''
+border_vertex_shader = '''
+    in vec2 pos;
+    in vec2 len;
+    out float v_Len;
+
+    uniform mat4 u_ViewProjectionMatrix;
+    uniform float u_X;
+    uniform float u_Y;
+    uniform float u_Height;
+    uniform float u_Width;
+
+    void main()
+    {
+        v_Len = len.x * u_Width + len.y * u_Height;
+        gl_Position = u_ViewProjectionMatrix * vec4(pos.x * u_Width + u_X, 
+        pos.y * u_Height + u_Y, 0.0f, 1.0f);
+    }
+'''
+border_fragment_shader = '''
+    in float v_Len;
+    out vec4 fragColor;
+
+    uniform vec4 u_SegmentColor;
+    uniform vec4 u_GapColor;
+
+    float dash_size = 4;
+    float gap_size = 4;
+    vec4 col = u_SegmentColor;
+
+    void main()
+    {
+        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
+            col = u_GapColor;
+        fragColor = col;
+    }
+'''
+crosshair_shader = gpu.types.GPUShader(crosshair_vertex_shader, crosshair_fragment_shader)
+fill_shader = gpu.types.GPUShader(fill_vertex_shader, fill_fragment_shader)
+border_shader = gpu.types.GPUShader(border_vertex_shader, border_fragment_shader)
+
+
+# noinspection PyTypeChecker
 class MESH_OT_select_box_xray(bpy.types.Operator):
     """Select items using box selection with x-ray"""
     bl_idname = "mesh.select_box_xray"
@@ -169,113 +272,12 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.select_through_toggle_key_list = get_select_through_toggle_key_list()
 
         self.handler = None
-        self.crosshair_shader = None
         self.crosshair_batch = None
-        self.border_shader = None
         self.border_batch = None
-        self.fill_shader = None
         self.fill_batch = None
         self.unif_segment_color = None
         self.unif_gap_color = None
         self.unif_fill_color = None
-
-        # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
-        # https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
-        self.crosshair_vertex_shader = '''
-            in vec2 pos;
-            in float len;
-            out float v_Len;
-            
-            uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-
-            void main()
-            {
-                v_Len = len;
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
-            }
-        '''
-        self.crosshair_fragment_shader = '''
-            in float v_Len;
-            out vec4 fragColor;
-            
-            uniform vec4 u_SegmentColor;
-            uniform vec4 u_GapColor;
-            
-            float dash_size = 4;
-            float gap_size = 4;
-            vec4 col = u_SegmentColor;
-
-            void main()
-            {
-                if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
-                    col = u_GapColor;
-                    
-                fragColor = col;
-            }
-        '''
-        self.border_vertex_shader = '''
-            in vec2 pos;
-            in vec2 len;
-            out float v_Len;
-
-            uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-            uniform float u_Height;
-            uniform float u_Width;
-
-            void main()
-            {
-                v_Len = len.x * u_Width + len.y * u_Height;
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x * u_Width + u_X, 
-                pos.y * u_Height + u_Y, 0.0f, 1.0f);
-            }
-        '''
-        self.border_fragment_shader = '''
-            in float v_Len;
-            out vec4 fragColor;
-
-            uniform vec4 u_SegmentColor;
-            uniform vec4 u_GapColor;
-            
-            float dash_size = 4;
-            float gap_size = 4;
-            vec4 col = u_SegmentColor;
-
-            void main()
-            {
-                if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
-                    col = u_GapColor;
-                fragColor = col;
-            }
-        '''
-        self.fill_vertex_shader = '''
-            in vec2 pos;
-
-            uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-            uniform float u_Height;
-            uniform float u_Width;
-
-            void main()
-            {
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x * u_Width + u_X, 
-                pos.y * u_Height + u_Y, 0.0f, 1.0f);
-            }
-        '''
-        self.fill_fragment_shader = '''
-            out vec4 fragColor;
-
-            uniform vec4 u_FillColor;
-            
-            void main()
-            {
-                fragColor = u_FillColor;
-            }
-        '''
 
     def invoke(self, context, event):
         set_properties(self, tool=0)
@@ -484,10 +486,9 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                     (width, 0))
         lengths = (0, 2 * height, 0, 2 * width)
 
-        self.crosshair_shader = gpu.types.GPUShader(self.crosshair_vertex_shader, self.crosshair_fragment_shader)
-        self.crosshair_batch = batch_for_shader(self.crosshair_shader, 'LINES', {"pos": vertices, "len": lengths})
-        self.unif_segment_color = self.crosshair_shader.uniform_from_name("u_SegmentColor")
-        self.unif_gap_color = self.crosshair_shader.uniform_from_name("u_GapColor")
+        self.crosshair_batch = batch_for_shader(crosshair_shader, 'LINES', {"pos": vertices, "len": lengths})
+        self.unif_segment_color = crosshair_shader.uniform_from_name("u_SegmentColor")
+        self.unif_gap_color = crosshair_shader.uniform_from_name("u_GapColor")
 
     def draw_crosshair_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -497,26 +498,26 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
             segment_color = (*self.default_color, 1)
         gap_color = (0.0, 0.0, 0.0, 1.0)
 
-        self.crosshair_shader.bind()
-        self.crosshair_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.crosshair_shader.uniform_float("u_X", self.last_mouse_region_x)
-        self.crosshair_shader.uniform_float("u_Y", self.last_mouse_region_y)
-        self.crosshair_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
-        self.crosshair_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
-        self.crosshair_batch.draw(self.crosshair_shader)
+        crosshair_shader.bind()
+        crosshair_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        crosshair_shader.uniform_float("u_X", self.last_mouse_region_x)
+        crosshair_shader.uniform_float("u_Y", self.last_mouse_region_y)
+        crosshair_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+        crosshair_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
+        self.crosshair_batch.draw(crosshair_shader)
 
     def build_box_shader(self):
         vertices = ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0))
         lengths = ((0, 0), (1, 0), (1, 1), (2, 1), (2, 2))
-        self.border_shader = gpu.types.GPUShader(self.border_vertex_shader, self.border_fragment_shader)
-        self.border_batch = batch_for_shader(self.border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
-        self.unif_segment_color = self.border_shader.uniform_from_name("u_SegmentColor")
-        self.unif_gap_color = self.border_shader.uniform_from_name("u_GapColor")
+
+        self.border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.unif_segment_color = border_shader.uniform_from_name("u_SegmentColor")
+        self.unif_gap_color = border_shader.uniform_from_name("u_GapColor")
 
         vertices = ((0, 0), (1, 0), (0, 1), (1, 1))
-        self.fill_shader = gpu.types.GPUShader(self.fill_vertex_shader, self.fill_fragment_shader)
-        self.fill_batch = batch_for_shader(self.fill_shader, 'TRI_STRIP', {"pos": vertices})
-        self.unif_fill_color = self.fill_shader.uniform_from_name("u_FillColor")
+
+        self.fill_batch = batch_for_shader(fill_shader, 'TRI_STRIP', {"pos": vertices})
+        self.unif_fill_color = fill_shader.uniform_from_name("u_FillColor")
 
     def draw_box_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -532,25 +533,25 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         height = self.last_mouse_region_y - self.start_mouse_region_y
 
         glEnable(GL_BLEND)
-        self.fill_shader.bind()
-        self.fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.fill_shader.uniform_float("u_X", self.start_mouse_region_x)
-        self.fill_shader.uniform_float("u_Y", self.start_mouse_region_y)
-        self.fill_shader.uniform_float("u_Height", height)
-        self.fill_shader.uniform_float("u_Width", width)
-        self.fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
-        self.fill_batch.draw(self.fill_shader)
+        fill_shader.bind()
+        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        fill_shader.uniform_float("u_X", self.start_mouse_region_x)
+        fill_shader.uniform_float("u_Y", self.start_mouse_region_y)
+        fill_shader.uniform_float("u_Height", height)
+        fill_shader.uniform_float("u_Width", width)
+        fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
+        self.fill_batch.draw(fill_shader)
         glDisable(GL_BLEND)
 
-        self.border_shader.bind()
-        self.border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.border_shader.uniform_float("u_X", self.start_mouse_region_x)
-        self.border_shader.uniform_float("u_Y", self.start_mouse_region_y)
-        self.border_shader.uniform_float("u_Height", height)
-        self.border_shader.uniform_float("u_Width", width)
-        self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
-        self.border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
-        self.border_batch.draw(self.border_shader)
+        border_shader.bind()
+        border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        border_shader.uniform_float("u_X", self.start_mouse_region_x)
+        border_shader.uniform_float("u_Y", self.start_mouse_region_y)
+        border_shader.uniform_float("u_Height", height)
+        border_shader.uniform_float("u_Width", width)
+        border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+        border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
+        self.border_batch.draw(border_shader)
 
 
 classes = (

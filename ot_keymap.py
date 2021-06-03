@@ -6,7 +6,7 @@ me_keyboard_keymap = []
 me_mouse_keymap = []
 ob_keyboard_keymap = []
 ob_mouse_keymap = []
-select_through_toggle_keymap = []
+toggles_keymap = []
 
 
 def register_me_keyboard_keymap():
@@ -103,13 +103,16 @@ def register_ob_mouse_keymap():
         ob_mouse_keymap.append((km, kmi))
 
 
-def register_select_through_toggle_keymap():
+def register_toggles_keymap():
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
         km = kc.keymaps.new(name="Mesh", space_type='EMPTY')
 
+        kmi = km.keymap_items.new("mesh.select_tools_xray_toggle_mesh_behavior", 'X', 'PRESS', ctrl=True, shift=True)
+        toggles_keymap.append((km, kmi))
+
         kmi = km.keymap_items.new("mesh.select_tools_xray_toggle_select_through", 'X', 'PRESS', ctrl=True, alt=True)
-        select_through_toggle_keymap.append((km, kmi))
+        toggles_keymap.append((km, kmi))
 
 
 def unregister_me_keyboard_keymap():
@@ -136,10 +139,10 @@ def unregister_ob_mouse_keymap():
     ob_mouse_keymap.clear()
 
 
-def unregister_select_through_toggle_keymap():
-    for km, kmi in select_through_toggle_keymap:
+def unregister_toggles_keymap():
+    for km, kmi in toggles_keymap:
         km.keymap_items.remove(kmi)
-    select_through_toggle_keymap.clear()
+    toggles_keymap.clear()
 
 
 def toggle_me_keyboard_keymap(self, context):
@@ -170,11 +173,11 @@ def toggle_ob_mouse_keymap(self, context):
         unregister_ob_mouse_keymap()
 
 
-def toggle_select_through_toggle_keymap(self, context):
-    if get_preferences().enable_select_through_toggle_keymap:
-        register_select_through_toggle_keymap()
+def toggle_toggles_keymap(self, context):
+    if get_preferences().enable_toggles_keymap:
+        register_toggles_keymap()
     else:
-        unregister_select_through_toggle_keymap()
+        unregister_toggles_keymap()
 
 
 def register():
@@ -186,8 +189,8 @@ def register():
         register_ob_mouse_keymap()
     if get_preferences().enable_ob_keyboard_keymap:
         register_ob_keyboard_keymap()
-    if get_preferences().enable_select_through_toggle_keymap:
-        register_select_through_toggle_keymap()
+    if get_preferences().enable_toggles_keymap:
+        register_toggles_keymap()
 
 
 def unregister():
@@ -195,4 +198,4 @@ def unregister():
     unregister_me_keyboard_keymap()
     unregister_ob_mouse_keymap()
     unregister_ob_keyboard_keymap()
-    unregister_select_through_toggle_keymap()
+    unregister_toggles_keymap()
