@@ -107,7 +107,7 @@ def sync_properties(self, context):
         self.select_through = True
 
 
-def set_properties(self):
+def set_properties(self, tool):
     if not self.override_global_props:
         self.select_through = get_preferences().me_select_through
         self.select_through_toggle_key = get_preferences().me_select_through_toggle_key
@@ -119,8 +119,10 @@ def set_properties(self):
         self.select_all_faces = get_preferences().me_select_all_faces
         self.hide_mirror = get_preferences().me_hide_mirror
         self.hide_solidify = get_preferences().me_hide_solidify
-        self.show_crosshair = get_preferences().me_show_crosshair
-        self.show_lasso_icon = get_preferences().me_show_lasso_icon
+        if tool == 0:
+            self.show_crosshair = get_preferences().me_show_crosshair
+        elif tool == 2:
+            self.show_lasso_icon = get_preferences().me_show_lasso_icon
 
 
 def update_shader_color(self, context):

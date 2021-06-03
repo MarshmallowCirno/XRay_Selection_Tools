@@ -48,10 +48,16 @@ def sync_properties(self, context):
         self.show_xray = True
 
 
-def set_properties(self):
+def set_properties(self, tool):
     if not self.override_global_props:
         self.show_xray = get_preferences().ob_show_xray
         self.xray_toggle_key = get_preferences().ob_xray_toggle_key
         self.xray_toggle_type = get_preferences().ob_xray_toggle_type
-        self.show_crosshair = get_preferences().ob_show_crosshair
-        self.show_lasso_icon = get_preferences().ob_show_lasso_icon
+        if tool == 0:
+            self.show_crosshair = get_preferences().ob_show_crosshair
+            self.behavior = self.curr_behavior = get_preferences().ob_box_select_behavior
+        elif tool == 1:
+            self.behavior = self.curr_behavior = get_preferences().ob_circle_select_behavior
+        else:
+            self.show_lasso_icon = get_preferences().ob_show_lasso_icon
+            self.behavior = self.curr_behavior = get_preferences().ob_lasso_select_behavior

@@ -5,9 +5,12 @@ from struct import pack
 from math import hypot
 from mathutils import Vector
 from gpu_extras.batch import batch_for_shader
-from bgl import glEnable, glDisable, GL_BLEND
-from .. functions.object_modal import *
+from bgl import glEnable, glDisable, glClear, glLineWidth, glColorMask, glStencilOp, glStencilMask, glStencilFunc, \
+    GL_FALSE, GL_TRUE, GL_ALWAYS, GL_EQUAL, GL_KEEP, GL_INVERT, GL_STENCIL_BUFFER_BIT, GL_STENCIL_TEST, GL_BLEND
+from ..functions.object_modal import *
 from ..icon.lasso_cursor import lasso_cursor
+from ..functions.object_intersect_lasso import select_obs_in_lasso
+from ..functions.polygon_tests import polygon_bbox
 
 
 class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
@@ -92,6 +95,17 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         default=True,
         options={'SKIP_SAVE'}
     )
+    behavior: bpy.props.EnumProperty(
+        name="Lasso Select Behavior",
+        description="Toggle x-ray by holding this key",
+        items=[('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
+               ('CONTAIN', "Contain", "Select only the objects fully contained in lasso", 'STICKY_UVS_LOC', 2),
+               ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
+               ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select "
+                                              "overlapped", 'UV_SYNC_SELECT', 4)
+               ],
+        default='ORIGIN'
+    )
 
     @classmethod
     def poll(cls, context):
@@ -101,6 +115,13 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.path = None
         self.stage = None
         self.curr_mode = self.mode
+        self.curr_behavior = self.behavior
+
+        self.lasso_poly = []
+        self.lasso_xmin = 0
+        self.lasso_xmax = 0
+        self.lasso_ymin = 0
+        self.lasso_ymax = 0
 
         self.last_mouse_region_x = 0
         self.last_mouse_region_y = 0
@@ -109,6 +130,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
         self.override_wait_for_input = True
         self.override_selection = False
+        self.override_intersect_tests = False
 
         self.xray_toggle_key_list = get_xray_toggle_key_list()
 
@@ -116,11 +138,10 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.icon_shader = None
         self.icon_batch = None
         self.border_shader = None
-        self.border_batch = None
-        self.inner_shader = None
-        self.inner_batch = None
-        self.unif_dash_color = None
-        self.unif_inner_color = None
+        self.fill_shader = None
+        self.unif_segment_color = None
+        self.unif_gap_color = None
+        self.unif_fill_color = None
 
         self.icon_vertex_shader = '''
             in vec2 pos;
@@ -139,11 +160,11 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.icon_fragment_shader = '''
             out vec4 fragColor;
 
-            uniform vec4 u_DashColor;
+            uniform vec4 u_SegmentColor;
 
             void main()
             {
-                fragColor = u_DashColor;
+                fragColor = u_SegmentColor;
             }
         '''
         self.border_vertex_shader = '''
@@ -163,49 +184,54 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             in float v_Len;
             out vec4 fragColor;
 
-            uniform vec4 u_DashColor;
+            uniform vec4 u_SegmentColor;
+            uniform vec4 u_GapColor;
+            uniform bvec4 u_Dashed;
 
-            float dash_size = 1;
-            float gap_size = 1;
+            float dash_size = 2;
+            float gap_size = 2;
+            vec4 col = u_SegmentColor;
 
             void main()
             {
-                if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
-                   discard;
+                if (u_Dashed == true)
+                    if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
+                       col = u_GapColor;
 
-                fragColor = u_DashColor;
+                fragColor = col;
             }
         '''
-        self.inner_vertex_shader = '''
+        self.fill_vertex_shader = '''
             in vec2 pos;
 
             uniform mat4 u_ViewProjectionMatrix;
-            uniform float u_X;
-            uniform float u_Y;
-
+            
             void main()
             {
-                gl_Position = u_ViewProjectionMatrix * vec4(pos.x + u_X, pos.y + u_Y, 0.0f, 1.0f);
+                gl_Position = u_ViewProjectionMatrix * vec4(pos.x, pos.y, 0.0f, 1.0f);
             }
         '''
-        self.inner_fragment_shader = '''
+        self.fill_fragment_shader = '''
             out vec4 fragColor;
 
-            uniform vec4 u_Color;
+            uniform vec4 u_FillColor;
 
             void main()
             {
-                fragColor = u_Color;
+                fragColor = u_FillColor;
             }
         '''
 
     def invoke(self, context, event):
-        set_properties(self)
+        set_properties(self, tool=2)
+
+        self.override_intersect_tests = self.behavior != 'ORIGIN'
 
         self.override_selection = \
             self.xray_toggle_key != 'DISABLED' or \
             self.alt_mode_toggle_key != 'SHIFT' or \
-            self.alt_mode != 'SUB'
+            self.alt_mode != 'SUB' or \
+            self.override_intersect_tests
 
         self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
 
@@ -255,13 +281,16 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
                 # to simplify path and improve performance
                 # only append points with enough distance between them
                 if hypot(event.mouse_region_x - self.last_mouse_region_x,
-                         event.mouse_region_y - self.last_mouse_region_y) > 5:
+                         event.mouse_region_y - self.last_mouse_region_y) > 10:
 
                     # append path point
                     self.path.append({"name": "",
                                       "loc": (event.mouse_region_x, event.mouse_region_y),
                                       "time": time.time()})
+                    self.lasso_poly.append((event.mouse_region_x, event.mouse_region_y))
+                    self.lasso_xmin, self.lasso_xmax, self.lasso_ymin, self.lasso_ymax = polygon_bbox(self.lasso_poly)
 
+                    self.update_directional_behavior()
                     self.update_shader_position(context, event)
 
             # toggle overlays
@@ -277,10 +306,16 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             if event.value in {'RELEASE'} and \
                     event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
                 self.finish_custom_selection_stage(context)
-                self.exec_inbuilt_lasso_select()
-                self.finish_modal(context)
-                bpy.ops.ed.undo_push(message="Lasso Select")
-                return {'FINISHED'}
+                if self.override_intersect_tests:
+                    self.begin_custom_intersect_tests(context, )
+                    self.finish_modal(context)
+                    bpy.ops.ed.undo_push(message="Lasso Select")
+                    return {'FINISHED'}
+                else:
+                    self.exec_inbuilt_lasso_select()
+                    self.finish_modal(context)
+                    bpy.ops.ed.undo_push(message="Lasso Select")
+                    return {'FINISHED'}
 
         if self.stage == 'INBUILT_OP':
             # inbuilt op was finished, now finish modal
@@ -339,6 +374,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.path = [{"name": "",
                       "loc": (event.mouse_region_x, event.mouse_region_y),
                       "time": time.time()}]
+        self.lasso_poly = [(event.mouse_region_x, event.mouse_region_y)]
         # for hypot calculation
         self.last_mouse_region_x = event.mouse_region_x
         self.last_mouse_region_y = event.mouse_region_y
@@ -361,8 +397,19 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
     def exec_inbuilt_lasso_select(self):
         bpy.ops.view3d.select_lasso(path=self.path, mode=self.curr_mode)
 
+    def begin_custom_intersect_tests(self, context):
+        select_obs_in_lasso(context, mode=self.curr_mode, lasso_poly=self.lasso_poly, behavior=self.curr_behavior)
+
     def finish_modal(self, context):
         restore_overlays(self, context)
+
+    def update_directional_behavior(self):
+        if self.behavior == 'DIRECTIONAL':
+            start = self.lasso_poly[0][0]
+            if abs(self.lasso_xmin - start) < abs(self.lasso_xmax - start):
+                self.curr_behavior = 'OVERLAP'
+            else:
+                self.curr_behavior = 'CONTAIN'
 
     def update_shader_position(self, context, event):
         self.last_mouse_region_x = event.mouse_region_x
@@ -376,61 +423,97 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        self.icon_shader = gpu.types.GPUShader(self.icon_vertex_shader,
-                                               self.icon_fragment_shader)
-        self.unif_dash_color = self.icon_shader.uniform_from_name("u_DashColor")
+        self.icon_shader = gpu.types.GPUShader(self.icon_vertex_shader, self.icon_fragment_shader)
+        self.unif_segment_color = self.icon_shader.uniform_from_name("u_SegmentColor")
         self.icon_batch = batch_for_shader(self.icon_shader, 'LINES', {"pos": vertices})
 
     def draw_icon_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
-        dash_color = (1.0, 1.0, 1.0, 1.0)
+        segment_color = (1.0, 1.0, 1.0, 1.0)
 
         self.icon_shader.bind()
         self.icon_shader.uniform_float("u_ViewProjectionMatrix", matrix)
         self.icon_shader.uniform_float("u_X", self.last_mouse_region_x)
         self.icon_shader.uniform_float("u_Y", self.last_mouse_region_y)
         self.icon_shader.uniform_float("u_Scale", 25)
-        self.icon_shader.uniform_vector_float(self.unif_dash_color, pack("4f", *dash_color), 4)
+        self.icon_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
         self.icon_batch.draw(self.icon_shader)
 
     def build_lasso_shader(self):
-        self.border_shader = gpu.types.GPUShader(self.border_vertex_shader,
-                                                 self.border_fragment_shader)
-        self.inner_shader = gpu.types.GPUShader(self.inner_vertex_shader,
-                                                self.inner_fragment_shader)
-        self.unif_dash_color = self.border_shader.uniform_from_name("u_DashColor")
-        self.unif_inner_color = self.inner_shader.uniform_from_name("u_Color")
+        self.border_shader = gpu.types.GPUShader(self.border_vertex_shader, self.border_fragment_shader)
+        self.fill_shader = gpu.types.GPUShader(self.fill_vertex_shader, self.fill_fragment_shader)
+        self.unif_segment_color = self.border_shader.uniform_from_name("u_SegmentColor")
+        self.unif_gap_color = self.border_shader.uniform_from_name("u_GapColor")
+        self.unif_fill_color = self.fill_shader.uniform_from_name("u_FillColor")
 
     def draw_lasso_shader(self):
         # create batches
-        vertices = [Vector(point['loc']) for point in self.path]
-        vertices.append(Vector(self.path[0]['loc']))
+        vertices = [Vector(v) for v in self.lasso_poly]
+        vertices.append(Vector(self.lasso_poly[0]))
 
         lengths = [0]
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        self.border_batch = batch_for_shader(self.border_shader, 'LINE_STRIP', {"pos": vertices,
-                                                                                "len": lengths})
+        bbox_vertices = ((self.lasso_xmin, self.lasso_ymax),
+                         (self.lasso_xmin, self.lasso_ymin),
+                         (self.lasso_xmax, self.lasso_ymin),
+                         (self.lasso_xmax, self.lasso_ymax))
 
-        self.inner_batch = batch_for_shader(self.inner_shader, 'TRI_FAN', {"pos": vertices})
+        border_batch = batch_for_shader(self.border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        fill_batch = batch_for_shader(self.fill_shader, 'TRI_FAN', {"pos": vertices})
+        stencil_batch = batch_for_shader(self.fill_shader, 'TRI_FAN', {"pos": bbox_vertices})
 
-        # draw shaders
         matrix = gpu.matrix.get_projection_matrix()
-        dash_color = (1.0, 1.0, 1.0, 1.0)
-        inner_color = (1.0, 1.0, 1.0, 0.04)
+        segment_color = (1.0, 1.0, 1.0, 1.0)
+        gap_color = (0.2, 0.2, 0.2, 1.0)
+        shadow_color = (0.3, 0.3, 0.3, 1.0)
+        fill_color = (1.0, 1.0, 1.0, 0.04)
 
-        self.border_shader.bind()
-        self.border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.border_shader.uniform_vector_float(self.unif_dash_color, pack("4f", *dash_color), 4)
-        self.border_batch.draw(self.border_shader)
+        # stencil mask
+        # https://stackoverflow.com/a/25468363/5106051
+        glClear(GL_STENCIL_BUFFER_BIT)
+        glEnable(GL_STENCIL_TEST)
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE)
+        glStencilFunc(GL_ALWAYS, 0, 1)
+        glStencilOp(GL_KEEP, GL_KEEP, GL_INVERT)
+        glStencilMask(1)
+        self.fill_shader.bind()
+        self.fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
+        fill_batch.draw(self.fill_shader)
+        glStencilFunc(GL_EQUAL, 1, 1)
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)
 
+        # fill
         glEnable(GL_BLEND)
-        self.inner_shader.bind()
-        self.inner_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.inner_shader.uniform_vector_float(self.unif_inner_color, pack("4f", *inner_color), 4)
-        self.inner_batch.draw(self.inner_shader)
+        stencil_batch.draw(self.fill_shader)
         glDisable(GL_BLEND)
+
+        if self.curr_behavior == 'CONTAIN':
+            # solid lasso shadow
+            glLineWidth(3)
+            self.border_shader.bind()
+            self.border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            self.border_shader.uniform_bool("u_Dashed", (0, 0, 0, 0))
+            self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *shadow_color), 4)
+            border_batch.draw(self.border_shader)
+            glLineWidth(1)
+
+            # solid lasso
+            glDisable(GL_STENCIL_TEST)
+            self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+            border_batch.draw(self.border_shader)
+        else:
+            # dashed lasso
+            glDisable(GL_STENCIL_TEST)
+            self.border_shader.bind()
+            self.border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            self.border_shader.uniform_bool("u_Dashed", (1, 1, 1, 1))
+            self.border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
+            self.border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
+            border_batch.draw(self.border_shader)
 
 
 classes = (

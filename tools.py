@@ -2,7 +2,7 @@ import bpy
 import os
 from .functions.legacy_tool_registration import register_tool_legacy, unregister_tool_legacy
 from .preferences import get_preferences
-from .tools_keymap import get_tool_keymap_from_prefs
+from .tools_keymap import get_keymap_of_tool_from_prefs
 
 icon_dir = os.path.join(os.path.dirname(__file__), "icon")
 
@@ -258,14 +258,14 @@ lasso_tools = (
 
 
 def register():
-    ToolSelectBoxXrayMesh.bl_keymap = get_tool_keymap_from_prefs("mesh.select_box_xray")
-    ToolSelectBoxXrayObject.bl_keymap = get_tool_keymap_from_prefs("object.select_box_xray")
+    ToolSelectBoxXrayMesh.bl_keymap = get_keymap_of_tool_from_prefs("mesh.select_box_xray")
+    ToolSelectBoxXrayObject.bl_keymap = get_keymap_of_tool_from_prefs("object.select_box_xray")
 
-    ToolSelectCircleXrayMesh.bl_keymap = get_tool_keymap_from_prefs("mesh.select_circle_xray")
-    ToolSelectCircleXrayObject.bl_keymap = get_tool_keymap_from_prefs("object.select_circle_xray")
+    ToolSelectCircleXrayMesh.bl_keymap = get_keymap_of_tool_from_prefs("mesh.select_circle_xray")
+    ToolSelectCircleXrayObject.bl_keymap = get_keymap_of_tool_from_prefs("object.select_circle_xray")
 
-    ToolSelectLassoXrayMesh.bl_keymap = get_tool_keymap_from_prefs("mesh.select_lasso_xray")
-    ToolSelectLassoXrayObject.bl_keymap = get_tool_keymap_from_prefs("object.select_lasso_xray")
+    ToolSelectLassoXrayMesh.bl_keymap = get_keymap_of_tool_from_prefs("mesh.select_lasso_xray")
+    ToolSelectLassoXrayObject.bl_keymap = get_keymap_of_tool_from_prefs("object.select_lasso_xray")
 
     if bpy.app.version < (2, 83, 0):
         for tool in box_tools:

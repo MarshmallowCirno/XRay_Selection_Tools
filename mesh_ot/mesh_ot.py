@@ -85,8 +85,7 @@ class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator):
         width_offset, height_offset = 20, 40
         ui_offset = 40 * ui_scale
 
-        safe_x, safe_y = get_safe_draw_x(context, width_offset + ui_offset), \
-                         height_offset + ui_offset
+        safe_x, safe_y = get_safe_draw_x(context, width_offset + ui_offset), height_offset + ui_offset
 
         text = "Select Through" if get_preferences().me_select_through else "OFF"
 

@@ -1,12 +1,17 @@
 from .preferences import get_preferences
 
 
-def populate_prefs_tools_keymap():
-    """Fill preferences keymap collection property from template"""
-    prefs_prop = get_preferences().tools_keymap
+def populate_prefs_keymaps_of_tools():
+    """Fill preferences keymaps collection property from template"""
+    # keymaps_of_tools = collection of keymap (box, circle, lasso)
+    # keymap = collection of kmi
+    keymaps = get_preferences().keymaps_of_tools
+    tools = ("BOX", "LASSO", "CIRCLE")
     default_keymap = {
-        "SET": {"description": "Set", "icon": "SELECT_SET",
+        "DEF": {"description": "Active Mode", "icon": "PROPERTIES",
                 "active": True, "shift": False, "ctrl": False, "alt": False},
+        "SET": {"description": "Set", "icon": "SELECT_SET",
+                "active": False, "shift": False, "ctrl": False, "alt": False},
         "ADD": {"description": "Extend", "icon": "SELECT_EXTEND",
                 "active": True, "shift": True, "ctrl": False, "alt": False},
         "SUB": {"description": "Subtract", "icon": "SELECT_SUBTRACT",
@@ -16,51 +21,77 @@ def populate_prefs_tools_keymap():
         "AND": {"description": "Intersect", "icon": "SELECT_INTERSECT",
                 "active": True, "shift": True, "ctrl": True, "alt": False}
     }
+    for tool in tools:
+        keymap = keymaps.get(tool, None)
+        if keymap is None:
+            keymap = keymaps.add()
+            keymap["name"] = tool
+        # remove XOR and AND from circle tools
+        if tool == "CIRCLE":
+            default_keymap.pop("XOR")
+            default_keymap.pop("AND")
 
-    for key, values in default_keymap.items():
-        if key not in prefs_prop.keys():
-            item = prefs_prop.add()
-            item["name"] = key
-            item["description"] = values["description"]
-            item["icon"] = values["icon"]
-            item["active"] = values["active"]
-            item["shift"] = values["shift"]
-            item["ctrl"] = values["ctrl"]
-            item["alt"] = values["alt"]
+        kmis = keymap.kmis
+        for key, values in default_keymap.items():
+            if key not in kmis.keys():
+                kmi = kmis.add()
+                kmi["name"] = key
+                kmi["description"] = values["description"]
+                kmi["icon"] = values["icon"]
+                kmi["active"] = values["active"]
+                kmi["shift"] = values["shift"]
+                kmi["ctrl"] = values["ctrl"]
+                kmi["alt"] = values["alt"]
 
 
-def get_tool_keymap_from_prefs(bl_operator):
+def get_keymap_of_tool_from_prefs(bl_operator):
     """Get tool keymap from preferences collection property"""
-    prefs_prop = get_preferences().tools_keymap
+    # keymaps_of_tools = collection of keymap (box, circle, lasso)
+    # keymap_of_tool = collection of kmi
+    keymaps = get_preferences().keymaps_of_tools
+    operator_tool = {
+        "mesh.select_box_xray": "BOX",
+        "object.select_box_xray": "BOX",
+        "view3d.select_box": "BOX",
+        "mesh.select_circle_xray": "CIRCLE",
+        "object.select_circle_xray": "CIRCLE",
+        "view3d.select_circle": "CIRCLE",
+        "mesh.select_lasso_xray": "LASSO",
+        "object.select_lasso_xray": "LASSO",
+        "view3d.select_lasso": "LASSO"
+    }
+    tool = operator_tool[bl_operator]
+    keymap = keymaps[tool]
+    kmis = keymap.kmis
 
-    if bl_operator in {"mesh.select_circle_xray", "object.select_circle_xray",
-                       "view3d.select_circle"}:
-        prefs_prop = dict(prefs_prop)
-        prefs_prop.pop("XOR")
-        prefs_prop.pop("AND")
-
-    tool_keymap = []
-    for key, values in prefs_prop.items():
+    keyconfig_kmis = []
+    for key, values in kmis.items():
         if values["active"]:
-            tool_keymap.append(
-                (
-                    bl_operator,
-                    {
-                        "type": 'EVT_TWEAK_L',
-                        "value": 'ANY',
-                        "shift": values["shift"],
-                        "ctrl": values["ctrl"],
-                        "alt": values["alt"]
-                    },
-                    {"properties": [("mode", key)]}
-                )
+            kmi = (
+                bl_operator,
+                {
+                    "type": 'EVT_TWEAK_L',
+                    "value": 'ANY',
+                    "shift": values["shift"],
+                    "ctrl": values["ctrl"],
+                    "alt": values["alt"]
+                },
+                {"properties": [("mode", key)]}
             )
-    tool_keymap.reverse()
-    tool_keymap = tuple(tool_keymap)
-    return tool_keymap
+            if key == "DEF":
+                kmi[2]["properties"] = []
+
+            if tool == "CIRCLE":
+                kmi[2]["properties"].append(("wait_for_input", False))
+
+            keyconfig_kmis.append(kmi)
+
+    keyconfig_kmis.reverse()
+    keyconfig_kmis = tuple(keyconfig_kmis)
+    return keyconfig_kmis
 
 
-def update_tools_keymaps(self, context):
+def update_keymaps_of_tools(self, context):
     from .tools import unregister as unregister_tools
     from .tools_dummy import unregister as unregister_tools_dummy
     from .tools import register as register_tools

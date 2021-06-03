@@ -1,7 +1,7 @@
 import bpy
 import os
 from .functions.legacy_tool_registration import register_tool_legacy, unregister_tool_legacy
-from .tools_keymap import get_tool_keymap_from_prefs
+from .tools_keymap import get_keymap_of_tool_from_prefs
 
 
 icon_dir = os.path.join(os.path.dirname(__file__), "icon")
@@ -707,11 +707,11 @@ lasso_tools = (
 
 def register():
     for tool in box_tools:
-        tool.bl_keymap = get_tool_keymap_from_prefs("view3d.select_box")
+        tool.bl_keymap = get_keymap_of_tool_from_prefs("view3d.select_box")
     for tool in circle_tools:
-        tool.bl_keymap = get_tool_keymap_from_prefs("view3d.select_circle")
+        tool.bl_keymap = get_keymap_of_tool_from_prefs("view3d.select_circle")
     for tool in lasso_tools:
-        tool.bl_keymap = get_tool_keymap_from_prefs("view3d.select_lasso")
+        tool.bl_keymap = get_keymap_of_tool_from_prefs("view3d.select_lasso")
 
     if bpy.app.version < (2, 83, 0):
         for tool in box_tools:
