@@ -67,7 +67,7 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
     depsgraph = context.evaluated_depsgraph_get()
 
     selectable_obs = context.selectable_objects
-    mesh_obs, nonmesh_obs = partition(selectable_obs, lambda o: o.type == 'MESH')
+    mesh_obs, nonmesh_obs = partition(selectable_obs, lambda o: o.type in {'MESH', 'CURVE', 'FONT'})
     mesh_ob_count = len(mesh_obs)
 
     # get coordinates of 2d bounding boxes of objects

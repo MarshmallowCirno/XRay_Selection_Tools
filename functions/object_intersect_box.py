@@ -31,7 +31,7 @@ def select_obs_in_box(context, mode, xmin, xmax, ymin, ymax, behavior):
     selectable_obs = context.selectable_objects
 
     if behavior == 'CONTAIN':
-        mesh_obs, nonmesh_obs = partition(selectable_obs, lambda o: o.type == 'MESH')
+        mesh_obs, nonmesh_obs = partition(selectable_obs, lambda o: o.type in {'MESH', 'CURVE', 'FONT'})
         mesh_ob_count = len(mesh_obs)
 
         # get coordinates of 2d bounding boxes of objects
