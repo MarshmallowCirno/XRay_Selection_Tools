@@ -52,7 +52,7 @@ border_fragment_shader = '''
 
     uniform vec4 u_SegmentColor;
     uniform vec4 u_GapColor;
-    uniform bvec4 u_Dashed;
+    uniform int u_Dashed;
 
     float dash_size = 2;
     float gap_size = 2;
@@ -60,10 +60,9 @@ border_fragment_shader = '''
 
     void main()
     {
-         if (u_Dashed == true)
+         if (u_Dashed == 1)
             if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
                 col = u_GapColor;
-
         fragColor = col;
     }
 '''
@@ -152,8 +151,8 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         options={'SKIP_SAVE'}
     )
     behavior: bpy.props.EnumProperty(
-        name="Circle Select Behavior",
-        description="Toggle x-ray by holding this key",
+        name="Selection Behavior",
+        description="Selection behavior",
         items=[('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
                ('CONTAIN', "Contain", "Select only the objects fully contained in circle", 'STICKY_UVS_LOC', 2),
                ('OVERLAP', "Overlap", "Select objects overlapping circle", 'SELECT_SUBTRACT', 3)
@@ -410,44 +409,37 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         shadow_color = (0.3, 0.3, 0.3, 1.0)
         fill_color = (1.0, 1.0, 1.0, 0.04)
 
-        if self.behavior == 'CONTAIN':
-            # fill
-            glEnable(GL_BLEND)
-            fill_shader.bind()
-            fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            fill_shader.uniform_float("u_X", self.last_mouse_region_x)
-            fill_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
-            self.fill_batch.draw(fill_shader)
-            glDisable(GL_BLEND)
+        # fill
+        glEnable(GL_BLEND)
+        fill_shader.bind()
+        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        fill_shader.uniform_float("u_X", self.last_mouse_region_x)
+        fill_shader.uniform_float("u_Y", self.last_mouse_region_y)
+        fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
+        self.fill_batch.draw(fill_shader)
+        glDisable(GL_BLEND)
 
-            # solid circle shadow
+        dashed = 0 if self.behavior == 'CONTAIN' else 1
+
+        if not dashed:
+            # solid border shadow
             border_shader.bind()
             border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
             border_shader.uniform_float("u_X", self.last_mouse_region_x)
             border_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            border_shader.uniform_bool("u_Dashed", (0, 0, 0, 0))
+            border_shader.uniform_int("u_Dashed", dashed)
             border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *shadow_color), 4)
             self.shadow_batch.draw(border_shader)
-            # solid circle
+            # solid border
             border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
             self.border_batch.draw(border_shader)
         else:
-            glEnable(GL_BLEND)
-            fill_shader.bind()
-            fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            fill_shader.uniform_float("u_X", self.last_mouse_region_x)
-            fill_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            fill_shader.uniform_vector_float(self.unif_fill_color, pack("4f", *fill_color), 4)
-            self.fill_batch.draw(fill_shader)
-            glDisable(GL_BLEND)
-
-            # dashed circle
+            # dashed border
             border_shader.bind()
             border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
             border_shader.uniform_float("u_X", self.last_mouse_region_x)
             border_shader.uniform_float("u_Y", self.last_mouse_region_y)
-            border_shader.uniform_bool("u_Dashed", (1, 1, 1, 1))
+            border_shader.uniform_int("u_Dashed", dashed)
             border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
             border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
             self.border_batch.draw(border_shader)

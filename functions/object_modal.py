@@ -7,6 +7,31 @@ def gather_overlays(context):
     return overlays
 
 
+def set_properties(self, tool):
+    if not self.override_global_props:
+        self.show_xray = get_preferences().ob_show_xray
+        self.xray_toggle_key = get_preferences().ob_xray_toggle_key
+        self.xray_toggle_type = get_preferences().ob_xray_toggle_type
+        if tool == 0:
+            self.show_crosshair = get_preferences().ob_show_crosshair
+            self.behavior = self.curr_behavior = get_preferences().ob_box_select_behavior
+        elif tool == 1:
+            self.behavior = self.curr_behavior = get_preferences().ob_circle_select_behavior
+        else:
+            self.show_lasso_icon = get_preferences().ob_show_lasso_icon
+            self.behavior = self.curr_behavior = get_preferences().ob_lasso_select_behavior
+
+
+def sync_properties(self, context):
+    """Sync operator parameters to current context shading. So if xray already enabled
+    make sure it would be possible to toggle it regardless of operator parameters"""
+    if context.space_data.shading.type in {'SOLID', 'MATERIAL', 'RENDERED'} and \
+            context.space_data.shading.show_xray or \
+            context.space_data.shading.type == 'WIREFRAME' and \
+            context.space_data.shading.show_xray_wireframe:
+        self.show_xray = True
+
+
 def toggle_overlays(self, context):
     if context.space_data.shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}:
         context.space_data.shading.show_xray = self.show_xray
@@ -36,28 +61,3 @@ def toggle_alt_mode(self, event):
         self.curr_mode = self.alt_mode
     else:
         self.curr_mode = self.mode
-
-
-def sync_properties(self, context):
-    """Sync operator parameters to current context shading. So if xray already enabled
-    make sure it would be possible to toggle it regardless of operator parameters"""
-    if context.space_data.shading.type in {'SOLID', 'MATERIAL', 'RENDERED'} and \
-            context.space_data.shading.show_xray or \
-            context.space_data.shading.type == 'WIREFRAME' and \
-            context.space_data.shading.show_xray_wireframe:
-        self.show_xray = True
-
-
-def set_properties(self, tool):
-    if not self.override_global_props:
-        self.show_xray = get_preferences().ob_show_xray
-        self.xray_toggle_key = get_preferences().ob_xray_toggle_key
-        self.xray_toggle_type = get_preferences().ob_xray_toggle_type
-        if tool == 0:
-            self.show_crosshair = get_preferences().ob_show_crosshair
-            self.behavior = self.curr_behavior = get_preferences().ob_box_select_behavior
-        elif tool == 1:
-            self.behavior = self.curr_behavior = get_preferences().ob_circle_select_behavior
-        else:
-            self.show_lasso_icon = get_preferences().ob_show_lasso_icon
-            self.behavior = self.curr_behavior = get_preferences().ob_lasso_select_behavior

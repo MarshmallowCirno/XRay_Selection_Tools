@@ -1,7 +1,7 @@
 from .preferences import get_preferences
 
 
-def populate_prefs_keymaps_of_tools():
+def populate_preferences_keymaps_of_tools():
     """Fill preferences keymaps collection property from template"""
     # keymaps_of_tools = collection of keymap (box, circle, lasso)
     # keymap = collection of kmi
@@ -44,7 +44,7 @@ def populate_prefs_keymaps_of_tools():
                 kmi["alt"] = values["alt"]
 
 
-def get_keymap_of_tool_from_prefs(bl_operator):
+def get_keymap_of_tool_from_preferences(bl_operator):
     """Get tool keymap from preferences collection property"""
     # keymaps_of_tools = collection of keymap (box, circle, lasso)
     # keymap_of_tool = collection of kmi

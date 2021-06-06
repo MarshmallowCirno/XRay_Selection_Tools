@@ -76,7 +76,7 @@ border_fragment_shader = '''
 
     uniform vec4 u_SegmentColor;
     uniform vec4 u_GapColor;
-    uniform bvec4 u_Dashed;
+    uniform int u_Dashed;
 
     float dash_size = 2;
     float gap_size = 2;
@@ -84,10 +84,9 @@ border_fragment_shader = '''
 
     void main()
     {
-        if (u_Dashed == true)
+        if (u_Dashed == 1)
             if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
                col = u_GapColor;
-
         fragColor = col;
     }
 '''
@@ -180,8 +179,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         options={'SKIP_SAVE'}
     )
     behavior: bpy.props.EnumProperty(
-        name="Lasso Select Behavior",
-        description="Toggle x-ray by holding this key",
+        name="Selection Behavior",
+        description="Selection behavior",
         items=[('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
                ('CONTAIN', "Contain", "Select only the objects fully contained in lasso", 'STICKY_UVS_LOC', 2),
                ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
@@ -407,8 +406,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
     def update_directional_behavior(self):
         if self.behavior == 'DIRECTIONAL':
-            start = self.lasso_poly[0][0]
-            if abs(self.lasso_xmin - start) < abs(self.lasso_xmax - start):
+            start_x = self.lasso_poly[0][0]
+            if abs(self.lasso_xmin - start_x) < abs(self.lasso_xmax - start_x):
                 self.curr_behavior = 'OVERLAP'
             else:
                 self.curr_behavior = 'CONTAIN'
@@ -490,26 +489,28 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         stencil_batch.draw(fill_shader)
         glDisable(GL_BLEND)
 
-        if self.curr_behavior == 'CONTAIN':
-            # solid lasso shadow
+        dashed = 0 if self.curr_behavior == 'CONTAIN' else 1
+
+        if not dashed:
+            # solid border shadow
             glLineWidth(3)
             border_shader.bind()
             border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            border_shader.uniform_bool("u_Dashed", (0, 0, 0, 0))
+            border_shader.uniform_int("u_Dashed", dashed)
             border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *shadow_color), 4)
             border_batch.draw(border_shader)
             glLineWidth(1)
 
-            # solid lasso
+            # solid border
             glDisable(GL_STENCIL_TEST)
             border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
             border_batch.draw(border_shader)
         else:
-            # dashed lasso
+            # dashed border
             glDisable(GL_STENCIL_TEST)
             border_shader.bind()
             border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            border_shader.uniform_bool("u_Dashed", (1, 1, 1, 1))
+            border_shader.uniform_int("u_Dashed", dashed)
             border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
             border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
             border_batch.draw(border_shader)

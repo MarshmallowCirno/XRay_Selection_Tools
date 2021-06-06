@@ -31,8 +31,8 @@ def draw_select_all_faces_info_popup(self, context):
 def draw_wait_for_input_cursor_info_popup(self, context):
     layout = self.layout
     text = \
-        "Show crosshair of box tool or lasso icon next to cursor of lasso tool when " \
-        "starting selection with a hotkey."
+        "When starting a selection with a hotkey show crosshair of box tool or lasso icon " \
+        "of lasso tool next to cursor."
     lines = textwrap.wrap(text, 120)
     col = layout.column(align=True)
     for n in lines:

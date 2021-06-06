@@ -92,6 +92,7 @@ border_fragment_shader = '''
 
     uniform vec4 u_SegmentColor;
     uniform vec4 u_GapColor;
+    uniform int u_Dashed;
 
     float dash_size = 4;
     float gap_size = 4;
@@ -99,9 +100,10 @@ border_fragment_shader = '''
 
     void main()
     {
-        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
-            col = u_GapColor;
-        fragColor = col;
+        if (u_Dashed == 1)
+            if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size)) 
+                col = u_GapColor;
+            fragColor = col;
     }
 '''
 crosshair_shader = gpu.types.GPUShader(crosshair_vertex_shader, crosshair_fragment_shader)
@@ -256,6 +258,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def __init__(self):
         self.stage = None
         self.curr_mode = self.mode
+        self.directional = get_preferences().me_directional_box and not self.override_global_props
+        self.direction = None
 
         self.start_mouse_region_x = 0
         self.start_mouse_region_y = 0
@@ -269,6 +273,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.override_selection = False
         self.override_intersect_tests = False
 
+        self.invert_select_through = False
         self.select_through_toggle_key_list = get_select_through_toggle_key_list()
 
         self.handler = None
@@ -280,7 +285,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.unif_fill_color = None
 
     def invoke(self, context, event):
-        set_properties(self, tool=0)
+        # set operator properties from addon preferences
+        set_properties_from_preferences(self, tool=0)
 
         self.override_intersect_tests = \
             self.select_all_faces and context.tool_settings.mesh_select_mode[2] or \
@@ -292,6 +298,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
             self.alt_mode != 'SUB' or \
             not self.select_through and self.default_color[:] != (1.0, 1.0, 1.0) or \
             self.select_through and self.select_through_color[:] != (1.0, 1.0, 1.0) or \
+            self.directional or \
             self.override_intersect_tests
 
         self.override_wait_for_input = \
@@ -301,13 +308,9 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.init_mods = gather_modifiers(self, context)  # save initial modifier states
         self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
 
-        # sync operator properties with current shading
-        sync_properties(self, context)
-
-        # hide modifiers and enable x-ray overlays
-        if self.select_through:
-            toggle_overlays(self, context)
-            toggle_modifiers(self)
+        # set x-ray overlays and modifiers
+        initialize_shading_from_properties(self, context)
+        set_modifiers_from_properties(self)
 
         context.window_manager.modal_handler_add(self)
 
@@ -333,9 +336,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                         self.select_through_toggle_type == 'HOLD' or \
                         event.value == 'PRESS' and \
                         self.select_through_toggle_type == 'PRESS':
-                    self.select_through = not self.select_through
-                    toggle_overlays(self, context)
-                    toggle_modifiers(self)
+                    self.invert_select_through = not self.invert_select_through
+                    set_shading_from_properties(self, context)
                     update_shader_color(self, context)
 
             # finish stage
@@ -350,6 +352,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         if self.stage == 'CUSTOM_SELECTION':
             # update shader
             if event.type == 'MOUSEMOVE':
+                self.update_direction_and_properties(context)
                 self.update_shader_position(context, event)
 
             # toggle modifiers and overlays
@@ -358,16 +361,15 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                         self.select_through_toggle_type == 'HOLD' or \
                         event.value == 'PRESS' and \
                         self.select_through_toggle_type == 'PRESS':
-                    self.select_through = not self.select_through
-                    toggle_overlays(self, context)
-                    toggle_modifiers(self)
+                    self.invert_select_through = not self.invert_select_through
+                    set_shading_from_properties(self, context)
                     update_shader_color(self, context)
 
             # finish stage
-            if event.value in {'RELEASE'} and \
-                    event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
+            if event.value in {'RELEASE'} and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
                 self.finish_custom_selection_stage(context)
-                if self.override_intersect_tests and self.select_through:
+                if self.override_intersect_tests and (self.select_through and not self.invert_select_through or
+                                                      not self.select_through and self.invert_select_through):
                     self.begin_custom_intersect_tests(context, )
                     self.finish_modal(context)
                     bpy.ops.ed.undo_push(message="Box Select")
@@ -471,6 +473,21 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         restore_overlays(self, context)
         restore_modifiers(self)
 
+    def update_direction_and_properties(self, context):
+        if self.directional and self.last_mouse_region_x != self.start_mouse_region_x:
+            if self.last_mouse_region_x - self.start_mouse_region_x > 0:
+                _ = "LEFT_TO_RIGHT"
+            else:
+                _ = "RIGHT_TO_LEFT"
+
+            if _ != self.direction:
+                self.direction = _
+                set_properties_from_direction(self, self.direction)
+                self.override_intersect_tests = \
+                    self.select_all_faces and context.tool_settings.mesh_select_mode[2] or \
+                    self.select_all_edges and context.tool_settings.mesh_select_mode[1]
+                set_shading_from_properties(self, context)
+
     def update_shader_position(self, context, event):
         self.last_mouse_region_x = event.mouse_region_x
         self.last_mouse_region_y = event.mouse_region_y
@@ -492,7 +509,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
     def draw_crosshair_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
-        if self.select_through:
+        if self.select_through and not self.invert_select_through or \
+                not self.select_through and self.invert_select_through:
             segment_color = (*self.select_through_color, 1)
         else:
             segment_color = (*self.default_color, 1)
@@ -521,17 +539,20 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
     def draw_box_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
-        if self.select_through:
+        if self.select_through and not self.invert_select_through or \
+                not self.select_through and self.invert_select_through:
             segment_color = (*self.select_through_color, 1)
             fill_color = (*self.select_through_color, 0.04)
         else:
             segment_color = (*self.default_color, 1)
             fill_color = (*self.default_color, 0.04)
         gap_color = (0.0, 0.0, 0.0, 1.0)
+        shadow_color = (0.3, 0.3, 0.3, 1.0)
 
         width = self.last_mouse_region_x - self.start_mouse_region_x
         height = self.last_mouse_region_y - self.start_mouse_region_y
 
+        # fill
         glEnable(GL_BLEND)
         fill_shader.bind()
         fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
@@ -543,15 +564,26 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.fill_batch.draw(fill_shader)
         glDisable(GL_BLEND)
 
+        dashed = 0 if self.direction == "RIGHT_TO_LEFT" else 1
+
+        # border
         border_shader.bind()
         border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
         border_shader.uniform_float("u_X", self.start_mouse_region_x)
         border_shader.uniform_float("u_Y", self.start_mouse_region_y)
         border_shader.uniform_float("u_Height", height)
         border_shader.uniform_float("u_Width", width)
+        border_shader.uniform_int("u_Dashed", dashed)
         border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *segment_color), 4)
         border_shader.uniform_vector_float(self.unif_gap_color, pack("4f", *gap_color), 4)
         self.border_batch.draw(border_shader)
+
+        if not dashed:
+            # solid border shadow
+            border_shader.uniform_float("u_X", self.start_mouse_region_x + 1)
+            border_shader.uniform_float("u_Y", self.start_mouse_region_y - 1)
+            border_shader.uniform_vector_float(self.unif_segment_color, pack("4f", *shadow_color), 4)
+            self.border_batch.draw(border_shader)
 
 
 classes = (

@@ -20,14 +20,14 @@
 bl_info = {
     "name": "X-Ray Selection Tools",
     "author": "MarshmallowCirno",
-    "version": (4, 0, 1),
-    "blender": (2, 92, 0),
+    "version": (4, 1, 0),
+    "blender": (2, 93, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Box, lasso and circle selection tools with x-ray",
     "warning": "",
     "category": "3D View",
     "doc_url": "https://gumroad.com/l/DaLdj",
-    "tracker_url": "https://blenderartists.org/t/box-select-x-ray/1212316/1",
+    "tracker_url": "https://blenderartists.org/t/x-ray-selection-tools/1212316",
 }
 
 

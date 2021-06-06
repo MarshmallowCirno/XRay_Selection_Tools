@@ -213,7 +213,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
     def __init__(self):
         self.stage = None
         self.curr_mode = self.mode
-        self.circle_verts_orig = None
+        self.directional = False
+        self.direction = None
 
         self.last_mouse_region_x = 0
         self.last_mouse_region_y = 0
@@ -224,6 +225,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.override_modal = False
         self.override_intersect_tests = False
 
+        self.invert_select_through = False
         self.select_through_toggle_key_list = get_select_through_toggle_key_list()
 
         self.handler = None
@@ -232,9 +234,11 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.unif_segment_color = None
         self.unif_gap_color = None
         self.unif_fill_color = None
+        self.circle_verts_orig = None
 
     def invoke(self, context, event):
-        set_properties(self, tool=1)
+        # set operator properties from addon preferences
+        set_properties_from_preferences(self, tool=1)
 
         self.override_intersect_tests = \
             self.select_all_faces and context.tool_settings.mesh_select_mode[2] or \
@@ -251,13 +255,9 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.init_mods = gather_modifiers(self, context)  # save initial modifier states
         self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
 
-        # sync operator properties with current shading
-        sync_properties(self, context)
-
-        # hide modifiers and set x-ray overlay states to allow selecting through
-        if self.select_through:
-            toggle_overlays(self, context)
-            toggle_modifiers(self)
+        # set x-ray overlays and modifiers
+        initialize_shading_from_properties(self, context)
+        set_modifiers_from_properties(self)
 
         context.window_manager.modal_handler_add(self)
 
@@ -284,9 +284,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                         self.select_through_toggle_type == 'HOLD' or \
                         event.value == 'PRESS' and \
                         self.select_through_toggle_type == 'PRESS':
-                    self.select_through = not self.select_through
-                    toggle_overlays(self, context)
-                    toggle_modifiers(self)
+                    self.invert_select_through = not self.invert_select_through
+                    set_shading_from_properties(self, context)
                     update_shader_color(self, context)
 
             # change radius
@@ -298,7 +297,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
                 self.stage = 'CUSTOM_SELECTION'
                 toggle_alt_mode(self, event)
-                if self.override_intersect_tests and self.select_through:
+                if self.override_intersect_tests and (self.select_through and not self.invert_select_through or
+                                                      not self.select_through and self.invert_select_through):
                     self.begin_custom_intersect_tests(context)
                 else:
                     self.exec_inbuilt_circle_select()
@@ -318,9 +318,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                         self.select_through_toggle_type == 'HOLD' or \
                         event.value == 'PRESS' and \
                         self.select_through_toggle_type == 'PRESS':
-                    self.select_through = not self.select_through
-                    toggle_overlays(self, context)
-                    toggle_modifiers(self)
+                    self.invert_select_through = not self.invert_select_through
+                    set_shading_from_properties(self, context)
                     update_shader_color(self, context)
 
             # change radius
@@ -459,7 +458,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
-        if self.select_through:
+        if self.select_through and not self.invert_select_through or \
+                not self.select_through and self.invert_select_through:
             segment_color = (*self.select_through_color, 1)
             fill_color = (*self.select_through_color, 0.04)
         else:
