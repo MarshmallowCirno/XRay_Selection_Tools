@@ -62,9 +62,10 @@ def add_fallback_keymap_items(keymap_dict: dict) -> None:
         km = kc.keymaps.new(name=keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
         addon_prefs_keymap = addon_prefs_keymaps[tool]
         addon_prefs_keymap_items = addon_prefs_keymap.kmis
+
         for key, values in reversed(addon_prefs_keymap_items.items()):
             if values["active"]:
-                km.keymap_items.new(
+                kmi = km.keymap_items.new(
                     keymap_item_idname,
                     event_type,
                     'CLICK_DRAG',
@@ -72,6 +73,8 @@ def add_fallback_keymap_items(keymap_dict: dict) -> None:
                     shift=values["shift"],
                     alt=values["alt"],
                 )
+                if values["name"] != 'DEF':
+                    kmi.properties.mode = values["name"]
 
 
 def remove_fallback_keymap_items(keymap_dict: dict) -> None:
