@@ -238,7 +238,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
     def invoke(self, context, event):
         # set operator properties from addon preferences
-        set_properties_from_preferences(self, tool=1)
+        set_properties_from_preferences(self, tool='CIRCLE')
 
         self.override_intersect_tests = \
             self.select_all_faces and context.tool_settings.mesh_select_mode[2] or \

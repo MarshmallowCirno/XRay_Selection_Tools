@@ -1,8 +1,12 @@
-import bpy
 import os
-from .functions.legacy_tool_registration import register_tool_legacy, unregister_tool_legacy
-from .tools_keymap import get_keymap_of_tool_from_preferences
 
+import bpy
+
+from .tools_keymap import add_fallback_keymap
+from .tools_keymap import add_fallback_keymap_items
+from .tools_keymap import dummy_fallback_keymap_dict
+from .tools_keymap import get_keymap_of_tool_from_preferences
+from .tools_keymap import remove_fallback_keymap_items
 
 icon_dir = os.path.join(os.path.dirname(__file__), "icon")
 
@@ -20,19 +24,19 @@ class ToolSelectBoxXrayCurve(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -56,19 +60,19 @@ class ToolSelectBoxXrayArmature(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -92,19 +96,19 @@ class ToolSelectBoxXrayMetaball(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -128,19 +132,19 @@ class ToolSelectBoxXrayLattice(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -164,19 +168,19 @@ class ToolSelectBoxXrayPose(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -200,19 +204,19 @@ class ToolSelectBoxXrayGrease(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_box",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -252,7 +256,7 @@ class ToolSelectCircleXrayCurve(bpy.types.WorkSpaceTool):
         from gpu_extras.presets import draw_circle_2d
         props = tool.operator_properties("view3d.select_circle")
         radius = props.radius
-        draw_circle_2d(xy, (1.0,) * 4, radius, 32)
+        draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("view3d.select_circle")
@@ -292,7 +296,7 @@ class ToolSelectCircleXrayArmature(bpy.types.WorkSpaceTool):
         from gpu_extras.presets import draw_circle_2d
         props = tool.operator_properties("view3d.select_circle")
         radius = props.radius
-        draw_circle_2d(xy, (1.0,) * 4, radius, 32)
+        draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("view3d.select_circle")
@@ -332,7 +336,7 @@ class ToolSelectCircleXrayMetaball(bpy.types.WorkSpaceTool):
         from gpu_extras.presets import draw_circle_2d
         props = tool.operator_properties("view3d.select_circle")
         radius = props.radius
-        draw_circle_2d(xy, (1.0,) * 4, radius, 32)
+        draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("view3d.select_circle")
@@ -372,7 +376,7 @@ class ToolSelectCircleXrayLattice(bpy.types.WorkSpaceTool):
         from gpu_extras.presets import draw_circle_2d
         props = tool.operator_properties("view3d.select_circle")
         radius = props.radius
-        draw_circle_2d(xy, (1.0,) * 4, radius, 32)
+        draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("view3d.select_circle")
@@ -412,7 +416,7 @@ class ToolSelectCircleXrayPose(bpy.types.WorkSpaceTool):
         from gpu_extras.presets import draw_circle_2d
         props = tool.operator_properties("view3d.select_circle")
         radius = props.radius
-        draw_circle_2d(xy, (1.0,) * 4, radius, 32)
+        draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("view3d.select_circle")
@@ -452,7 +456,7 @@ class ToolSelectCircleXrayGrease(bpy.types.WorkSpaceTool):
         from gpu_extras.presets import draw_circle_2d
         props = tool.operator_properties("view3d.select_circle")
         radius = props.radius
-        draw_circle_2d(xy, (1.0,) * 4, radius, 32)
+        draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     def draw_settings(context, layout, tool):
         props = tool.operator_properties("view3d.select_circle")
@@ -476,19 +480,19 @@ class ToolSelectLassoXrayCurve(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -512,19 +516,19 @@ class ToolSelectLassoXrayArmature(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -548,19 +552,19 @@ class ToolSelectLassoXrayMetaball(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -584,19 +588,19 @@ class ToolSelectLassoXrayLattice(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -620,19 +624,19 @@ class ToolSelectLassoXrayPose(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -656,19 +660,19 @@ class ToolSelectLassoXrayGrease(bpy.types.WorkSpaceTool):
     bl_keymap = (
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True, "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True, "ctrl": True},
             {"properties": [("mode", 'AND')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "ctrl": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "ctrl": True},
             {"properties": [("mode", 'SUB')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY', "shift": True},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG', "shift": True},
             {"properties": [("mode", 'ADD')]}),
         (
             "view3d.select_lasso",
-            {"type": 'EVT_TWEAK_L', "value": 'ANY'},
+            {"type": 'LEFTMOUSE', "value": 'CLICK_DRAG'},
             {})
     )
 
@@ -693,7 +697,7 @@ circle_tools = (
     ToolSelectCircleXrayMetaball,
     ToolSelectCircleXrayLattice,
     ToolSelectCircleXrayPose,
-    ToolSelectCircleXrayGrease
+    ToolSelectCircleXrayGrease,
 )
 lasso_tools = (
     ToolSelectLassoXrayCurve,
@@ -701,11 +705,11 @@ lasso_tools = (
     ToolSelectLassoXrayMetaball,
     ToolSelectLassoXrayLattice,
     ToolSelectLassoXrayPose,
-    ToolSelectLassoXrayGrease
+    ToolSelectLassoXrayGrease,
 )
 
 
-def register():
+def register() -> None:
     for tool in box_tools:
         tool.bl_keymap = get_keymap_of_tool_from_preferences("view3d.select_box")
     for tool in circle_tools:
@@ -713,34 +717,21 @@ def register():
     for tool in lasso_tools:
         tool.bl_keymap = get_keymap_of_tool_from_preferences("view3d.select_lasso")
 
-    if bpy.app.version < (2, 83, 0):
-        for tool in box_tools:
-            register_tool_legacy(tool, after={"builtin.select_box"},
-                                 separator=False, group=False)
-        for tool in circle_tools:
-            register_tool_legacy(tool, after={"builtin.select_circle"},
-                                 separator=False, group=False)
-        for tool in lasso_tools:
-            register_tool_legacy(tool, after={"builtin.select_lasso"},
-                                 separator=False, group=False)
-    else:
-        for tool in box_tools:
-            bpy.utils.register_tool(tool, after={"builtin.select_box"},
-                                    separator=False, group=False)
-        for tool in circle_tools:
-            bpy.utils.register_tool(tool, after={"builtin.select_circle"},
-                                    separator=False, group=False)
-        for tool in lasso_tools:
-            bpy.utils.register_tool(tool, after={"builtin.select_lasso"},
-                                    separator=False, group=False)
+    for tool in box_tools:
+        bpy.utils.register_tool(tool, after={"builtin.select_box"}, separator=False, group=False)
+    for tool in circle_tools:
+        bpy.utils.register_tool(tool, after={"builtin.select_circle"}, separator=False, group=False)
+    for tool in lasso_tools:
+        bpy.utils.register_tool(tool, after={"builtin.select_lasso"}, separator=False, group=False)
+
+    add_fallback_keymap(dummy_fallback_keymap_dict)
+    add_fallback_keymap_items(dummy_fallback_keymap_dict)
 
 
-def unregister():
+def unregister() -> None:
     import itertools
 
-    if bpy.app.version < (2, 83, 0):
-        for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
-            unregister_tool_legacy(tool)
-    else:
-        for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
-            bpy.utils.unregister_tool(tool)
+    remove_fallback_keymap_items(dummy_fallback_keymap_dict)
+
+    for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
+        bpy.utils.unregister_tool(tool)

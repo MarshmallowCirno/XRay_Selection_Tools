@@ -188,7 +188,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         self.unif_fill_color = None
 
     def invoke(self, context, event):
-        set_properties(self, tool=1)
+        set_properties(self, tool='CIRCLE')
 
         self.override_intersect_tests = self.behavior != 'ORIGIN'
 

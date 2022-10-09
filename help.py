@@ -43,7 +43,7 @@ def draw_ob_select_behavior_info_popup(self, context):
     layout = self.layout
     texts = \
         ("• In Origin mode, you select only objects with origins within the selection region.",
-         "• In Contain mode, you select only the objects within the selection region.",
+         "• In Contain mode, you select only objects within the selection region.",
          "• In Overlap mode, you select all objects within the region, plus any objects "
          "crossing the boundaries of the region.",
          "• In Direction mode, you automatically switch between Overlap and Contain selection "
@@ -63,10 +63,10 @@ def draw_ob_select_behavior_info_popup(self, context):
 def draw_tools_keymap_info_popup(self, context):
     layout = self.layout
     texts = \
-        ("Tool key modifiers that change selection mode when you held down them before using a box, "
-         "lasso or circle tool in the toolbar. Deactivating selection mode here will remove "
-         "its shortcut from all xray selection tools.",
-         "Active Mode corresponds to active mode button in the header tool settings or properties active tool tab."
+        ("Keys that change selection mode when held down before using a box, lasso or circle xray tool in the "
+         "toolbar. Deactivating selection mode here will remove its shortcut from all xray selection tools.",
+         "Active Mode corresponds to active selection mode button in blender header or Active Tool tab in "
+         "blender properties area."
          )
     for text in texts:
         lines = textwrap.wrap(text, 120)

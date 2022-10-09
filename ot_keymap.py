@@ -35,23 +35,23 @@ def register_me_mouse_keymap():
     if kc:
         km = kc.keymaps.new(name="Mesh", space_type='EMPTY')
 
-        kmi = km.keymap_items.new("mesh.select_lasso_xray", 'EVT_TWEAK_L', 'ANY', ctrl=True, shift=True)
+        kmi = km.keymap_items.new("mesh.select_lasso_xray", 'LEFTMOUSE', 'CLICK_DRAG', ctrl=True, shift=True)
         kmi.properties.mode = 'SUB'
         me_mouse_keymap.append((km, kmi))
         
-        kmi = km.keymap_items.new("mesh.select_lasso_xray", 'EVT_TWEAK_L', 'ANY', ctrl=True)
+        kmi = km.keymap_items.new("mesh.select_lasso_xray", 'LEFTMOUSE', 'CLICK_DRAG', ctrl=True)
         kmi.properties.mode = 'ADD'
         me_mouse_keymap.append((km, kmi))
 
-        kmi = km.keymap_items.new("mesh.select_box_xray", 'EVT_TWEAK_R', 'ANY', ctrl=True)
+        kmi = km.keymap_items.new("mesh.select_box_xray", 'RIGHTMOUSE', 'CLICK_DRAG', ctrl=True)
         kmi.properties.mode = 'SUB'
         me_mouse_keymap.append((km, kmi))
 
-        kmi = km.keymap_items.new("mesh.select_box_xray", 'EVT_TWEAK_R', 'ANY', shift=True)
+        kmi = km.keymap_items.new("mesh.select_box_xray", 'RIGHTMOUSE', 'CLICK_DRAG', shift=True)
         kmi.properties.mode = 'ADD'
         me_mouse_keymap.append((km, kmi))
 
-        kmi = km.keymap_items.new("mesh.select_box_xray", 'EVT_TWEAK_R', 'ANY')
+        kmi = km.keymap_items.new("mesh.select_box_xray", 'RIGHTMOUSE', 'CLICK_DRAG')
         kmi.properties.mode = 'SET'
         me_mouse_keymap.append((km, kmi))
 
@@ -82,23 +82,23 @@ def register_ob_mouse_keymap():
     if kc:
         km = kc.keymaps.new(name="Object Mode", space_type='EMPTY')
 
-        kmi = km.keymap_items.new("object.select_lasso_xray", 'EVT_TWEAK_L', 'ANY', ctrl=True, shift=True)
+        kmi = km.keymap_items.new("object.select_lasso_xray", 'LEFTMOUSE', 'CLICK_DRAG', ctrl=True, shift=True)
         kmi.properties.mode = 'SUB'
         ob_mouse_keymap.append((km, kmi))
 
-        kmi = km.keymap_items.new("object.select_lasso_xray", 'EVT_TWEAK_L', 'ANY', ctrl=True)
+        kmi = km.keymap_items.new("object.select_lasso_xray", 'LEFTMOUSE', 'CLICK_DRAG', ctrl=True)
         kmi.properties.mode = 'ADD'
         ob_mouse_keymap.append((km, kmi))
 
-        kmi = km.keymap_items.new("object.select_box_xray", 'EVT_TWEAK_R', 'ANY', ctrl=True)
+        kmi = km.keymap_items.new("object.select_box_xray", 'RIGHTMOUSE', 'CLICK_DRAG', ctrl=True)
         kmi.properties.mode = 'SUB'
         ob_mouse_keymap.append((km, kmi))
 
-        kmi = km.keymap_items.new("object.select_box_xray", 'EVT_TWEAK_R', 'ANY', shift=True)
+        kmi = km.keymap_items.new("object.select_box_xray", 'RIGHTMOUSE', 'CLICK_DRAG', shift=True)
         kmi.properties.mode = 'ADD'
         ob_mouse_keymap.append((km, kmi))
 
-        kmi = km.keymap_items.new("object.select_box_xray", 'EVT_TWEAK_R', 'ANY')
+        kmi = km.keymap_items.new("object.select_box_xray", 'RIGHTMOUSE', 'CLICK_DRAG')
         kmi.properties.mode = 'SET'
         ob_mouse_keymap.append((km, kmi))
 

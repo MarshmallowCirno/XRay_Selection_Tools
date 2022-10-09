@@ -4,8 +4,8 @@ from ..preferences import get_preferences
 def gather_overlays(context):
     overlays = {"show_xray": context.space_data.shading.show_xray,
                 "xray_alpha": context.space_data.shading.xray_alpha,
-                "show_xray_wireframe": context.space_data.shading.show_xray_wireframe,
-                "xray_alpha_wireframe": context.space_data.shading.xray_alpha_wireframe,
+                "show_xray_wireframe": bool(context.space_data.shading.show_xray_wireframe),
+                "xray_alpha_wireframe": bool(context.space_data.shading.xray_alpha_wireframe),
                 "backwire_opacity": context.space_data.overlay.backwire_opacity}
     return overlays
 
@@ -44,9 +44,9 @@ def set_properties_from_preferences(self, tool):
         self.select_through_toggle_type = get_preferences().me_select_through_toggle_type
         self.hide_mirror = get_preferences().me_hide_mirror
         self.hide_solidify = get_preferences().me_hide_solidify
-        if tool == 0:
+        if tool == 'BOX':
             self.show_crosshair = get_preferences().me_show_crosshair
-        elif tool == 2:
+        elif tool == 'LASSO':
             self.show_lasso_icon = get_preferences().me_show_lasso_icon
 
 

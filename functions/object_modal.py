@@ -12,10 +12,10 @@ def set_properties(self, tool):
         self.show_xray = get_preferences().ob_show_xray
         self.xray_toggle_key = get_preferences().ob_xray_toggle_key
         self.xray_toggle_type = get_preferences().ob_xray_toggle_type
-        if tool == 0:
+        if tool == 'BOX':
             self.show_crosshair = get_preferences().ob_show_crosshair
             self.behavior = self.curr_behavior = get_preferences().ob_box_select_behavior
-        elif tool == 1:
+        elif tool == 'CIRCLE':
             self.behavior = self.curr_behavior = get_preferences().ob_circle_select_behavior
         else:
             self.show_lasso_icon = get_preferences().ob_show_lasso_icon

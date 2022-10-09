@@ -273,7 +273,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
     def invoke(self, context, event):
         # set operator properties from addon preferences
-        set_properties_from_preferences(self, tool=2)
+        set_properties_from_preferences(self, tool='LASSO')
 
         self.override_intersect_tests = \
             self.select_all_faces and context.tool_settings.mesh_select_mode[2] or \
@@ -374,9 +374,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
         if self.stage == 'INBUILT_OP':
             # inbuilt op was finished, now finish modal
-            if event.value == 'RELEASE':
-                self.finish_modal(context)
-                return {'FINISHED'}
+            self.finish_modal(context)
+            return {'FINISHED'}
 
         # cancel modal
         if event.type in {'ESC', 'RIGHTMOUSE'}:

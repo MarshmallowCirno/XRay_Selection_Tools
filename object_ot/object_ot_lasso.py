@@ -224,7 +224,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.unif_fill_color = None
 
     def invoke(self, context, event):
-        set_properties(self, tool=2)
+        set_properties(self, tool='LASSO')
 
         self.override_intersect_tests = self.behavior != 'ORIGIN'
 
@@ -320,9 +320,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
         if self.stage == 'INBUILT_OP':
             # inbuilt op was finished, now finish modal
-            if event.value == 'RELEASE':
-                self.finish_modal(context)
-                return {'FINISHED'}
+            self.finish_modal(context)
+            return {'FINISHED'}
 
         # cancel modal
         if event.type in {'ESC', 'RIGHTMOUSE'}:

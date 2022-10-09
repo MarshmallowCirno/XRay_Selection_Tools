@@ -300,6 +300,15 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     keymaps_of_tools: bpy.props.CollectionProperty(type=XRAYSELToolKeymapPG, name="Keymaps of Tools")
     me_direction_properties: bpy.props.CollectionProperty(type=XRAYSELToolMeDirectionProps, name="Mesh Direction Props")
 
+    select_mouse: bpy.props.EnumProperty(
+        description="Last value of property, since keyconfig.preferences isn't available at blender startup",
+        items=[
+            ('LEFT', "", ""),
+            ('RIGHT', "", ""),
+        ],
+        default='LEFT',
+    )
+
     tool_keymap_tabs: bpy.props.EnumProperty(
         name="Tool Selection Modifier Keys",
         items=[('BOX', "Box Tool", ""),
