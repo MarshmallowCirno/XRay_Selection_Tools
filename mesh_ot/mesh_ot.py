@@ -91,7 +91,7 @@ class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, Toggle
 class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_Base):
     """Toggle mesh selection behavior for mesh xray selection tools"""
     bl_idname = "mesh.select_tools_xray_toggle_mesh_behavior"
-    bl_label = "Toggle Mesh Select Behavior"
+    bl_label = "Toggle Select All Edges & Faces"
     bl_options = {'REGISTER', 'UNDO'}
 
     def __init__(self):

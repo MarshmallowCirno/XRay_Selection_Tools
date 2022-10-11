@@ -309,6 +309,15 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         default='LEFT',
     )
 
+    rmb_action: bpy.props.EnumProperty(
+        description="Last value of property, since keyconfig.preferences isn't available at blender startup",
+        items=[
+            ('TWEAK', "", ""),
+            ('FALLBACK_TOOL', "", ""),
+        ],
+        default='TWEAK',
+    )
+
     tool_keymap_tabs: bpy.props.EnumProperty(
         name="Tool Selection Modifier Keys",
         items=[('BOX', "Box Tool", ""),
@@ -621,7 +630,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         col = box.column()
 
         text = ("Change, disable or enable shortcuts here. To edit shortcut properties "
-                "independently of global settings expand key item and check "
+                "independently of global addon settings expand key item and check "
                 "''Override Global Properties''")
         width = bpy.context.region.width
         wrapper = textwrap.TextWrapper(width=width / 6)  # 50 = maximum length
@@ -679,7 +688,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         # Tool Modifier Keys
         box.separator()
         row = box.row(align=True)
-        row.label(text="Tool Selection Mode Modifier Keys")
+        row.label(text="Shortcuts for toolbar tools")
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tools_keymap"
 
         col = box.column(align=True)

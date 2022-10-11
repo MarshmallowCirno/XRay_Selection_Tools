@@ -50,13 +50,18 @@ def add_fallback_keymap_items(keymap_dict: dict) -> None:
     # keyconfig.preferences isn't available at blender startup
     if kc.preferences is not None:
         select_mouse = get_preferences().select_mouse = kc.preferences.select_mouse
+        rmb_action = get_preferences().rmb_action = kc.preferences.rmb_action
     else:
         select_mouse = get_preferences().select_mouse
+        rmb_action = get_preferences().rmb_action
 
     kc = bpy.context.window_manager.keyconfigs.addon
     addon_prefs_keymaps = get_preferences().keymaps_of_tools
 
-    event_type = {'LEFT': 'LEFTMOUSE', 'RIGHT': 'RIGHTMOUSE'}[select_mouse]
+    if select_mouse == 'RIGHT' and rmb_action == 'FALLBACK_TOOL':
+        event_type = 'RIGHTMOUSE'
+    else:
+        event_type = 'LEFTMOUSE'
 
     for keymap_name, (keymap_item_idname, tool) in keymap_dict.items():
         km = kc.keymaps.new(name=keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
