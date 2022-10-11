@@ -81,6 +81,11 @@ def add_fallback_keymap_items(keymap_dict: dict) -> None:
                 if values["name"] != 'DEF':
                     kmi.properties.mode = values["name"]
 
+                if keymap_item_idname in {"mesh.select_circle_xray",
+                                          "object.select_circle_xray",
+                                          "view3d.select_circle"}:
+                    kmi.properties.wait_for_input = False
+
 
 def remove_fallback_keymap_items(keymap_dict: dict) -> None:
     """Remove tool fallback keymap items."""
