@@ -346,10 +346,11 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
         if self.stage == 'INBUILT_OP':
             # inbuilt op was finished, now finish modal
-            self.radius = \
-                context.window_manager.operator_properties_last("view3d.select_circle").radius
-            self.finish_modal(context)
-            return {'FINISHED'}
+            if event.type == 'MOUSEMOVE':
+                self.radius = \
+                    context.window_manager.operator_properties_last("view3d.select_circle").radius
+                self.finish_modal(context)
+                return {'FINISHED'}
 
         # cancel modal
         if event.type in {'ESC', 'RIGHTMOUSE'}:

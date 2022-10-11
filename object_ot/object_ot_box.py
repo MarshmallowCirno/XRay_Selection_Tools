@@ -328,8 +328,9 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
 
         if self.stage == 'INBUILT_OP':
             # inbuilt op was finished, now finish modal
-            self.finish_modal(context)
-            return {'FINISHED'}
+            if event.type == 'MOUSEMOVE':
+                self.finish_modal(context)
+                return {'FINISHED'}
 
         # cancel modal
         if event.type in {'ESC', 'RIGHTMOUSE'}:
