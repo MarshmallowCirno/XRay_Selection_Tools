@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Changelog - X-Ray Selection Tools</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../css/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Changelog";
+        var mkdocs_page_input_path = "changelog.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> X-Ray Selection Tools
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Preferences</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../mesh_prefs/">Mesh tools</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../object_prefs/">Object tools</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../keymap_prefs/">Advanced Keymap</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Changelog</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#425">4.2.5</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#424">4.2.4</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#423">4.2.3</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#422">4.2.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#421">4.2.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#420">4.2.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#410">4.1.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#401">4.0.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#400">4.0.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#310">3.1.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#301">3.0.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#300">3.0.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2014">2.0.14</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">X-Ray Selection Tools</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Development &raquo;</li>
+      <li>Changelog</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools/edit/master/docs/changelog.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1"></h1>
+<h2 id="425">4.2.5</h2>
+<ul>
+<li>Fixed a conflict with addons that use timer (like Hardops or Screencast Keys) that could cause x-ray shading to stop working.</li>
+</ul>
+<h2 id="424">4.2.4</h2>
+<ul>
+<li>Fixed circle select fallback tools requiring a click to start selection by disabling wait_for_input, copying default blender tool behavior.</li>
+</ul>
+<h2 id="423">4.2.3</h2>
+<ul>
+<li>Fix for wrong fallback tool keys registration when blender selection is set to right mouse button.</li>
+<li>Changed a couple of labels in addon preferences to be more descriptive.</li>
+</ul>
+<h2 id="422">4.2.2</h2>
+<ul>
+<li>Fixed bug on releasing circle select in object mode and fallback tool keyitems.</li>
+</ul>
+<h2 id="421">4.2.1</h2>
+<ul>
+<li>Fixed directory structure and bug on releasing circle selection in mesh mode.</li>
+</ul>
+<h2 id="420">4.2.0</h2>
+<ul>
+<li>Update to Blender 3.3.1</li>
+</ul>
+<h2 id="410">4.1.0</h2>
+<ul>
+<li>Box and lasso tool settings for edit mode can be configured separately for left-to-right and right-to-left drag directions.</li>
+</ul>
+<h2 id="401">4.0.1</h2>
+<ul>
+<li>Fixed shaders in blender fullscreen, added shortcut for toggling addon preferences.</li>
+</ul>
+<h2 id="400">4.0.0</h2>
+<ul>
+<li>Added contain and overlap selection behavior modes for object tools to addon preferences, similar to autodesk Window/Crossing selection. 
+Contain behavior select objects fully contained in the selection region. Overlap behavior selects objects touching and inside the selecting region.</li>
+<li>Added directional behavior for automatically switching between contain and overlap selection mode. 
+Drag from left to right to select all objects that are entirely contained in the selection box or lasso, drag from right to left to select all objects that are overlapped by the selection box or lasso.</li>
+<li>Added shortcut configuration for tool selection mode (Set, Extend, Subtract etc.) for individual tools.</li>
+<li>Fixed selection mode buttons in header and properties active tool tab.</li>
+<li>Speed up circle selection in mesh mode.</li>
+<li>Improved drawing of lasso shader.</li>
+</ul>
+<h2 id="310">3.1.0</h2>
+<ul>
+<li>Added shortcut configuration for tool selection mode (Set, Extend, Subtract etc.) in the addon preferences Advanced Keymap tab.</li>
+<li>Added header buttons in Advanced Keymap to disable/enable addon preinstalled shortcuts. Disabled shortcuts won't be added and won't clutter a blender keyconfig.</li>
+</ul>
+<h2 id="301">3.0.1</h2>
+<ul>
+<li>Fixed disabling hiding modifiers.</li>
+</ul>
+<h2 id="300">3.0.0</h2>
+<ul>
+<li>Reworked the addon preference panel, since it used to be confusing.</li>
+<li>Selection through can be toggled by pressing or holding a user-set set button during selection.</li>
+<li>You can set a different color for tools with enabled selection through.</li>
+<li>Implemented selection of all faces and edges in select through mode for lasso select and circle select tools.</li>
+<li>Rewritten code in numpy to improve performance.</li>
+</ul>
+<h2 id="2014">2.0.14</h2>
+<ul>
+<li>Fixed issues with addon registration.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../keymap_prefs/" class="btn btn-neutral float-left" title="Advanced Keymap"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../keymap_prefs/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

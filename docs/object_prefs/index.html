@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Object tools - X-Ray Selection Tools</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../css/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Object tools";
+        var mkdocs_page_input_path = "object_prefs.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> X-Ray Selection Tools
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Preferences</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../mesh_prefs/">Mesh tools</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Object tools</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#shortcuts">Shortcuts</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#show-x-ray-shading">Show x-ray shading</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#selection-behavior">Selection behavior</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#show-box-crosshair-or-lasso-icon">Show box crosshair or lasso icon</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../keymap_prefs/">Advanced Keymap</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">X-Ray Selection Tools</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Preferences &raquo;</li>
+      <li>Object tools</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools/edit/master/docs/object_prefs.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1"></h1>
+<p><img alt="Object tool preferences" src="/img/object_tool_prefs.png" title="Object tool preferences" /></p>
+<h3 id="shortcuts">Shortcuts</h3>
+<p>Shortcuts for tools in object mode.</p>
+<h3 id="show-x-ray-shading">Show x-ray shading</h3>
+<p>This toggle defines whether the x-ray tools will use x-ray shading or not. 
+The button below allows you to toggle the state of x-ray shading.</p>
+<p>For example, you can turn off x-ray shading and x-ray tools will work just like the default blender tools
+and set a key to turn it on when it's needed:</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/object_show_xray.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<h3 id="selection-behavior">Selection behavior</h3>
+<ul>
+<li>In Origin mode you select only objects with origins within the selection region.</li>
+<li>In Contain mode you select only objects entirely enclosed in the selection region:</li>
+</ul>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/object_select_contain.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+<ul>
+<li>In Overlap mode you select all objects within the selection region, plus any objects
+crossing boundaries of the selection region:</li>
+</ul>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/object_select_overlap.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+<ul>
+<li>In Direction mode you automatically switch between Overlap and Contain selection based on cursor movement direction. <ul>
+<li>Drag from left to right to select all objects crossing or within the selection region (Overlap).</li>
+<li>Drag from right to left to select all objects entirely enclosed in the selection region (Contain).</li>
+</ul>
+</li>
+</ul>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/object_select_direction.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<p>Note that every mode is slower than the default one on objects with a lot of geometry.</p>
+<h3 id="show-box-crosshair-or-lasso-icon">Show box crosshair or lasso icon</h3>
+<p>When you initialize a tool with a keyboard shortcut (for example default B, C, L shortcuts) it displays a starting
+indicator - crosshair for box tool and lasso icon for lasso tool: </p>
+<p><img alt="Box crosshair" src="/img/box_crosshair.png" title="Box crosshair" /> <img alt="Lasso icon" src="/img/lasso_icon.png" title="Lasso icon" /></p>
+<p>This toggles can disable them.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../mesh_prefs/" class="btn btn-neutral float-left" title="Mesh tools"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../keymap_prefs/" class="btn btn-neutral float-right" title="Advanced Keymap">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../mesh_prefs/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../keymap_prefs/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

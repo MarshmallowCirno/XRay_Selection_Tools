@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Advanced Keymap - X-Ray Selection Tools</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../css/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Advanced Keymap";
+        var mkdocs_page_input_path = "keymap_prefs.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> X-Ray Selection Tools
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Preferences</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../mesh_prefs/">Mesh tools</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../object_prefs/">Object tools</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Advanced Keymap</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#shortcuts-for-starting-tools-and-changing-preferences">Shortcuts for starting tools and changing preferences</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#shortcuts-for-tool-selection-modes">Shortcuts for tool selection modes</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">X-Ray Selection Tools</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Preferences &raquo;</li>
+      <li>Advanced Keymap</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools/edit/master/docs/keymap_prefs.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1"></h1>
+<p><img alt="Keymap preferences" src="/img/keymap_prefs.png" title="Keymap preferences" /></p>
+<h3 id="shortcuts-for-starting-tools-and-changing-preferences">Shortcuts for starting tools and changing preferences</h3>
+<p>Here are mouse and keyboard shortcuts for starting x-ray selection tools and toggling their preferences.</p>
+<p>Deactivating shortcut header here will completely remove keys below it from blender keyconfig, 
+so keyconfig won't be cluttered with inactive keys.</p>
+<p>By default, tools use preferences from Mesh Tools and Object Tools tabs in addon preferences. But you can configure preferences 
+separately for individual shortcuts. To do this expand a shortcut and check Override Global Properties (1). Then 
+you can change shortcut preferences independently of global ones (2)(3).</p>
+<p><img alt="Override global properties" src="/img/override_global_props.png" title="Override global properties" /></p>
+<h3 id="shortcuts-for-tool-selection-modes">Shortcuts for tool selection modes</h3>
+<p>This section allows to set up keys that change selection mode when held down before using a box, lasso or circle xray 
+tool in the toolbar. Deactivating selection mode here will remove its shortcut from xray selection tool. </p>
+<p>Active mode corresponds to current selection mode in the blender header or properties:</p>
+<p><img alt="Active selection mode" src="/img/active_selection_mode.png" title="Active selection mode" /></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../object_prefs/" class="btn btn-neutral float-left" title="Object tools"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../changelog/" class="btn btn-neutral float-right" title="Changelog">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../object_prefs/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../changelog/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

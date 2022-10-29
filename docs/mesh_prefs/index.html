@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Mesh tools - X-Ray Selection Tools</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../css/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Mesh tools";
+        var mkdocs_page_input_path = "mesh_prefs.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> X-Ray Selection Tools
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="..">Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Preferences</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Mesh tools</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#shortcuts">Shortcuts</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#selection-through">Selection through</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#selection-frame-colors">Selection frame colors</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#show-x-ray-shading">Show x-ray shading</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#select-all-edges-and-faces">Select all edges and faces</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#directional-box-and-lasso-tools">Directional box and lasso tools</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#hide-mirror-and-solidify-modifiers">Hide mirror and solidify modifiers</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#show-box-crosshair-or-lasso-icon">Show box crosshair or lasso icon</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../object_prefs/">Object tools</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../keymap_prefs/">Advanced Keymap</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">X-Ray Selection Tools</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Preferences &raquo;</li>
+      <li>Mesh tools</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools/edit/master/docs/mesh_prefs.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1"></h1>
+<p><img alt="Mesh tool preferences" src="/img/mesh_tool_prefs.png" title="Mesh tool preferences" /></p>
+<h3 id="shortcuts">Shortcuts</h3>
+<p>Shortcuts for tools in edit mode.</p>
+<h3 id="selection-through">Selection through</h3>
+<p>This toggle defines whether the x-ray tools will select through or not. 
+The button below allows you to toggle the state of selection through.</p>
+<p>For example, you can turn off selection through and x-ray tools will work just like the default blender tools
+and set a key to turn it on when it's needed:</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/mesh_select_through_key_toggle.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<h3 id="selection-frame-colors">Selection frame colors</h3>
+<p>Setting different colors can be useful to see if selection through is enabled or not if you disabled x-ray shading:</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/mesh_select_through_color.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<h3 id="show-x-ray-shading">Show x-ray shading</h3>
+<p>When this toggle is turned off, x-ray shading won't automatically turn on in selection through mode:</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/mesh_select_through_without_xray.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<h3 id="select-all-edges-and-faces">Select all edges and faces</h3>
+<p>By default, in selection through mode tools select edges that have both their vertices inside the selection region and
+faces with their center dot inside the selection region:</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/mesh_select_edges_faces_default.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<p>To select all edges or faces that touch the selection region enable "Select All" toggles (this is slower than the 
+default selection on meshes with a lot of geometry):</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/mesh_select_edges_faces_all.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<h3 id="directional-box-and-lasso-tools">Directional box and lasso tools</h3>
+<p>Toggle separate configuration of tool settings for left-to-right and right-to-left directions. For example, you can
+set up left-to-right drag direction to select through and right-to-left direction to perform default selection:</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="/videos/mesh_select_direction.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
+<h3 id="hide-mirror-and-solidify-modifiers">Hide mirror and solidify modifiers</h3>
+<p>Hide mirror modifier or solidify modifier during selection through and re-enable them after finishing selection. 
+This can be useful on dense mesh, making it easier to see real geometry in x-ray shading.</p>
+<h3 id="show-box-crosshair-or-lasso-icon">Show box crosshair or lasso icon</h3>
+<p>When you initialize a tool with a keyboard shortcut (for example default B, C, L shortcuts) it displays a starting
+indicator - crosshair for box tool and lasso icon for lasso tool: </p>
+<p><img alt="Box crosshair" src="/img/box_crosshair.png" title="Box crosshair" /> <img alt="Lasso icon" src="/img/lasso_icon.png" title="Lasso icon" /></p>
+<p>This toggles can disable them.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../object_prefs/" class="btn btn-neutral float-right" title="Object tools">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/MarshmallowCirno/XRay_Selection_Tools" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../object_prefs/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
