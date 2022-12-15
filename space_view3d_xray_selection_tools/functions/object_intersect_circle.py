@@ -100,11 +100,11 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
     # Speed up finding overlaps or intersections by doing polygon tests on bounding boxes.
 
     # Ob bbox intersects selection circle.
-    segment_bools = segments_inside_or_intersect_circle(ob_2dbbox_segments, center, radius).reshape(mesh_ob_count, 4)
+    segment_bools = segments_inside_or_intersect_circle(ob_2dbbox_segments, center, radius).reshape((mesh_ob_count, 4))
     obs_mask_2dbbox_isect_selcircle = np.any(segment_bools, axis=1)
 
     # Ob bbox entirely inside selection circle.
-    point_bools = points_inside_circle(ob_2dbbox_points, center, radius).reshape(mesh_ob_count, 4)
+    point_bools = points_inside_circle(ob_2dbbox_points, center, radius).reshape((mesh_ob_count, 4))
     obs_mask_2dbbox_entire_in_selcircle = np.all(point_bools, axis=1)
 
     # Cursor is inside ob bbox.

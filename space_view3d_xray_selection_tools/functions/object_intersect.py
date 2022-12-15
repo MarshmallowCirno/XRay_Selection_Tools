@@ -17,12 +17,12 @@ def partition(items, predicate=bool):
 def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
     ob_3dbbox_list = (ob.bound_box for ob in mesh_obs)
     ob_3dbbox_flat_list = chain.from_iterable(chain.from_iterable(ob_3dbbox_list))
-    ob_3dbbox_co_local = np.fromiter(ob_3dbbox_flat_list, "f", mesh_ob_count * 24).reshape(mesh_ob_count, (8, 3))
+    ob_3dbbox_co_local = np.fromiter(ob_3dbbox_flat_list, "f", mesh_ob_count * 24).reshape((mesh_ob_count, 8, 3))
 
     # Get object matrices.
     ob_mat_list = (ob.matrix_world for ob in mesh_obs)
     ob_mat_flat_list = chain.from_iterable(chain.from_iterable(ob_mat_list))
-    ob_mats = np.fromiter(ob_mat_flat_list, "f", mesh_ob_count * 16).reshape(mesh_ob_count, (4, 4))
+    ob_mats = np.fromiter(ob_mat_flat_list, "f", mesh_ob_count * 16).reshape((mesh_ob_count, 4, 4))
 
     # Get world space coordinates of 3d bboxes of objects.
     ob_3dbbox_co_world = get_co_world_of_mats(ob_mats, ob_3dbbox_co_local)
@@ -52,7 +52,7 @@ def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
             ob_2dbbox_xmax,
             ob_2dbbox_ymin,
         )
-    ).reshape(mesh_ob_count * 4, 2)
+    ).reshape((mesh_ob_count * 4, 2))
 
     # Create segments of object 2d bboxes.
     ob_2dbbox_segments = np.column_stack(
@@ -74,7 +74,7 @@ def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
             ob_2dbbox_xmin,
             ob_2dbbox_ymin,
         )
-    ).reshape(mesh_ob_count * 4, 2, 2)
+    ).reshape((mesh_ob_count * 4, 2, 2))
 
     # Get mask of entirely clipped bboxes.
     obs_mask_2dbbox_entire_clip = np.all(ob_3dbbox_co_2d_mask_clip, axis=1)
@@ -153,7 +153,7 @@ def get_ob_loc_co_2d(obs, region, rv3d):
     ob_co_world = (ob.location for ob in obs)
     ob_co_world = chain.from_iterable(ob_co_world)
     c = len(obs)
-    ob_co_world = np.fromiter(ob_co_world, "f", c * 3).reshape(c, 3)
+    ob_co_world = np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3))
     ob_co_2d = get_co_2d(region, rv3d, ob_co_world)
     return ob_co_2d
 
