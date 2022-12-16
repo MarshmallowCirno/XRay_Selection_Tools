@@ -4,6 +4,7 @@ from itertools import chain
 from operator import itemgetter
 
 import bmesh
+import bpy
 import numpy as np
 from bpy.types import Context
 
@@ -70,10 +71,16 @@ def select_mesh_elems(
             timer = Timer()
             mesh_select_mode = context.tool_settings.mesh_select_mode
 
-            ob.update_from_editmode()
-            me = ob.data
-            # noinspection PyTypeChecker
-            bm = bmesh.from_edit_mesh(me)
+            if bpy.app.version >= (3, 4, 0):
+                # noinspection PyTypeChecker
+                bm = bmesh.from_edit_mesh(ob.data)
+                me = bpy.data.meshes.new("xray_select_temp_mesh")
+                bm.to_mesh(me)
+            else:
+                ob.update_from_editmode()
+                me = ob.data
+                # noinspection PyTypeChecker
+                bm = bmesh.from_edit_mesh(me)
 
             timer.add("\nGetting mesh")
 
@@ -90,7 +97,12 @@ def select_mesh_elems(
 
                 # Mask of visible vertices.
                 verts_mask_vis = np.empty(vert_count, "?")
-                verts.foreach_get("hide", verts_mask_vis)
+                if bpy.app.version >= (3, 4, 0):
+                    me.attributes.new(name=".hide_vert", type="BOOLEAN", domain="POINT")
+                    data = me.attributes[".hide_vert"].data
+                    data.foreach_get("value", verts_mask_vis)
+                else:
+                    verts.foreach_get("hide", verts_mask_vis)
                 verts_mask_vis = ~verts_mask_vis
 
                 timer.add("\nGetting vert attributes")
@@ -124,7 +136,12 @@ def select_mesh_elems(
 
                 # Do selection.
                 if mesh_select_mode[0]:
-                    select = get_mesh_selection_mask(verts, vert_count, verts_mask_visin, mode)
+                    if bpy.app.version >= (3, 4, 0):
+                        me.attributes.new(name=".select_vert", type="BOOLEAN", domain="POINT")
+                        data = me.attributes[".select_vert"].data
+                        select = get_mesh_selection_mask(data, vert_count, verts_mask_visin, mode)
+                    else:
+                        select = get_mesh_selection_mask(verts, vert_count, verts_mask_visin, mode)
 
                     select_list = select.tolist()
                     for v, sel in zip(bm.verts, select_list):
@@ -145,7 +162,12 @@ def select_mesh_elems(
 
                 # Mask of visible edges.
                 edges_mask_vis = np.empty(edge_count, "?")
-                edges.foreach_get("hide", edges_mask_vis)
+                if bpy.app.version >= (3, 4, 0):
+                    me.attributes.new(name=".hide_edge", type="BOOLEAN", domain="EDGE")
+                    data = me.attributes[".hide_edge"].data
+                    data.foreach_get("value", edges_mask_vis)
+                else:
+                    edges.foreach_get("hide", edges_mask_vis)
                 edges_mask_vis = ~edges_mask_vis
 
                 timer.add("\nGetting edge attributes")
@@ -227,7 +249,12 @@ def select_mesh_elems(
 
                 # Do selection.
                 if mesh_select_mode[1]:
-                    select = get_mesh_selection_mask(edges, edge_count, edges_mask_visin, mode)
+                    if bpy.app.version >= (3, 4, 0):
+                        me.attributes.new(name=".select_edge", type="BOOLEAN", domain="EDGE")
+                        data = me.attributes[".select_edge"].data
+                        select = get_mesh_selection_mask(data, edge_count, edges_mask_visin, mode)
+                    else:
+                        select = get_mesh_selection_mask(edges, edge_count, edges_mask_visin, mode)
 
                     select_list = select.tolist()
                     for e, sel in zip(bm.edges, select_list):
@@ -243,7 +270,12 @@ def select_mesh_elems(
 
                 # Get mask of visible faces.
                 faces_mask_vis = np.empty(face_count, "?")
-                faces.foreach_get("hide", faces_mask_vis)
+                if bpy.app.version >= (3, 4, 0):
+                    me.attributes.new(name=".hide_poly", type="BOOLEAN", domain="FACE")
+                    data = me.attributes[".hide_poly"].data
+                    data.foreach_get("value", faces_mask_vis)
+                else:
+                    faces.foreach_get("hide", faces_mask_vis)
                 faces_mask_vis = ~faces_mask_vis
 
                 timer.add("\nGetting face attributes")
@@ -384,7 +416,12 @@ def select_mesh_elems(
                         timer.add("Getting faces under cursor")
 
                 # Do selection.
-                select = get_mesh_selection_mask(faces, face_count, faces_mask_visin, mode)
+                if bpy.app.version >= (3, 4, 0):
+                    me.attributes.new(name=".select_poly", type="BOOLEAN", domain="FACE")
+                    data = me.attributes[".select_poly"].data
+                    select = get_mesh_selection_mask(data, face_count, faces_mask_visin, mode)
+                else:
+                    select = get_mesh_selection_mask(faces, face_count, faces_mask_visin, mode)
 
                 select_list = select.tolist()
                 for f, sel in zip(bm.faces, select_list):
@@ -392,10 +429,13 @@ def select_mesh_elems(
 
                 timer.add("Selecting faces")
 
+            if bpy.app.version >= (3, 4, 0):
+                bpy.data.meshes.remove(me, do_unlink=True)
+
             # Flush face selection after selecting/deselecting edges and vertices.
             bm.select_flush_mode()
 
             # noinspection PyTypeChecker
-            bmesh.update_edit_mesh(me, loop_triangles=False, destructive=False)
+            bmesh.update_edit_mesh(ob.data, loop_triangles=False, destructive=False)
 
             timer.add("End")
