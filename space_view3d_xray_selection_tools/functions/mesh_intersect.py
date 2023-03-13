@@ -1,7 +1,7 @@
 from typing import Literal
 
 from itertools import chain
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 
 import bmesh
 import bpy
@@ -332,13 +332,12 @@ def select_mesh_elems(
                             visin_edges = itemgetter(*visin_edge_indices)(bm.edges)
                             visin_edges = (visin_edges,) if type(visin_edges) is not tuple else visin_edges
 
-                            link_faces = (edge.link_faces for edge in visin_edges)
+                            link_faces = map(attrgetter("link_faces"), visin_edges)
                             link_faces = set(chain.from_iterable(link_faces))
 
-                            in_face_indices = (face.index for face in link_faces)
+                            in_face_indices = map(attrgetter("index"), link_faces)
 
-                            c = len(link_faces)
-                            in_face_indices = np.fromiter(in_face_indices, "i", c)
+                            in_face_indices = np.fromiter(in_face_indices, "i")
                         else:
                             # Numpy pass.
                             # Indices of face edges.

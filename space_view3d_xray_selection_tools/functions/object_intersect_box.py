@@ -21,7 +21,7 @@ def get_obs_mask_in_selbox(obs, obs_mask_check, depsgraph, region, rv3d, xmin, x
             bool_list.append(False)
         ob_eval.to_mesh_clear()
 
-    bools = np.fromiter(bool_list, "?")
+    bools = np.fromiter(bool_list, "?", len(bool_list))
     return bools
 
 

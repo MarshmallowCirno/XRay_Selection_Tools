@@ -1,4 +1,5 @@
 from itertools import chain
+from operator import attrgetter, methodcaller
 
 import numpy as np
 
@@ -15,12 +16,12 @@ def partition(items, predicate=bool):
 
 
 def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
-    ob_3dbbox_list = (ob.bound_box for ob in mesh_obs)
+    ob_3dbbox_list = map(attrgetter("bound_box"), mesh_obs)
     ob_3dbbox_flat_list = chain.from_iterable(chain.from_iterable(ob_3dbbox_list))
     ob_3dbbox_co_local = np.fromiter(ob_3dbbox_flat_list, "f", mesh_ob_count * 24).reshape((mesh_ob_count, 8, 3))
 
     # Get object matrices.
-    ob_mat_list = (ob.matrix_world for ob in mesh_obs)
+    ob_mat_list = map(attrgetter("matrix_world"), mesh_obs)
     ob_mat_flat_list = chain.from_iterable(chain.from_iterable(ob_mat_list))
     ob_mats = np.fromiter(ob_mat_flat_list, "f", mesh_ob_count * 16).reshape((mesh_ob_count, 4, 4))
 
@@ -150,7 +151,7 @@ def get_face_vert_co_2d(me, vert_co_2d):
 
 def get_ob_loc_co_2d(obs, region, rv3d):
     """Get 2D coordinates of object location."""
-    ob_co_world = (ob.location for ob in obs)
+    ob_co_world = map(attrgetter("location"), obs)
     ob_co_world = chain.from_iterable(ob_co_world)
     c = len(obs)
     ob_co_world = np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3))
@@ -159,7 +160,7 @@ def get_ob_loc_co_2d(obs, region, rv3d):
 
 
 def do_selection(mask_of_obs_to_select, obs_to_select, mode):
-    obs_mask_selected = (ob.select_get() for ob in obs_to_select)
+    obs_mask_selected = map(methodcaller("select_get"), obs_to_select)
     obs_mask_selected = np.fromiter(obs_mask_selected, "?")
     select = get_ob_selection_mask(obs_mask_selected, mask_of_obs_to_select, mode).tolist()
     for ob, sel in zip(obs_to_select, select):

@@ -53,7 +53,7 @@ def get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d,
                     bool_list.append(False)
         ob_eval.to_mesh_clear()
 
-    bools = np.fromiter(bool_list, "?")
+    bools = np.fromiter(bool_list, "?", len(bool_list))
     return bools
 
 
@@ -72,7 +72,7 @@ def get_obs_mask_in_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, cent
             bool_list.append(False)
         ob_eval.to_mesh_clear()
 
-    bools = np.fromiter(bool_list, "?")
+    bools = np.fromiter(bool_list, "?", len(bool_list))
     return bools
 
 
