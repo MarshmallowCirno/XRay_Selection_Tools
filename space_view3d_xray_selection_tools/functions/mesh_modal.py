@@ -151,7 +151,7 @@ def set_shading_from_properties(self, context):
             self.select_through and self.invert_select_through
         ):
             shading.show_xray = self.init_overlays["show_xray"]
-            shading.show_xray_wireframe = self.init_overlays["xray_alpha_wireframe"]
+            shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
 
 
 def set_modifiers_from_properties(self):
