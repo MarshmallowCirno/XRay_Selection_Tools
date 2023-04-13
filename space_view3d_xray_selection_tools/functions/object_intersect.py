@@ -1,6 +1,7 @@
 from itertools import chain
 from operator import attrgetter, methodcaller
 
+import bpy
 import numpy as np
 
 from .view3d import get_co_world_of_ob, get_co_world_of_mats, get_co_2d
@@ -98,7 +99,13 @@ def get_vert_co_2d(me, ob, region, rv3d):
 
     # Get local coordinates of vertices.
     vert_co_local = np.empty(vert_count * 3, "f")
-    verts.foreach_get("co", vert_co_local)
+    if bpy.app.version >= (3, 5, 0):
+        if "position" not in me.attributes:
+            me.attributes.new(name="position", type="FLOAT_VECTOR", domain="POINT")
+        data = me.attributes["position"].data
+        data.foreach_get("vector", vert_co_local)
+    else:
+        verts.foreach_get("co", vert_co_local)
     vert_co_local.shape = (vert_count, 3)
 
     # Get 2d coordinates of vertices.

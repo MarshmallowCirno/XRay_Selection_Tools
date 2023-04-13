@@ -92,7 +92,12 @@ def select_mesh_elems(
 
                 # Local coordinates of vertices.
                 vert_co_local = np.empty(vert_count * 3, "f")
-                verts.foreach_get("co", vert_co_local)
+                if bpy.app.version >= (3, 5, 0):
+                    me.attributes.new(name="position", type="FLOAT_VECTOR", domain="POINT")
+                    data = me.attributes["position"].data
+                    data.foreach_get("vector", vert_co_local)
+                else:
+                    verts.foreach_get("co", vert_co_local)
                 vert_co_local.shape = (vert_count, 3)
 
                 # Mask of visible vertices.
@@ -184,9 +189,11 @@ def select_mesh_elems(
 
                 # If select_all_edges enabled or no inner edges found
                 # then select edges that intersect the selection polygon.
-                if select_all_edges \
-                        or (not select_all_edges and not np.any(vis_edges_mask_in)) \
-                        or (mesh_select_mode[2] and select_all_faces):
+                if (
+                        select_all_edges
+                        or (not select_all_edges and not np.any(vis_edges_mask_in))
+                        or (mesh_select_mode[2] and select_all_faces)
+                ):
 
                     # Coordinates of vertices of visible edges.
                     vis_edge_vert_co = vert_co[vis_edge_vert_indices]
