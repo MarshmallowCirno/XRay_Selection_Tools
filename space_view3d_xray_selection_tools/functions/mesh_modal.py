@@ -6,7 +6,7 @@ def gather_overlays(context):
         "show_xray": context.space_data.shading.show_xray,
         "xray_alpha": context.space_data.shading.xray_alpha,
         "show_xray_wireframe": bool(context.space_data.shading.show_xray_wireframe),
-        "xray_alpha_wireframe": bool(context.space_data.shading.xray_alpha_wireframe),
+        "xray_alpha_wireframe": context.space_data.shading.xray_alpha_wireframe,
         "backwire_opacity": context.space_data.overlay.backwire_opacity,
     }
     return overlays
@@ -85,9 +85,9 @@ def initialize_shading_from_properties(self, context):
                 ):
                     shading.show_xray = True
                     shading.show_xray_wireframe = True
-                    shading.xray_alpha = 1  # .5
-                    shading.xray_alpha_wireframe = 1  # 0
-                    overlay.backwire_opacity = 0  # .5
+                    shading.xray_alpha = 1.0  # default 0.5
+                    shading.xray_alpha_wireframe = 1.0  # default 0.0
+                    overlay.backwire_opacity = 0.0  # default 0.5
 
 
 def set_properties_from_direction(self, direction):
@@ -136,9 +136,9 @@ def set_shading_from_properties(self, context):
         ):
             shading.show_xray = True
             shading.show_xray_wireframe = True
-            shading.xray_alpha = 1  # .5
-            shading.xray_alpha_wireframe = 1  # 0
-            overlay.backwire_opacity = 0  # .5
+            shading.xray_alpha = 1.0  # default 0.5
+            shading.xray_alpha_wireframe = 1.0  # default 0.0
+            overlay.backwire_opacity = 0.0  # default 0.5
         else:
             # If hidden xray shading should be off, restore initial overlay opacity.
             shading.xray_alpha = self.init_overlays["xray_alpha"]
