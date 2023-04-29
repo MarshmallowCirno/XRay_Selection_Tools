@@ -1,7 +1,6 @@
 import gpu
 import bpy
 from gpu_extras.batch import batch_for_shader
-from bgl import glEnable, glDisable, GL_BLEND
 
 
 def redraw_point_shader(context, points):
@@ -43,11 +42,11 @@ def redraw_segment_shader(context, points, indices):
 
 
 def draw_segment_shader(segment_shader, segment_batch):
-    glEnable(GL_BLEND)
+    gpu.state.blend_set("ALPHA")
     segment_shader.bind()
     segment_shader.uniform_float("color", (0.0, 1.0, 0.0, 0.2))
     segment_batch.draw(segment_shader)
-    glDisable(GL_BLEND)
+    gpu.state.blend_set("NONE")
 
     # points = ob_2dbboxes.reshape((-1, 2)).tolist()
     # redraw_point_shader(context, points)
