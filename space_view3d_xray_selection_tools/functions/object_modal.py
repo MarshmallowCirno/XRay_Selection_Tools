@@ -5,6 +5,7 @@ def gather_overlays(context):
     overlays = {
         "show_xray": context.space_data.shading.show_xray,
         "show_xray_wireframe": context.space_data.shading.show_xray_wireframe,
+        "show_gizmo": context.space_data.show_gizmo,
     }
     return overlays
 
@@ -14,6 +15,7 @@ def set_properties(self, tool):
         self.show_xray = get_preferences().ob_show_xray
         self.xray_toggle_key = get_preferences().ob_xray_toggle_key
         self.xray_toggle_type = get_preferences().ob_xray_toggle_type
+        self.hide_gizmo = get_preferences().ob_hide_gizmo
         match tool:
             case 'BOX':
                 self.show_crosshair = get_preferences().ob_show_crosshair
@@ -43,11 +45,14 @@ def toggle_overlays(self, context):
     elif context.space_data.shading.type == 'WIREFRAME':
         context.space_data.shading.show_xray_wireframe = self.show_xray
 
+    if self.hide_gizmo:
+        context.space_data.show_gizmo = False
 
 def restore_overlays(self, context):
     if self.init_overlays:
         context.space_data.shading.show_xray = self.init_overlays["show_xray"]
         context.space_data.shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
+        context.space_data.show_gizmo = self.init_overlays["show_gizmo"]
 
 
 def get_xray_toggle_key_list():

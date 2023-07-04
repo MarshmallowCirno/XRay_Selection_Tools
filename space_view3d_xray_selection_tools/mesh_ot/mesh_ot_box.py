@@ -269,6 +269,12 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         default=True,
         options={'SKIP_SAVE'},
     )
+    hide_gizmo: bpy.props.BoolProperty(
+        name="Hide Gizmo",
+        description="Temporary hide gizmo of the active tool",
+        default=False,
+        options={'SKIP_SAVE'},
+    )
     show_crosshair: bpy.props.BoolProperty(
         name="Show Crosshair",
         description="Show crosshair when wait_for_input is enabled",

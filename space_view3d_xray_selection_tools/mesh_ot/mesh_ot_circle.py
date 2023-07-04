@@ -231,6 +231,12 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         default=True,
         options={'SKIP_SAVE'},
     )
+    hide_gizmo: bpy.props.BoolProperty(
+        name="Hide Gizmo",
+        description="Temporary hide gizmo of the active tool",
+        default=False,
+        options={'SKIP_SAVE'},
+    )
 
     @classmethod
     def poll(cls, context):

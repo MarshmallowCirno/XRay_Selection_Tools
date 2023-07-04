@@ -178,6 +178,12 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         default='HOLD',
         options={'SKIP_SAVE'},
     )
+    hide_gizmo: bpy.props.BoolProperty(
+        name="Hide Gizmo",
+        description="Temporary hide gizmo of the active tool",
+        default=False,
+        options={'SKIP_SAVE'},
+    )
     behavior: bpy.props.EnumProperty(
         name="Selection Behavior",
         description="Selection behavior",

@@ -59,6 +59,17 @@ def draw_wait_for_input_cursor_info_popup(self, context):
         col.label(text=n)
 
 
+def draw_hide_gizmo_info_popup(self, context):
+    layout = self.layout
+    text = \
+        "Hide gizmo of the active tool during a selection and restore it after finishing " \
+        "selection."
+    lines = textwrap.wrap(text, 120)
+    col = layout.column(align=True)
+    for n in lines:
+        col.label(text=n)
+
+
 def draw_ob_select_behavior_info_popup(self, context):
     layout = self.layout
     texts = \
@@ -134,6 +145,9 @@ class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
                                            ui_units_x=31, keymap=None, from_active_button=True)
         elif self.button == "wait_for_input_cursor":
             context.window_manager.popover(draw_wait_for_input_cursor_info_popup,
+                                           ui_units_x=31, keymap=None, from_active_button=True)
+        elif self.button == "hide_gizmo":
+            context.window_manager.popover(draw_hide_gizmo_info_popup,
                                            ui_units_x=31, keymap=None, from_active_button=True)
         elif self.button == "tool_keymaps":
             context.window_manager.popover(draw_tool_keymaps_info_popup,

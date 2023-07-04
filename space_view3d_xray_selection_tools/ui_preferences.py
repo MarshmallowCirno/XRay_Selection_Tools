@@ -1,5 +1,4 @@
 import bpy
-import textwrap
 import rna_keymap_ui
 from .ot_keymap import me_keyboard_keymap, me_mouse_keymap, ob_keyboard_keymap, ob_mouse_keymap, \
     toggles_keymap
@@ -185,6 +184,11 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         description="Hide solidify modifiers during selection",
         default=True
     )
+    me_hide_gizmo: bpy.props.BoolProperty(
+        name="Hide Gizmo",
+        description="Hide the active tool gizmo during selection",
+        default=False
+    )
     me_show_crosshair: bpy.props.BoolProperty(
         name="Show Crosshair",
         description="Show crosshair when wait_for_input is enabled",
@@ -218,6 +222,11 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
                ('PRESS', "Pressing", "")
                ],
         default='HOLD'
+    )
+    ob_hide_gizmo: bpy.props.BoolProperty(
+        name="Hide Gizmo",
+        description="Hide the active tool gizmo during selection",
+        default=False
     )
     ob_show_crosshair: bpy.props.BoolProperty(
         name="Show Crosshair",
@@ -328,7 +337,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         options={'SKIP_SAVE'}
     )
 
-    def draw(self, context):
+    def draw(self, _):
         layout = self.layout
         col = layout.column(align=True)
         row = col.row(align=True)
@@ -508,10 +517,17 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             flow.label(text="Temporary hide this modifiers during selection through")
             split = flow.split(align=True)
             split.active = rtl_st_available or ltr_st_available or def_st_available
-            split.prop(self, "me_hide_mirror", text="Mirror", icon='MOD_MIRROR')
+            split.prop(self, "me_hide_mirror", text="Hide Mirror", icon='MOD_MIRROR')
             row = split.row(align=True)
-            row.prop(self, "me_hide_solidify", text="Solidify", icon='MOD_SOLIDIFY')
+            row.prop(self, "me_hide_solidify", text="Hide Solidify", icon='MOD_SOLIDIFY')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_modifiers"
+
+            self.draw_flow_vertical_separator(flow)
+
+            flow.label(text="Temporary hide gizmo of the active tool")
+            row = flow.row(align=True)
+            row.prop(self, "me_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
+            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_gizmo"
 
             self.draw_flow_vertical_separator(flow)
 
@@ -580,10 +596,17 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             flow.label(text="Temporary hide this modifiers during selection through")
             split = flow.split(align=True)
             split.active = st_available
-            split.prop(self, "me_hide_mirror", text="Mirror", icon='MOD_MIRROR')
+            split.prop(self, "me_hide_mirror", text="Hide Mirror", icon='MOD_MIRROR')
             row = split.row(align=True)
-            row.prop(self, "me_hide_solidify", text="Solidify", icon='MOD_SOLIDIFY')
+            row.prop(self, "me_hide_solidify", text="Hide Solidify", icon='MOD_SOLIDIFY')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_modifiers"
+
+            self.draw_flow_vertical_separator(flow)
+
+            flow.label(text="Temporary hide gizmo of the active tool")
+            row = flow.row(align=True)
+            row.prop(self, "me_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
+            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
 
             self.draw_flow_vertical_separator(flow)
 
@@ -629,6 +652,13 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         row = flow.row(align=True)
         row.prop(self, "ob_lasso_select_behavior", text="")
         row.label(text="", icon='BLANK1')
+
+        self.draw_flow_vertical_separator(flow)
+
+        flow.label(text="Temporary hide gizmo of the active tool")
+        row = flow.row(align=True)
+        row.prop(self, "ob_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
 
         self.draw_flow_vertical_separator(flow)
 

@@ -5,9 +5,10 @@ def gather_overlays(context):
     overlays = {
         "show_xray": context.space_data.shading.show_xray,
         "xray_alpha": context.space_data.shading.xray_alpha,
-        "show_xray_wireframe": bool(context.space_data.shading.show_xray_wireframe),
+        "show_xray_wireframe": context.space_data.shading.show_xray_wireframe,
         "xray_alpha_wireframe": context.space_data.shading.xray_alpha_wireframe,
         "backwire_opacity": context.space_data.overlay.backwire_opacity,
+        "show_gizmo": context.space_data.show_gizmo,
     }
     return overlays
 
@@ -46,6 +47,7 @@ def set_properties_from_preferences(self, tool):
         self.select_through_toggle_type = get_preferences().me_select_through_toggle_type
         self.hide_mirror = get_preferences().me_hide_mirror
         self.hide_solidify = get_preferences().me_hide_solidify
+        self.hide_gizmo = get_preferences().me_hide_gizmo
         match tool:
             case 'BOX':
                 self.show_crosshair = get_preferences().me_show_crosshair
@@ -88,6 +90,9 @@ def initialize_shading_from_properties(self, context):
                     shading.xray_alpha = 1.0  # default 0.5
                     shading.xray_alpha_wireframe = 1.0  # default 0.0
                     overlay.backwire_opacity = 0.0  # default 0.5
+
+        if self.hide_gizmo:
+            context.space_data.show_gizmo = False
 
 
 def set_properties_from_direction(self, direction):
@@ -174,6 +179,7 @@ def restore_overlays(self, context):
         context.space_data.shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
         context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
         context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+        context.space_data.show_gizmo = self.init_overlays["show_gizmo"]
 
 
 def restore_modifiers(self):
