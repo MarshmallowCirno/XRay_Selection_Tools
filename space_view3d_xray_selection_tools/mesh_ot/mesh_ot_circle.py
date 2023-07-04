@@ -456,6 +456,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             wait_for_input=False,
             radius=self.radius,
         )
+        if self.curr_mode == 'SET':
+            self.curr_mode = 'ADD'
 
     def begin_custom_intersect_tests(self, context):
         center = (self.last_mouse_region_x, self.last_mouse_region_y)
