@@ -121,7 +121,12 @@ def get_edge_vert_co_2d(me, vert_co_2d):
 
     # For each edge get 2 indices of its vertices.
     edge_vert_indices = np.empty(edge_count * 2, "i")
-    edges.foreach_get("vertices", edge_vert_indices)
+    if bpy.app.version >= (3, 6, 0):
+        me.attributes.new(name=".edge_verts", type="INT", domain="EDGE")
+        data = me.attributes[".edge_verts"].data
+        data.foreach_get("value", edge_vert_indices)
+    else:
+        edges.foreach_get("vertices", edge_vert_indices)
     edge_vert_indices.shape = (edge_count, 2)
 
     # For each edge get 2 coordinates of its vertices.

@@ -60,15 +60,16 @@ def select_mesh_elems(
         case 'LASSO':
             lasso = tool_co
         case _:
-            raise ValueError("tool is invalid")
+            raise ValueError("Tool is invalid")
 
     region = context.region
     rv3d = context.region_data
 
+    timer = Timer()
+
     sel_obs = context.selected_objects if context.selected_objects else [context.object]
     for ob in sel_obs:
         if ob.type == 'MESH':
-            timer = Timer()
             mesh_select_mode = context.tool_settings.mesh_select_mode
 
             if bpy.app.version >= (3, 4, 0):
@@ -82,11 +83,10 @@ def select_mesh_elems(
                 # noinspection PyTypeChecker
                 bm = bmesh.from_edit_mesh(me)
 
-            timer.add("\nGetting mesh")
+            timer.add("Getting mesh")
 
-            # VERT PASS ####
+            # VERTEX PASS ####
             if mesh_select_mode[0] or mesh_select_mode[1] or mesh_select_mode[2] and select_all_faces:
-                timer = Timer()
                 verts = me.vertices
                 vert_count = len(verts)
 
@@ -110,7 +110,7 @@ def select_mesh_elems(
                     verts.foreach_get("hide", verts_mask_vis)
                 verts_mask_vis = ~verts_mask_vis
 
-                timer.add("\nGetting vert attributes")
+                timer.add("Getting vertex attributes")
 
                 # Local coordinates of visible vertices.
                 vis_vert_co_local = vert_co_local[verts_mask_vis]
@@ -120,7 +120,7 @@ def select_mesh_elems(
                 vert_co = np.empty((vert_count, 2), "f")
                 vert_co[verts_mask_vis] = vis_vert_co = get_co_2d(region, rv3d, vis_vert_co_world)
 
-                timer.add("Vert co2d")
+                timer.add("Calculating 2d coordinates of vertices")
 
                 # Mask of vertices inside the selection polygon from visible vertices.
                 match tool:
@@ -137,7 +137,7 @@ def select_mesh_elems(
                 verts_mask_visin = np.full(vert_count, False, "?")
                 verts_mask_visin[verts_mask_vis] = vis_verts_mask_in
 
-                timer.add("Vert tests")
+                timer.add("Performing intersection tests on vertices")
 
                 # Do selection.
                 if mesh_select_mode[0]:
@@ -149,20 +149,25 @@ def select_mesh_elems(
                         select = get_mesh_selection_mask(verts, vert_count, verts_mask_visin, mode)
 
                     select_list = select.tolist()
+                    # noinspection PyTypeChecker
                     for v, sel in zip(bm.verts, select_list):
                         v.select = sel
 
-                    timer.add("Vert selection")
+                    timer.add("Doing vertex selection")
 
             # EDGE PASS ####
             if mesh_select_mode[1] or mesh_select_mode[2] and select_all_faces:
-                timer = Timer()
                 edges = me.edges
                 edge_count = len(edges)
 
                 # For each edge get 2 indices of its vertices.
                 edge_vert_indices = np.empty(edge_count * 2, "i")
-                edges.foreach_get("vertices", edge_vert_indices)
+                if bpy.app.version >= (3, 6, 0):
+                    me.attributes.new(name=".edge_verts", type="INT", domain="EDGE")
+                    data = me.attributes[".edge_verts"].data
+                    data.foreach_get("value", edge_vert_indices)
+                else:
+                    edges.foreach_get("vertices", edge_vert_indices)
                 edge_vert_indices.shape = (edge_count, 2)
 
                 # Mask of visible edges.
@@ -175,7 +180,7 @@ def select_mesh_elems(
                     edges.foreach_get("hide", edges_mask_vis)
                 edges_mask_vis = ~edges_mask_vis
 
-                timer.add("\nGetting edge attributes")
+                timer.add("Getting edge attributes")
 
                 # For each visible edge get 2 vertex indices.
                 vis_edge_vert_indices = edge_vert_indices[edges_mask_vis]
@@ -211,7 +216,7 @@ def select_mesh_elems(
                         case 'LASSO':
                             xmin, xmax, ymin, ymax = polygon_bbox(lasso)
                         case _:
-                            raise ValueError("tool is invalid")
+                            raise ValueError("Tool is invalid")
 
                     # Mask of edges from visible edges that have verts both laying outside of one of sides
                     # of selection polygon bbox, so they can't intersect the selection polygon and
@@ -240,7 +245,7 @@ def select_mesh_elems(
                                 may_isect_vis_edges_mask_isect = segments_intersect_polygon(
                                     may_isect_vis_edge_co, lasso)
                             case _:
-                                raise ValueError("tool is invalid")
+                                raise ValueError("Tool is invalid")
 
                         # Mask of edges that intersect the selection polygon from visible edges.
                         vis_edges_mask_in = vis_edges_mask_vert_in
@@ -252,7 +257,7 @@ def select_mesh_elems(
                 edges_mask_visin = np.full(edge_count, False, "?")
                 edges_mask_visin[edges_mask_vis] = vis_edges_mask_in
 
-                timer.add("Edge tests")
+                timer.add("Performing intersection tests on edges")
 
                 # Do selection.
                 if mesh_select_mode[1]:
@@ -264,14 +269,14 @@ def select_mesh_elems(
                         select = get_mesh_selection_mask(edges, edge_count, edges_mask_visin, mode)
 
                     select_list = select.tolist()
+                    # noinspection PyTypeChecker
                     for e, sel in zip(bm.edges, select_list):
                         e.select = sel
 
-                    timer.add("Edge selection")
+                    timer.add("Doing edge selection")
 
             # FACE PASS #####
             if mesh_select_mode[2]:
-                timer = Timer()
                 faces = me.polygons
                 face_count = len(faces)
 
@@ -285,7 +290,7 @@ def select_mesh_elems(
                     faces.foreach_get("hide", faces_mask_vis)
                 faces_mask_vis = ~faces_mask_vis
 
-                timer.add("\nGetting face attributes")
+                timer.add("Getting face attributes")
 
                 # Select faces which centers are inside the selection rectangle.
                 if not select_all_faces:
@@ -311,7 +316,7 @@ def select_mesh_elems(
                         case 'LASSO':
                             vis_faces_mask_in = points_inside_polygon(vis_face_center_co, lasso, prefilter=True)
                         case _:
-                            raise ValueError("tool is invalid")
+                            raise ValueError("Tool is invalid")
 
                     # Mask of visible faces inside the selection polygon from all faces.
                     faces_mask_visin = np.full(face_count, False, "?")
@@ -370,7 +375,7 @@ def select_mesh_elems(
                     else:
                         faces_mask_in = faces_mask_visin = np.full(face_count, False, "?")
 
-                    timer.add("Getting faces from selection")
+                    timer.add("Getting faces from edge and vertex selection")
 
                     # FACE POLY PASS ####
                     # Select faces under cursor (faces that have the selection polygon inside their area).
@@ -391,7 +396,7 @@ def select_mesh_elems(
                             case 'LASSO':
                                 cursor_co = lasso[0]
                             case _:
-                                raise ValueError("tool is invalid")
+                                raise ValueError("Tool is invalid")
 
                         # Indices of vertices of all faces.
                         face_vert_indices = np.empty(loop_count, "i")
@@ -430,10 +435,11 @@ def select_mesh_elems(
                     select = get_mesh_selection_mask(faces, face_count, faces_mask_visin, mode)
 
                 select_list = select.tolist()
+                # noinspection PyTypeChecker
                 for f, sel in zip(bm.faces, select_list):
                     f.select = sel
 
-                timer.add("Selecting faces")
+                timer.add("Doing face selection")
 
             if bpy.app.version >= (3, 4, 0):
                 bpy.data.meshes.remove(me, do_unlink=True)
