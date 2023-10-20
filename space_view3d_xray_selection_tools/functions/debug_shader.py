@@ -10,7 +10,10 @@ def redraw_point_shader(context, points):
         context.space_data.draw_handler_remove(handler, 'WINDOW')
         del bpy.app.driver_namespace['draw_xray_points_debug']
 
-    point_shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    if bpy.app.version >= (4, 0, 0):
+        point_shader = gpu.shader.from_builtin('UNIFORM_COLOR')
+    else:
+        point_shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
     point_batch = batch_for_shader(point_shader, 'POINTS', {"pos": points})
 
     handler = context.space_data.draw_handler_add(draw_point_shader, (point_shader, point_batch,), 'WINDOW',
@@ -32,7 +35,11 @@ def redraw_segment_shader(context, points, indices):
         context.space_data.draw_handler_remove(handler, 'WINDOW')
         del bpy.app.driver_namespace['draw_xray_segment_debug']
 
-    segment_shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    if bpy.app.version >= (4, 0, 0):
+        segment_shader = gpu.shader.from_builtin('UNIFORM_COLOR')
+    else:
+        segment_shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+
     segment_batch = batch_for_shader(segment_shader, 'LINES', {"pos": points}, indices=indices)
 
     handler = context.space_data.draw_handler_add(draw_segment_shader, (segment_shader, segment_batch,), 'WINDOW',
