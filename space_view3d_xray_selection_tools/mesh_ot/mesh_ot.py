@@ -4,7 +4,10 @@ from ..preferences import get_preferences
 
 
 def draw_text(text, pos_x, pos_y, align="LEFT", font=0, font_size=12, color=(1, 1, 1, 1)):
-    blf.size(font, font_size, 0)
+    if bpy.app.version >= (4, 0, 0):
+        blf.size(font, font_size)
+    else:
+        blf.size(font, font_size, 0)
     blf.color(font, *color)
     blf.enable(font, blf.SHADOW)
     blf.shadow_offset(font, 1, -1)
