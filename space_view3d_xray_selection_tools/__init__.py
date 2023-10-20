@@ -20,8 +20,8 @@
 bl_info = {
     "name": "X-Ray Selection Tools",
     "author": "MarshmallowCirno",
-    "version": (4, 3, 5),
-    "blender": (3, 5, 1),
+    "version": (4, 4, 0),
+    "blender": (3, 6, 0),
     "location": "Toolbar > Selection Tools",
     "description": "Box, lasso and circle selection tools with x-ray",
     "warning": "",
@@ -56,6 +56,7 @@ reloadable_modules = (
     "tools_dummy",
     "tools_keymap",
     "ui_preferences",
+    "startup",
 )
 
 # when bpy is already in local, we know this is not the initial import...
@@ -82,7 +83,7 @@ else:
     )
     from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
     from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
-    from . import help, ot_keymap, tools, tools_dummy, ui_preferences
+    from . import help, ot_keymap, tools, tools_dummy, ui_preferences, startup
 
 
 import bpy
@@ -101,6 +102,7 @@ def register():
     ot_keymap.register()
     tools.register()
     tools_dummy.register()
+    startup.register()
 
 
 def unregister():
@@ -117,3 +119,4 @@ def unregister():
     tools.reset_active_tool()
     tools.unregister()
     tools_dummy.unregister()
+    startup.unregister()
