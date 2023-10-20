@@ -1,5 +1,6 @@
 import ctypes
 import time
+from itertools import chain
 from math import hypot
 
 import bpy
@@ -23,7 +24,7 @@ from bgl import (
     GL_BLEND,
 )
 from gpu_extras.batch import batch_for_shader
-from mathutils import Vector
+from mathutils import geometry, Vector
 
 from ..icon.lasso_cursor import lasso_cursor
 from ..functions.mesh_intersect import select_mesh_elems
@@ -498,7 +499,11 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         self.last_mouse_region_x = event.mouse_region_x
         self.last_mouse_region_y = event.mouse_region_y
 
-        self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader, (context,), 'WINDOW', 'POST_PIXEL')
+        if bpy.app.version >= (4, 0, 0):
+            self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader, (), 'WINDOW', 'POST_PIXEL')
+        else:
+            self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader_bgl, (context,), 'WINDOW',
+                                                               'POST_PIXEL')
         self.update_shader_position(context, event)
 
     def finish_custom_selection_stage(self, context):
@@ -588,7 +593,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         icon_shader.uniform_float("u_ViewProjectionMatrix", matrix)
         self.icon_batch.draw(icon_shader)
 
-    def draw_lasso_shader(self, context):
+    def draw_lasso_shader_bgl(self, context):
         # Create batches.
         vertices = [Vector(v) for v in self.lasso_poly]
         vertices.append(Vector(self.lasso_poly[0]))
@@ -681,6 +686,79 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         else:
             # Dashed border.
             glDisable(GL_STENCIL_TEST)
+            border_shader.bind()
+            border_shader.uniform_block("ub", self.UBO)
+            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_batch.draw(border_shader)
+
+    def draw_lasso_shader(self):
+        # Create batches.
+        vertices = [Vector(v) for v in self.lasso_poly]
+        vertices.append(Vector(self.lasso_poly[0]))
+
+        indices = geometry.tessellate_polygon((self.lasso_poly,))
+        triangles = [self.lasso_poly[i] for i in chain.from_iterable(indices)]
+
+        lengths = [0]
+        for a, b in zip(vertices[:-1], vertices[1:]):
+            lengths.append(lengths[-1] + (a - b).length)
+
+        fill_batch = batch_for_shader(fill_shader, 'TRIS', {"pos": triangles})
+        border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+
+        matrix = gpu.matrix.get_projection_matrix()
+        if (
+            self.select_through
+            and not self.invert_select_through
+            or not self.select_through
+            and self.invert_select_through
+        ):
+            segment_color = (*self.select_through_color, 1)
+            fill_color = (*self.select_through_color, 0.04)
+        else:
+            segment_color = (*self.default_color, 1)
+            fill_color = (*self.default_color, 0.04)
+        gap_color = (0.0, 0.0, 0.0, 1.0)
+        shadow_color = (0.3, 0.3, 0.3, 1.0)
+        dashed = False if self.direction == "RIGHT_TO_LEFT" else True
+
+        # UBO.
+        self.UBO_data.u_FillColor = fill_color
+        self.UBO_data.u_Dashed = dashed
+        self.UBO_data.u_GapColor = gap_color
+        self.UBO_data.u_SegmentColor = segment_color
+        self.update_UBO()
+
+        # Fill.
+        gpu.state.blend_set('ALPHA')
+        fill_shader.bind()
+        fill_shader.uniform_block("ub", self.UBO)
+        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+        fill_batch.draw(fill_shader)
+        gpu.state.blend_set('NONE')
+
+        # Border.
+        if not dashed:
+            # Solid border shadow.
+            self.UBO_data.u_SegmentColor = shadow_color
+            self.update_UBO()
+
+            gpu.state.line_width_set(3)
+            border_shader.bind()
+            border_shader.uniform_block("ub", self.UBO)
+            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_batch.draw(border_shader)
+            gpu.state.line_width_set(1)
+
+            # Solid border.
+            self.UBO_data.u_SegmentColor = segment_color
+            self.update_UBO()
+
+            border_shader.uniform_block("ub", self.UBO)
+            border_batch.draw(border_shader)
+
+        else:
+            # Dashed border.
             border_shader.bind()
             border_shader.uniform_block("ub", self.UBO)
             border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
