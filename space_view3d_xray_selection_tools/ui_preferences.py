@@ -186,7 +186,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     me_hide_gizmo: bpy.props.BoolProperty(
         name="Hide Gizmo",
-        description="Hide the active tool gizmo during selection",
+        description="Hide active tool gizmo during selection",
         default=False
     )
     me_show_crosshair: bpy.props.BoolProperty(
@@ -198,6 +198,17 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         name="Show Lasso Cursor",
         description="Show lasso cursor icon when wait_for_input is enabled",
         default=True
+    )
+    me_tool_to_activate: bpy.props.EnumProperty(
+        name="Activate automatically at startup",
+        description="Set this tool as active in toolbar automatically when you start blender or load a save file",
+        items=[
+            ('NONE', "None", ""),
+            ('BOX', "Select Box X-Ray", ""),
+            ('CIRCLE', "Select Circle X-Ray", ""),
+            ('LASSO', "Select Lasso X-Ray", ""),
+        ],
+        default='NONE',
     )
 
     ob_show_xray: bpy.props.BoolProperty(
@@ -225,7 +236,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     ob_hide_gizmo: bpy.props.BoolProperty(
         name="Hide Gizmo",
-        description="Hide the active tool gizmo during selection",
+        description="Hide active tool gizmo during selection",
         default=False
     )
     ob_show_crosshair: bpy.props.BoolProperty(
@@ -268,6 +279,17 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
                                               "overlapped", 'UV_SYNC_SELECT', 4)
                ],
         default='ORIGIN'
+    )
+    ob_tool_to_activate: bpy.props.EnumProperty(
+        name="Activate automatically at startup",
+        description="Set this tool as active in toolbar automatically when you start blender or load a save file",
+        items=[
+            ('NONE', "None", ""),
+            ('BOX', "Select Box X-Ray", ""),
+            ('CIRCLE', "Select Circle X-Ray", ""),
+            ('LASSO', "Select Lasso X-Ray", ""),
+        ],
+        default='NONE',
     )
 
     enable_me_keyboard_keymap: bpy.props.BoolProperty(
@@ -361,38 +383,52 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         row.label(text="")
 
     def draw_mesh_tools_preferences(self, box):
+        """Mesh Tools tab."""
+        use_directional_props = self.me_directional_box | self.me_directional_lasso
+
+        dir_tools = []
+        def_tools = ["Circle"]
+        if self.me_directional_box:
+            dir_tools.append("Box")
+        else:
+            def_tools.append("Box")
+        if self.me_directional_lasso:
+            dir_tools.append("Lasso")
+        else:
+            def_tools.append("Lasso")
+
+        rtl_props = self.me_direction_properties["RIGHT_TO_LEFT"]
+        ltr_props = self.me_direction_properties["LEFT_TO_RIGHT"]
+
+        rtl_st_available = rtl_props.select_through or self.me_select_through_toggle_key != 'DISABLED'
+        ltr_st_available = ltr_props.select_through or self.me_select_through_toggle_key != 'DISABLED'
+        def_st_available = self.me_select_through or self.me_select_through_toggle_key != 'DISABLED'
+
+        # Keymap
         if self.enable_me_keyboard_keymap:
             box.label(text="Change shortcuts here or disable them by unchecking")
             col = box.column()
-            self.draw_keymap_items(col, "Mesh", me_keyboard_keymap, {'KEYBOARD'}, False)
+            self.draw_keymap_items(col, "Mesh", me_keyboard_keymap, None, False)
             box.separator(factor=1.7)
 
-        if self.me_directional_box | self.me_directional_lasso:
-            flow = box.grid_flow(columns=2, row_major=True, align=True)
+        flow = box.grid_flow(columns=2, row_major=True, align=True)
 
-            flow.label(text="Toggle select through during selection with a key")
-            split = flow.split(align=True)
-            sub = split.row(align=True)
-            sub.active = self.me_select_through_toggle_key != 'DISABLED'
-            sub.prop(self, "me_select_through_toggle_type", text="")
-            split.prop(self, "me_select_through_toggle_key", text="")
+        # Select through
+        if not use_directional_props:
+            flow.label(text="Start selection with enabled selection through")
+            flow.prop(self, "me_select_through", text="Select Through", icon='MOD_WIREFRAME')
 
+        # Select through toggle
+        flow.label(text="Toggle select through during selection with a key")
+        split = flow.split(align=True)
+        sub = split.row(align=True)
+        sub.active = self.me_select_through_toggle_key != 'DISABLED'
+        sub.prop(self, "me_select_through_toggle_type", text="")
+        split.prop(self, "me_select_through_toggle_key", text="")
+
+        if use_directional_props:
             self.draw_flow_vertical_separator(flow)
-
-            dir_tools = []
-            def_tools = ["Circle"]
-            if self.me_directional_box:
-                dir_tools.append("Box")
-            else:
-                def_tools.append("Box")
-            if self.me_directional_lasso:
-                dir_tools.append("Lasso")
-            else:
-                def_tools.append("Lasso")
-
-            rtl_props = self.me_direction_properties["RIGHT_TO_LEFT"]
-            ltr_props = self.me_direction_properties["LEFT_TO_RIGHT"]
-
+            # Labels
             flow.label(text="Tool")
             split = flow.split(align=True)
             row = split.row()
@@ -410,13 +446,8 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             sub = row.row()
             sub.alignment = 'CENTER'
             sub.label(text=" and ".join(def_tools))
-            # split.label(text=" and ".join(dir_tools), icon='BLANK1')
-            # split.label(text=" and ".join(dir_tools), icon='BLANK1')
-            # split.label(text=" and ".join(def_tools), icon='BLANK1')
-            # split.prop(self, "blank", text=" and ".join(dir_tools), icon='BLANK1', emboss=False)
-            # split.prop(self, "blank", text=" and ".join(dir_tools), icon='BLANK1', emboss=False)
-            # split.prop(self, "blank", text=" and ".join(def_tools), icon='BLANK1', emboss=False)
 
+            # Directions
             flow.label(text="Direction")
             split = flow.split(align=True)
             row = split.row()
@@ -434,35 +465,27 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             sub = row.row()
             sub.alignment = 'CENTER'
             sub.label(text="Any")
-            # split.label(text="Right to Left", icon='BACK')
-            # split.label(text="Left to Right", icon='FORWARD')
-            # split.label(text="Any", icon='ARROW_LEFTRIGHT')
-            # split.prop(self, "blank", text="Right to Left", icon='BACK', emboss=False)
-            # split.prop(self, "blank", text="Left to Right", icon='FORWARD', emboss=False)
-            # split.prop(self, "blank", text="Any", icon='ARROW_LEFTRIGHT', emboss=False)
 
+            # Select through
             flow.label(text="Start selection with enabled selection through")
             split = flow.split(align=True)
             split.prop(rtl_props, "select_through", text="Select Through", icon='MOD_WIREFRAME')
             split.prop(ltr_props, "select_through", text="Select Through", icon='MOD_WIREFRAME')
             split.prop(self, "me_select_through", text="Select Through", icon='MOD_WIREFRAME')
 
-            rtl_st_available = rtl_props.select_through or self.me_select_through_toggle_key != 'DISABLED'
-            ltr_st_available = ltr_props.select_through or self.me_select_through_toggle_key != 'DISABLED'
-            def_st_available = self.me_select_through or self.me_select_through_toggle_key != 'DISABLED'
-
+            # Color
             flow.label(text="Selection frame color when selection through is disabled")
             split = flow.split(align=True)
             split.prop(rtl_props, "default_color", text="")
             split.prop(ltr_props, "default_color", text="")
             split.prop(self, "me_default_color", text="")
-
             flow.label(text="Selection frame color when selection through is enabled")
             split = flow.split(align=True)
             split.prop(rtl_props, "select_through_color", text="")
             split.prop(ltr_props, "select_through_color", text="")
             split.prop(self, "me_select_through_color", text="")
 
+            # Show x-ray
             flow.label(text="Show x-ray shading during selection through")
             split = flow.split(align=True)
             row = split.row(align=True)
@@ -475,6 +498,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             row.active = def_st_available
             row.prop(self, "me_show_xray", text="Show X-Ray", icon='XRAY')
 
+            # All edges
             row = flow.row(align=True)
             row.label(text="Select all edges touched by selection region")
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_edges"
@@ -489,6 +513,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             row.active = def_st_available
             row.prop(self, "me_select_all_edges", text="Select All Edges", icon='EDGESEL')
 
+            # All faces
             row = flow.row(align=True)
             row.label(text="Select all faces touched by selection region")
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_faces"
@@ -502,133 +527,94 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             row = split.row(align=True)
             row.active = def_st_available
             row.prop(self, "me_select_all_faces", text="Select All Faces", icon='FACESEL')
-
-            self.draw_flow_vertical_separator(flow)
-
-            flow.label(text="Configure tool settings separately for drag directions")
-            split = flow.split(align=True)
-            split.prop(self, "me_directional_box", text="Directional Box", icon='UV_SYNC_SELECT')
-            row = split.row(align=True)
-            row.prop(self, "me_directional_lasso", text="Directional Lasso", icon='UV_SYNC_SELECT')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_drag_direction"
-
-            self.draw_flow_vertical_separator(flow)
-
-            flow.label(text="Temporary hide this modifiers during selection through")
-            split = flow.split(align=True)
-            split.active = rtl_st_available or ltr_st_available or def_st_available
-            split.prop(self, "me_hide_mirror", text="Hide Mirror", icon='MOD_MIRROR')
-            row = split.row(align=True)
-            row.prop(self, "me_hide_solidify", text="Hide Solidify", icon='MOD_SOLIDIFY')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_modifiers"
-
-            self.draw_flow_vertical_separator(flow)
-
-            flow.label(text="Temporary hide gizmo of the active tool")
-            row = flow.row(align=True)
-            row.prop(self, "me_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_gizmo"
-
-            self.draw_flow_vertical_separator(flow)
-
-            flow.label(text="Show box tool crosshair or lasso tool icon")
-            split = flow.split(align=True)
-            split.prop(self, "me_show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
-            row = split.row(align=True)
-            row.prop(self, "me_show_lasso_icon", text="Show Lasso Icon", icon='RESTRICT_SELECT_OFF')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"
-
         else:
-            flow = box.grid_flow(columns=2, row_major=True, align=True)
-
-            flow.label(text="Start selection with enabled selection through")
-            flow.prop(self, "me_select_through", text="Select Through", icon='MOD_WIREFRAME')
-
-            flow.label(text="Toggle select through during selection with a key")
-            split = flow.split(align=True)
-            sub = split.row(align=True)
-            sub.active = self.me_select_through_toggle_key != 'DISABLED'
-            sub.prop(self, "me_select_through_toggle_type", text="")
-            split.prop(self, "me_select_through_toggle_key", text="")
-
+            # Color
             self.draw_flow_vertical_separator(flow)
-
             flow.label(text="Selection frame color when selection through is disabled")
             flow.prop(self, "me_default_color", text="")
-
-            st_available = self.me_select_through or self.me_select_through_toggle_key != 'DISABLED'
-
             flow.label(text="Selection frame color when selection through is enabled")
             flow.prop(self, "me_select_through_color", text="")
 
+            # Show x-ray
             self.draw_flow_vertical_separator(flow)
-
             flow.label(text="Show x-ray shading during selection through")
             row = flow.row()
-            row.active = st_available
+            row.active = def_st_available
             row.prop(self, "me_show_xray", text="Show X-Ray", icon='XRAY')
 
+            # All edges and faces
             self.draw_flow_vertical_separator(flow)
-
             flow.label(text="Select all edges touched by selection region")
             row = flow.row(align=True)
-            row.active = st_available
+            row.active = def_st_available
             row.prop(self, "me_select_all_edges", text="Select All Edges", icon='EDGESEL')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_edges"
-
             flow.label(text="Select all faces touched by selection region")
             row = flow.row(align=True)
-            row.active = st_available
+            row.active = def_st_available
             row.prop(self, "me_select_all_faces", text="Select All Faces", icon='FACESEL')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_faces"
 
-            self.draw_flow_vertical_separator(flow)
+        # Directional toggles
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Configure tool settings separately for drag directions")
+        split = flow.split(align=True)
+        split.prop(self, "me_directional_box", text="Directional Box", icon='UV_SYNC_SELECT')
+        row = split.row(align=True)
+        row.prop(self, "me_directional_lasso", text="Directional Lasso", icon='UV_SYNC_SELECT')
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_drag_direction"
 
-            flow.label(text="Configure tool settings separately for drag directions")
-            split = flow.split(align=True)
-            split.prop(self, "me_directional_box", text="Directional Box", icon='UV_SYNC_SELECT')
-            row = split.row(align=True)
-            row.prop(self, "me_directional_lasso", text="Directional Lasso", icon='UV_SYNC_SELECT')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_drag_direction"
+        # Modifiers
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Temporary hide this modifiers during selection through")
+        split = flow.split(align=True)
+        if use_directional_props:
+            split.active = rtl_st_available or ltr_st_available or def_st_available
+        else:
+            split.active = def_st_available
+        split.prop(self, "me_hide_mirror", text="Hide Mirror", icon='MOD_MIRROR')
+        row = split.row(align=True)
+        row.prop(self, "me_hide_solidify", text="Hide Solidify", icon='MOD_SOLIDIFY')
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_modifiers"
 
-            self.draw_flow_vertical_separator(flow)
+        # Gizmo
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Temporary hide gizmo of the active tool")
+        row = flow.row(align=True)
+        row.prop(self, "me_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_gizmo"
 
-            flow.label(text="Temporary hide this modifiers during selection through")
-            split = flow.split(align=True)
-            split.active = st_available
-            split.prop(self, "me_hide_mirror", text="Hide Mirror", icon='MOD_MIRROR')
-            row = split.row(align=True)
-            row.prop(self, "me_hide_solidify", text="Hide Solidify", icon='MOD_SOLIDIFY')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_modifiers"
+        # Icon
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Show box tool crosshair or lasso tool icon")
+        split = flow.split(align=True)
+        split.prop(self, "me_show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
+        row = split.row(align=True)
+        row.prop(self, "me_show_lasso_icon", text="Show Lasso Icon", icon='RESTRICT_SELECT_OFF')
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"
 
-            self.draw_flow_vertical_separator(flow)
-
-            flow.label(text="Temporary hide gizmo of the active tool")
-            row = flow.row(align=True)
-            row.prop(self, "me_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
-
-            self.draw_flow_vertical_separator(flow)
-
-            flow.label(text="Show box tool crosshair or lasso tool icon")
-            split = flow.split(align=True)
-            split.prop(self, "me_show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
-            row = split.row(align=True)
-            row.prop(self, "me_show_lasso_icon", text="Show Lasso Icon", icon='RESTRICT_SELECT_OFF')
-            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"
+        # Startup
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Activate tool automatically at startup")
+        flow.prop(self, "me_tool_to_activate", text="")
 
     def draw_object_tools_preferences(self, box):
+        """Object Tools tab."""
+
+        # Keymap
         if self.enable_ob_keyboard_keymap:
             box.label(text="Change shortcuts here or disable them by unchecking")
             col = box.column()
-            self.draw_keymap_items(col, "Object Mode", ob_keyboard_keymap, {'KEYBOARD'}, False)
+            self.draw_keymap_items(col, "Object Mode", ob_keyboard_keymap, None, False)
             box.separator(factor=1.7)
 
         flow = box.grid_flow(columns=2, row_major=True, align=True)
 
+        # Select through
         flow.label(text="Start selection with enabled x-ray shading")
         flow.prop(self, "ob_show_xray", text="Show X-Ray", icon='XRAY')
 
+        # Select toggle
         flow.label(text="Toggle x-ray shading during selection with a key")
         split = flow.split(align=True)
         sub = split.row(align=True)
@@ -636,32 +622,30 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         sub.prop(self, "ob_xray_toggle_type", text="")
         split.prop(self, "ob_xray_toggle_key", text="")
 
+        # Behavior
         self.draw_flow_vertical_separator(flow)
-
         flow.label(text="Box tool behavior")
         row = flow.row(align=True)
         row.prop(self, "ob_box_select_behavior", text="")
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "ob_selection_behavior"
-
         flow.label(text="Circle tool behavior")
         row = flow.row(align=True)
         row.prop(self, "ob_circle_select_behavior", text="")
         row.label(text="", icon='BLANK1')
-
         flow.label(text="Lasso tool behavior")
         row = flow.row(align=True)
         row.prop(self, "ob_lasso_select_behavior", text="")
         row.label(text="", icon='BLANK1')
 
+        # Gizmo
         self.draw_flow_vertical_separator(flow)
-
         flow.label(text="Temporary hide gizmo of the active tool")
         row = flow.row(align=True)
         row.prop(self, "ob_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
 
+        # Icon
         self.draw_flow_vertical_separator(flow)
-
         flow.label(text="Show box tool crosshair or lasso tool icon")
         split = flow.split(align=True)
         split.prop(self, "ob_show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
@@ -669,7 +653,13 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         row.prop(self, "ob_show_lasso_icon", text="Show Lasso Icon", icon='RESTRICT_SELECT_OFF')
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"
 
+        # Startup
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Activate tool automatically at startup")
+        flow.prop(self, "ob_tool_to_activate", text="")
+
     def draw_adv_keymap(self, box):
+        """Advanced Keymap tab."""
 
         # Object and Mesh Mode Keymap
         col = box.column()
@@ -747,15 +737,20 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             sub.prop(kmis[mode], "alt", text="Alt", toggle=True)
 
     @staticmethod
-    def draw_keymap_items(col, km_name, keymap, map_type, allow_remove):
+    def draw_keymap_items(col, km_name, keymap, map_type=None, allow_remove=False):
         kc = bpy.context.window_manager.keyconfigs.user
         km = kc.keymaps.get(km_name)
         kmi_idnames = [km_tuple[1].idname for km_tuple in keymap]
         if allow_remove:
             col.context_pointer_set("keymap", km)
 
-        kmis = [kmi for kmi in km.keymap_items if
-                kmi.idname in kmi_idnames and kmi.map_type in map_type]
+        if map_type is None:
+            kmis = [kmi for kmi in km.keymap_items if
+                    kmi.idname in kmi_idnames and kmi.map_type]
+        else:
+            kmis = [kmi for kmi in km.keymap_items if
+                    kmi.idname in kmi_idnames and kmi.map_type in map_type]
+
         for kmi in kmis:
             rna_keymap_ui.draw_kmi(['ADDON', 'USER', 'DEFAULT'], kc, km, kmi, col, 0)
 
