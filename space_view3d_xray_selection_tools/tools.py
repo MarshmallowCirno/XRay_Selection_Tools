@@ -1,7 +1,10 @@
+import itertools
 import os
 
 import bpy
+from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
 
+from .functions.toolbar import set_tool_in_mode
 from .preferences import get_preferences
 from .tools_keymap import add_fallback_keymap
 from .tools_keymap import add_fallback_keymap_items
@@ -264,15 +267,20 @@ lasso_tools = (
 
 
 def reset_active_tool() -> None:
-    for workspace in bpy.data.workspaces:
-        for screen in workspace.screens:
-            for area in screen.areas:
-                if area.type == 'VIEW_3D':
-                    override = {"screen": screen, "area": area, "space_data": area.spaces[0]}
-                    bpy.ops.wm.tool_set_by_id(override, name="builtin.select_box")
 
-    from bl_ui.space_toolsystem_common import ToolSelectPanelHelper
+    for mode in (
+            'EDIT_MESH',
+            'OBJECT',
+            'EDIT_CURVE',
+            'EDIT_ARMATURE',
+            'EDIT_METABALL',
+            'EDIT_LATTICE',
+            'POSE',
+            'EDIT_GPENCIL',
+    ):
+        set_tool_in_mode(mode, "bultin.select")
 
+    # Fallback.
     cls = ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
     cls._tool_group_active = {"bultin.select": 1}
 
@@ -299,7 +307,6 @@ def register() -> None:
 
 
 def unregister() -> None:
-    import itertools
 
     remove_fallback_keymap_items(fallback_keymap_dict)
 
