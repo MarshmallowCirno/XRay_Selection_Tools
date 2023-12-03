@@ -52,7 +52,12 @@ class ToolSelectBoxXrayMesh(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
-        row.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+
+        sub = row.row(align=True)
+        sub.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+        sub = sub.row(align=True)
+        sub.active = global_props.me_select_through
+        sub.prop(global_props, "me_select_backfacing", icon='NORMALS_FACE', toggle=True)
 
 
 class ToolSelectBoxXrayObject(bpy.types.WorkSpaceTool):
@@ -130,7 +135,12 @@ class ToolSelectCircleXrayMesh(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
-        row.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+
+        sub = row.row(align=True)
+        sub.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+        sub = sub.row(align=True)
+        sub.active = global_props.me_select_through
+        sub.prop(global_props, "me_select_backfacing", icon='NORMALS_FACE', toggle=True)
 
         layout.prop(tool_props, "radius")
 
@@ -212,7 +222,12 @@ class ToolSelectLassoXrayMesh(bpy.types.WorkSpaceTool):
         row = layout.row()
         row.use_property_split = False
         row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
-        row.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+
+        sub = row.row(align=True)
+        sub.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+        sub = sub.row(align=True)
+        sub.active = global_props.me_select_through
+        sub.prop(global_props, "me_select_backfacing", icon='NORMALS_FACE', toggle=True)
 
 
 class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
