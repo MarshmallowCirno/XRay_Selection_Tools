@@ -62,11 +62,17 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#select-all-edges-and-faces">Select all edges and faces</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#select-backfacing">Select backfacing</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#directional-box-and-lasso-tools">Directional box and lasso tools</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#hide-gizmo-of-active-tool">Hide gizmo of active tool</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#hide-mirror-and-solidify-modifiers">Hide mirror and solidify modifiers</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#show-box-crosshair-or-lasso-icon">Show box crosshair or lasso icon</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#activate-tool-at-startup">Activate tool at startup</a>
     </li>
     </ul>
                   </li>
@@ -147,6 +153,15 @@ default selection on meshes with a lot of geometry):</p>
 Your browser does not support the video tag.
 </video>
 
+<h3 id="select-backfacing">Select backfacing</h3>
+<p>By default, in selection through mode tools select elements regardless of their normal directions. </p>
+<p>Disable this option if you want to select only elements with back side facing away from you (this is slower than the 
+default selection on meshes with a lot of geometry):</p>
+<video style="padding-bottom: 20px" controls autoplay muted loop>
+  <source src="../videos/mesh_select_backfacing.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video>
+
 <h3 id="directional-box-and-lasso-tools">Directional box and lasso tools</h3>
 <p>Toggle separate configuration of tool settings for left-to-right and right-to-left directions. For example, you can
 set up left-to-right drag direction to select through and right-to-left direction to perform default selection:</p>
@@ -155,6 +170,8 @@ set up left-to-right drag direction to select through and right-to-left directio
 Your browser does not support the video tag.
 </video>
 
+<h3 id="hide-gizmo-of-active-tool">Hide gizmo of active tool</h3>
+<p>Hide gizmo of the active tool (such as the scale gizmo) for the duration of the selection and restore it after finishing selection.</p>
 <h3 id="hide-mirror-and-solidify-modifiers">Hide mirror and solidify modifiers</h3>
 <p>Hide mirror modifier or solidify modifier during selection through and re-enable them after finishing selection. 
 This can be useful on dense mesh, making it easier to see real geometry in x-ray shading.</p>
@@ -163,6 +180,8 @@ This can be useful on dense mesh, making it easier to see real geometry in x-ray
 indicator - crosshair for box tool and lasso icon for lasso tool: </p>
 <p><img alt="Box crosshair" src="../img/box_crosshair.png" title="Box crosshair" /> <img alt="Lasso icon" src="../img/lasso_icon.png" title="Lasso icon" /></p>
 <p>This toggles can disable them.</p>
+<h3 id="activate-tool-at-startup">Activate tool at startup</h3>
+<p>The tool specified in this option will be set as active in the toolbar automatically when you start blender or load a save file.</p>
               
             </div>
           </div><footer>
