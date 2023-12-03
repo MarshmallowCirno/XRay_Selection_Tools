@@ -265,6 +265,12 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         default=False,
         options={'SKIP_SAVE'},
     )
+    select_backfacing: bpy.props.BoolProperty(
+        name="Select Backfacing",
+        description="Select elements with normals facing away from you. Works only in select through mode",
+        default=True,
+        options={'SKIP_SAVE'},
+    )
     hide_mirror: bpy.props.BoolProperty(
         name="Hide Mirror",
         description="Hide mirror modifiers during selection",
@@ -336,6 +342,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             and context.tool_settings.mesh_select_mode[2]
             or self.select_all_edges
             and context.tool_settings.mesh_select_mode[1]
+            or not self.select_backfacing
         )
 
         self.override_selection = (
@@ -526,6 +533,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             tool_co=self.lasso_poly,
             select_all_edges=self.select_all_edges,
             select_all_faces=self.select_all_faces,
+            select_backfacing=self.select_backfacing,
         )
 
     def finish_modal(self, context):
@@ -548,6 +556,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                     and context.tool_settings.mesh_select_mode[2]
                     or self.select_all_edges
                     and context.tool_settings.mesh_select_mode[1]
+                    or not self.select_backfacing
                 )
                 set_shading_from_properties(self, context)
 

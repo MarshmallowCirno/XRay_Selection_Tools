@@ -42,6 +42,7 @@ def set_properties_from_preferences(self, tool):
             self.show_xray = get_preferences().me_show_xray
             self.select_all_edges = get_preferences().me_select_all_edges
             self.select_all_faces = get_preferences().me_select_all_faces
+            self.select_backfacing = get_preferences().me_select_backfacing
 
         self.select_through_toggle_key = get_preferences().me_select_through_toggle_key
         self.select_through_toggle_type = get_preferences().me_select_through_toggle_type
@@ -103,6 +104,7 @@ def set_properties_from_direction(self, direction):
     self.show_xray = dir_props.show_xray
     self.select_all_edges = dir_props.select_all_edges
     self.select_all_faces = dir_props.select_all_faces
+    self.select_backfacing = dir_props.select_backfacing
 
 
 def set_shading_from_properties(self, context):

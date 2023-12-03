@@ -108,9 +108,25 @@ class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_
         return {'FINISHED'}
 
 
+class MESH_OT_select_tools_xray_toggle_select_backfacing(bpy.types.Operator, Toggle_Base):
+    """Toggle backfacing selection for mesh xray selection tools."""
+    bl_idname = "mesh.select_tools_xray_toggle_select_backfacing"
+    bl_label = "Toggle Select Backfacing"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def __init__(self):
+        super().__init__()
+        self.text = "Default" if not get_preferences().me_select_backfacing else "Exclude Backfacing"
+
+    def execute(self, context):
+        get_preferences().me_select_backfacing = not get_preferences().me_select_backfacing
+        return {'FINISHED'}
+
+
 classes = (
     MESH_OT_select_tools_xray_toggle_select_through,
-    MESH_OT_select_tools_xray_toggle_mesh_behavior
+    MESH_OT_select_tools_xray_toggle_mesh_behavior,
+    MESH_OT_select_tools_xray_toggle_select_backfacing,
 )
 
 

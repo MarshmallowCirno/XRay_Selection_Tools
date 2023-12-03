@@ -26,6 +26,18 @@ def draw_me_select_all_faces_info_popup(self, context):
         col.label(text=n)
 
 
+def draw_me_select_backfacing_info_popup(self, context):
+    layout = self.layout
+    text = \
+        ("By default, in selection through mode tools select elements regardless of their normal directions. "
+         "Disable this option if you want to select only elements with back side facing away from you"
+         "(this is slower than the default selection on meshes with a lot of geometry).")
+    lines = textwrap.wrap(text, 120)
+    col = layout.column(align=True)
+    for n in lines:
+        col.label(text=n)
+
+
 def draw_me_drag_direction_info_popup(self, context):
     layout = self.layout
     text = \
@@ -133,6 +145,9 @@ class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
                                            ui_units_x=31, keymap=None, from_active_button=True)
         elif self.button == "me_select_all_faces":
             context.window_manager.popover(draw_me_select_all_faces_info_popup,
+                                           ui_units_x=31, keymap=None, from_active_button=True)
+        elif self.button == "me_select_backfacing":
+            context.window_manager.popover(draw_me_select_backfacing_info_popup,
                                            ui_units_x=31, keymap=None, from_active_button=True)
         elif self.button == "me_drag_direction":
             context.window_manager.popover(draw_me_drag_direction_info_popup,

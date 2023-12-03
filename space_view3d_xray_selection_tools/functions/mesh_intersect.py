@@ -7,6 +7,7 @@ import bmesh
 import bpy
 import numpy as np
 from bpy.types import Context
+from mathutils import Vector
 
 from ..functions.timer import Timer
 from .polygon_tests import (
@@ -48,6 +49,7 @@ def select_mesh_elems(
     tool_co: list[int],
     select_all_edges: bool,
     select_all_faces: bool,
+    select_backfacing: bool,
 ):
     box_xmin = box_xmax = box_ymin = box_ymax = center = radius = lasso = None
     vert_co = verts_mask_visin = vis_edges_mask_in = edge_count = edges_mask_visin = None
@@ -64,6 +66,12 @@ def select_mesh_elems(
 
     region = context.region
     rv3d = context.region_data
+
+    # Get view facing vector.
+    vec_z = Vector((0.0, 0.0, 1.0))
+    view_vec_facing = rv3d.view_matrix.inverted().to_3x3() @ vec_z
+    view_vec_facing.normalize()
+    view_vec_facing = np.array(view_vec_facing)
 
     timer = Timer()
 
@@ -111,6 +119,17 @@ def select_mesh_elems(
                 verts_mask_vis = ~verts_mask_vis
 
                 timer.add("Getting vertex attributes")
+
+                # Filter out backfacing.
+                if (mesh_select_mode[0] or mesh_select_mode[1]) and not select_backfacing:
+                    vert_normal = np.empty(vert_count * 3, "f")
+                    verts.foreach_get("normal", vert_normal)
+                    vert_normal.shape = (vert_count, 3)
+
+                    verts_mask_facing = vert_normal @ view_vec_facing >= .001
+                    verts_mask_vis &= verts_mask_facing
+
+                timer.add("Filter out backfacing")
 
                 # Local coordinates of visible vertices.
                 vis_vert_co_local = vert_co_local[verts_mask_vis]
@@ -291,6 +310,17 @@ def select_mesh_elems(
                 faces_mask_vis = ~faces_mask_vis
 
                 timer.add("Getting face attributes")
+
+                # Filter out backfacing.
+                if not select_backfacing:
+                    face_normal = np.empty(face_count * 3, "f")
+                    faces.foreach_get("normal", face_normal)
+                    face_normal.shape = (face_count, 3)
+
+                    faces_mask_facing = face_normal @ view_vec_facing >= .001
+                    faces_mask_vis &= faces_mask_facing
+
+                timer.add("Filter out backfacing")
 
                 # Select faces which centers are inside the selection rectangle.
                 if not select_all_faces:

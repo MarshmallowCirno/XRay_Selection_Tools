@@ -87,6 +87,11 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
                     "in select through mode",
         default=False
     )
+    select_backfacing: bpy.props.BoolProperty(
+        name="Select Backfacing",
+        description="Select elements with normals facing away from you. Works only in select through mode",
+        default=True
+    )
 
 
 # noinspection PyTypeChecker
@@ -173,6 +178,11 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
                     "not just the ones with centers inside the selection borders. Works only "
                     "in select through mode",
         default=False
+    )
+    me_select_backfacing: bpy.props.BoolProperty(
+        name="Select Backfacing",
+        description="Select elements with normals facing away from you. Works only in select through mode",
+        default=True
     )
     me_hide_mirror: bpy.props.BoolProperty(
         name="Hide Mirror",
@@ -527,6 +537,21 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             row = split.row(align=True)
             row.active = def_st_available
             row.prop(self, "me_select_all_faces", text="Select All Faces", icon='FACESEL')
+
+            # Backfacing
+            row = flow.row(align=True)
+            row.label(text="Select elements with normals facing away from you")
+            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_backfacing"
+            split = flow.split(align=True)
+            row = split.row(align=True)
+            row.active = rtl_st_available
+            row.prop(rtl_props, "select_backfacing", text="Select Backfacing", icon='NORMALS_FACE')
+            row = split.row(align=True)
+            row.active = ltr_st_available
+            row.prop(ltr_props, "select_backfacing", text="Select Backfacing", icon='NORMALS_FACE')
+            row = split.row(align=True)
+            row.active = def_st_available
+            row.prop(self, "me_select_backfacing", text="Select Backfacing", icon='NORMALS_FACE')
         else:
             # Color
             self.draw_flow_vertical_separator(flow)
@@ -549,11 +574,18 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             row.active = def_st_available
             row.prop(self, "me_select_all_edges", text="Select All Edges", icon='EDGESEL')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_edges"
+
             flow.label(text="Select all faces touched by selection region")
             row = flow.row(align=True)
             row.active = def_st_available
             row.prop(self, "me_select_all_faces", text="Select All Faces", icon='FACESEL')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_faces"
+
+            flow.label(text="Select elements with normals facing away from you")
+            row = flow.row(align=True)
+            row.active = def_st_available
+            row.prop(self, "me_select_backfacing", text="Select Backfacing", icon='NORMALS_FACE')
+            row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_backfacing"
 
         # Directional toggles
         self.draw_flow_vertical_separator(flow)

@@ -108,6 +108,9 @@ def register_toggles_keymap():
     if kc:
         km = kc.keymaps.new(name="Mesh", space_type='EMPTY')
 
+        kmi = km.keymap_items.new("mesh.select_tools_xray_toggle_select_backfacing", 'X', 'PRESS', ctrl=True, shift=True, alt=True)
+        toggles_keymap.append((km, kmi))
+
         kmi = km.keymap_items.new("mesh.select_tools_xray_toggle_mesh_behavior", 'X', 'PRESS', ctrl=True, shift=True)
         toggles_keymap.append((km, kmi))
 
