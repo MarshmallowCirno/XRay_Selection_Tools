@@ -30,7 +30,7 @@ def draw_me_select_backfacing_info_popup(self, context):
     layout = self.layout
     text = \
         ("By default, in selection through mode tools select elements regardless of their normal directions. "
-         "Disable this option if you want to select only elements with back side facing away from you"
+         "Disable this option if you want to select only elements with back side facing away from you "
          "(this is slower than the default selection on meshes with a lot of geometry).")
     lines = textwrap.wrap(text, 120)
     col = layout.column(align=True)
