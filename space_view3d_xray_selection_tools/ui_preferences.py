@@ -614,7 +614,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         flow.label(text="Temporary hide gizmo of the active tool")
         row = flow.row(align=True)
         row.prop(self, "me_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
-        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_hide_gizmo"
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
 
         # Icon
         self.draw_flow_vertical_separator(flow)

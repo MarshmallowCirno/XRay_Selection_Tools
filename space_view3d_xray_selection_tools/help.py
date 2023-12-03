@@ -74,7 +74,7 @@ def draw_wait_for_input_cursor_info_popup(self, context):
 def draw_hide_gizmo_info_popup(self, context):
     layout = self.layout
     text = \
-        "Hide gizmo of the active tool during a selection and restore it after finishing " \
+        "Hide gizmo of the active tool for the duration of the selection and restore it after finishing " \
         "selection."
     lines = textwrap.wrap(text, 120)
     col = layout.column(align=True)
@@ -135,7 +135,7 @@ def draw_tool_selection_mode_keymaps_info_popup(self, context):
 class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
     """Show description"""
     bl_idname = "xraysel.show_info_popup"
-    bl_label = "Select X-Ray"
+    bl_label = "Show Info"
 
     button: bpy.props.StringProperty()
 
