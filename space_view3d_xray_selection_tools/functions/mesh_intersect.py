@@ -69,9 +69,9 @@ def select_mesh_elems(
 
     # Get view facing vector.
     vec_z = Vector((0.0, 0.0, 1.0))
-    view_vec_facing = rv3d.view_matrix.inverted().to_3x3() @ vec_z
-    view_vec_facing.normalize()
-    view_vec_facing = np.array(view_vec_facing)
+    facing_vec_world = rv3d.view_matrix.inverted().to_3x3() @ vec_z
+    facing_vec_world.normalize()
+    facing_vec_world = np.array(facing_vec_world)
 
     timer = Timer()
 
@@ -126,7 +126,11 @@ def select_mesh_elems(
                     verts.foreach_get("normal", vert_normal)
                     vert_normal.shape = (vert_count, 3)
 
-                    verts_mask_facing = vert_normal @ view_vec_facing >= .001
+                    ob_mat_world = np.array(ob.matrix_world)
+                    mat = ob_mat_world[:3, :3].T
+                    vert_normal_world = vert_normal @ mat
+
+                    verts_mask_facing = vert_normal_world @ facing_vec_world >= 0.15
                     verts_mask_vis &= verts_mask_facing
 
                 timer.add("Filter out backfacing")
@@ -317,7 +321,11 @@ def select_mesh_elems(
                     faces.foreach_get("normal", face_normal)
                     face_normal.shape = (face_count, 3)
 
-                    faces_mask_facing = face_normal @ view_vec_facing >= .001
+                    ob_mat_world = np.array(ob.matrix_world)
+                    mat = ob_mat_world[:3, :3].T
+                    face_normal_world = face_normal @ mat
+
+                    faces_mask_facing = face_normal_world @ facing_vec_world >= .15
                     faces_mask_vis &= faces_mask_facing
 
                 timer.add("Filter out backfacing")
