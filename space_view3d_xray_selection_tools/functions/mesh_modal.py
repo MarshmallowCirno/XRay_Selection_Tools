@@ -1,15 +1,22 @@
+import bpy
+
 from ..preferences import get_preferences
 
 
 def gather_overlays(context):
     overlays = {
         "show_xray": context.space_data.shading.show_xray,
-        "xray_alpha": context.space_data.shading.xray_alpha,
         "show_xray_wireframe": context.space_data.shading.show_xray_wireframe,
-        "xray_alpha_wireframe": context.space_data.shading.xray_alpha_wireframe,
-        "backwire_opacity": context.space_data.overlay.backwire_opacity,
         "show_gizmo": context.space_data.show_gizmo,
     }
+    if bpy.app.version < (4, 1, 0):
+        overlays.update({
+            "xray_alpha": context.space_data.shading.xray_alpha,
+            "xray_alpha_wireframe": context.space_data.shading.xray_alpha_wireframe,
+            "backwire_opacity": context.space_data.overlay.backwire_opacity,
+        })
+    if bpy.app.version >= (4, 1, 0):
+        overlays["show_face_center"] = context.space_data.overlay.show_face_center
     return overlays
 
 
@@ -78,19 +85,26 @@ def initialize_shading_from_properties(self, context):
             if self.show_xray:
                 shading.show_xray = True
                 shading.show_xray_wireframe = True
-            # Hidden xray shading should be turned on to select through if default xray shading is off.
-            if not self.override_intersect_tests:
-                if (
-                    shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}
-                    and not shading.show_xray
-                    or shading.type == 'WIREFRAME'
-                    and not shading.show_xray_wireframe
-                ):
-                    shading.show_xray = True
-                    shading.show_xray_wireframe = True
-                    shading.xray_alpha = 1.0  # default 0.5
-                    shading.xray_alpha_wireframe = 1.0  # default 0.0
-                    overlay.backwire_opacity = 0.0  # default 0.5
+
+            if bpy.app.version < (4, 1, 0):
+                # Hidden xray shading should be turned on to select through if default xray shading is off.
+                if not self.override_intersect_tests:
+                    if (
+                        shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}
+                        and not shading.show_xray
+                        or shading.type == 'WIREFRAME'
+                        and not shading.show_xray_wireframe
+                    ):
+                        shading.show_xray = True
+                        shading.show_xray_wireframe = True
+                        shading.xray_alpha = 1.0  # default 0.5
+                        shading.xray_alpha_wireframe = 1.0  # default 0.0
+                        overlay.backwire_opacity = 0.0  # default 0.5
+
+            if bpy.app.version >= (4, 1, 0):
+                if context.tool_settings.mesh_select_mode[2]:
+                    if not self.select_all_faces and not self.show_xray:
+                        overlay.show_face_center = True
 
         if self.hide_gizmo:
             context.space_data.show_gizmo = False
@@ -123,34 +137,42 @@ def set_shading_from_properties(self, context):
             shading.show_xray = self.init_overlays["show_xray"]
             shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
 
-        # If select through is toggled on in props by direction or by key and intersect tests won't be used
-        # enabled hidden xray shading to select through
-        # don't use hidden xray shading if default xray shading is already enabled.
-        if (
-            (
-                self.select_through
-                and not self.invert_select_through
-                or not self.select_through
-                and self.invert_select_through
-            )
-            and not self.override_intersect_tests
-            and (
-                shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}
-                and not shading.show_xray
-                or shading.type == 'WIREFRAME'
-                and not shading.show_xray_wireframe
-            )
-        ):
-            shading.show_xray = True
-            shading.show_xray_wireframe = True
-            shading.xray_alpha = 1.0  # default 0.5
-            shading.xray_alpha_wireframe = 1.0  # default 0.0
-            overlay.backwire_opacity = 0.0  # default 0.5
-        else:
-            # If hidden xray shading should be off, restore initial overlay opacity.
-            shading.xray_alpha = self.init_overlays["xray_alpha"]
-            shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
-            overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+        if bpy.app.version < (4, 1, 0):
+            # If select through is toggled on in props by direction or by key and intersect tests won't be used
+            # enabled hidden xray shading to select through
+            # don't use hidden xray shading if default xray shading is already enabled.
+            if (
+                (
+                    self.select_through and not self.invert_select_through
+                    or not self.select_through and self.invert_select_through
+                )
+                and not self.override_intersect_tests
+                and (
+                    shading.type in {'SOLID', 'MATERIAL', 'RENDERED'} and not shading.show_xray
+                    or shading.type == 'WIREFRAME' and not shading.show_xray_wireframe
+                )
+            ):
+                shading.show_xray = True
+                shading.show_xray_wireframe = True
+                shading.xray_alpha = 1.0  # default 0.5
+                shading.xray_alpha_wireframe = 1.0  # default 0.0
+                overlay.backwire_opacity = 0.0  # default 0.5
+            else:
+                # If hidden xray shading should be off, restore initial overlay opacity.
+                shading.xray_alpha = self.init_overlays["xray_alpha"]
+                shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
+                overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+
+        if bpy.app.version >= (4, 1, 0):
+            # Show face centers in selection through with disabled xray shading.
+            if context.tool_settings.mesh_select_mode[2]:
+                if (
+                    self.select_through and not self.invert_select_through
+                    or not self.select_through and self.invert_select_through
+                ) and not self.select_all_faces and not self.show_xray:
+                    overlay.show_face_center = True
+                else:
+                    overlay.show_face_center = self.init_overlays["show_face_center"]
 
         # If select through is toggled off in props by direction or by key
         # return initial xray shading.
@@ -177,11 +199,14 @@ def set_modifiers_from_properties(self):
 def restore_overlays(self, context):
     if self.init_overlays:
         context.space_data.shading.show_xray = self.init_overlays["show_xray"]
-        context.space_data.shading.xray_alpha = self.init_overlays["xray_alpha"]
         context.space_data.shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
-        context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
-        context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
         context.space_data.show_gizmo = self.init_overlays["show_gizmo"]
+        if bpy.app.version < (4, 1, 0):
+            context.space_data.shading.xray_alpha = self.init_overlays["xray_alpha"]
+            context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
+            context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+        if bpy.app.version >= (4, 1, 0):
+            context.space_data.overlay.show_face_center = self.init_overlays["show_face_center"]
 
 
 def restore_modifiers(self):

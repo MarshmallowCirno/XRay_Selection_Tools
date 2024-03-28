@@ -327,21 +327,18 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         set_properties_from_preferences(self, tool='BOX')
 
         self.override_intersect_tests = (
-            self.select_all_faces
-            and context.tool_settings.mesh_select_mode[2]
-            or self.select_all_edges
-            and context.tool_settings.mesh_select_mode[1]
+            self.select_all_faces and context.tool_settings.mesh_select_mode[2]
+            or self.select_all_edges and context.tool_settings.mesh_select_mode[1]
             or not self.select_backfacing
+            or bpy.app.version >= (4, 1, 0) and self.select_through and not self.show_xray
         )
 
         self.override_selection = (
             self.select_through_toggle_key != 'DISABLED'
             or self.alt_mode_toggle_key != 'SHIFT'
             or self.alt_mode != 'SUB'
-            or not self.select_through
-            and self.default_color[:] != (1.0, 1.0, 1.0)
-            or self.select_through
-            and self.select_through_color[:] != (1.0, 1.0, 1.0)
+            or not self.select_through and self.default_color[:] != (1.0, 1.0, 1.0)
+            or self.select_through and self.select_through_color[:] != (1.0, 1.0, 1.0)
             or self.directional
             or self.override_intersect_tests
         )
@@ -539,11 +536,10 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 self.direction = direction
                 set_properties_from_direction(self, self.direction)
                 self.override_intersect_tests = (
-                    self.select_all_faces
-                    and context.tool_settings.mesh_select_mode[2]
-                    or self.select_all_edges
-                    and context.tool_settings.mesh_select_mode[1]
+                    self.select_all_faces and context.tool_settings.mesh_select_mode[2]
+                    or self.select_all_edges and context.tool_settings.mesh_select_mode[1]
                     or not self.select_backfacing
+                    or bpy.app.version >= (4, 1, 0) and self.select_through and not self.show_xray
                 )
                 set_shading_from_properties(self, context)
 
