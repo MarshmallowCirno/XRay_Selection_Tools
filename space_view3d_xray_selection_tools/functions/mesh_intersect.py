@@ -67,17 +67,17 @@ def select_mesh_elems(
     region = context.region
     rv3d = context.region_data
 
-    # Get view facing vector.
-    vec_z = Vector((0.0, 0.0, 1.0))
-    facing_vec_world = rv3d.view_matrix.inverted().to_3x3() @ vec_z
-    facing_vec_world.normalize()
-    facing_vec_world = np.array(facing_vec_world)
-
     timer = Timer()
 
     sel_obs = context.selected_objects if context.selected_objects else [context.object]
     for ob in sel_obs:
         if ob.type == 'MESH':
+            # View location
+            eye = Vector(rv3d.view_matrix[2][:3])
+            eye.length = rv3d.view_distance
+            eye_co_world = rv3d.view_location + eye
+            eye_co_local = ob.matrix_world.inverted() @ eye_co_world
+
             mesh_select_mode = context.tool_settings.mesh_select_mode
 
             if bpy.app.version >= (3, 4, 0):
@@ -93,7 +93,7 @@ def select_mesh_elems(
 
             timer.add("Getting mesh")
 
-            # VERTEX PASS ####
+            # VERTEX PASS
             if mesh_select_mode[0] or mesh_select_mode[1] or mesh_select_mode[2] and select_all_faces:
                 verts = me.vertices
                 vert_count = len(verts)
@@ -126,11 +126,10 @@ def select_mesh_elems(
                     verts.foreach_get("normal", vert_normal)
                     vert_normal.shape = (vert_count, 3)
 
-                    ob_mat_world = np.array(ob.matrix_world)
-                    mat = ob_mat_world[:3, :3].T
-                    vert_normal_world = vert_normal @ mat
+                    new_vec = vert_co_local - eye_co_local
+                    new_vec /= np.linalg.norm(new_vec, axis=1, keepdims=True)
 
-                    verts_mask_facing = vert_normal_world @ facing_vec_world >= 0.15
+                    verts_mask_facing = np.einsum('ij,ij->i',vert_normal, new_vec) < 0
                     verts_mask_vis &= verts_mask_facing
 
                 timer.add("Filter out backfacing")
@@ -178,7 +177,7 @@ def select_mesh_elems(
 
                     timer.add("Doing vertex selection")
 
-            # EDGE PASS ####
+            # EDGE PASS
             if mesh_select_mode[1] or mesh_select_mode[2] and select_all_faces:
                 edges = me.edges
                 edge_count = len(edges)
@@ -298,7 +297,7 @@ def select_mesh_elems(
 
                     timer.add("Doing edge selection")
 
-            # FACE PASS #####
+            # FACE PASS
             if mesh_select_mode[2]:
                 faces = me.polygons
                 face_count = len(faces)
@@ -321,11 +320,14 @@ def select_mesh_elems(
                     faces.foreach_get("normal", face_normal)
                     face_normal.shape = (face_count, 3)
 
-                    ob_mat_world = np.array(ob.matrix_world)
-                    mat = ob_mat_world[:3, :3].T
-                    face_normal_world = face_normal @ mat
+                    face_center_co_local = np.empty(face_count * 3, "f")
+                    faces.foreach_get("center", face_center_co_local)
+                    face_center_co_local.shape = (face_count, 3)
 
-                    faces_mask_facing = face_normal_world @ facing_vec_world >= .15
+                    new_vec = face_center_co_local - eye_co_local
+                    new_vec /= np.linalg.norm(new_vec, axis=1, keepdims=True)
+
+                    faces_mask_facing = np.einsum('ij,ij->i',face_normal, new_vec) < 0
                     faces_mask_vis &= faces_mask_facing
 
                 timer.add("Filter out backfacing")
