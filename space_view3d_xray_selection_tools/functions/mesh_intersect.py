@@ -139,7 +139,7 @@ def select_mesh_elems(
                 # World coordinates of visible vertices.
                 vis_vert_co_world = get_co_world_of_ob(ob, vis_vert_co_local)
                 # 2d coordinates of visible vertices.
-                vert_co = np.empty((vert_count, 2), "f")
+                vert_co = np.full((vert_count, 2), np.nan, "f")
                 vert_co[verts_mask_vis] = vis_vert_co = get_co_2d(region, rv3d, vis_vert_co_world)
 
                 timer.add("Calculating 2d coordinates of vertices")
