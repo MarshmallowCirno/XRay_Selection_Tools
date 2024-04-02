@@ -52,7 +52,7 @@ def select_mesh_elems(
     select_backfacing: bool,
 ):
     box_xmin = box_xmax = box_ymin = box_ymax = center = radius = lasso = None
-    vert_co = verts_mask_visin = vis_edges_mask_in = edge_count = edges_mask_visin = None
+    vert_co = verts_mask_visin = vis_edges_mask_in = edge_count = edges_mask_visin = cam = eye_co_world = facing_vec_world = None
 
     match tool:
         case 'BOX':
@@ -64,19 +64,35 @@ def select_mesh_elems(
         case _:
             raise ValueError("Tool is invalid")
 
+    scene = context.scene
     region = context.region
+    sv3d = context.space_data
     rv3d = context.region_data
 
     timer = Timer()
 
-    sel_obs = context.selected_objects if context.selected_objects else [context.object]
-    for ob in sel_obs:
-        if ob.type == 'MESH':
-            # View location
+    # View vector
+    match rv3d.view_perspective:
+        case 'PERSP':
             eye = Vector(rv3d.view_matrix[2][:3])
             eye.length = rv3d.view_distance
             eye_co_world = rv3d.view_location + eye
-            eye_co_local = ob.matrix_world.inverted() @ eye_co_world
+        case 'CAMERA':
+            cam = sv3d.camera if sv3d.use_local_camera else scene.camera
+            eye_co_world = cam.matrix_world.translation
+        case _:  # 'ORTHO'
+            vec_z = Vector((0.0, 0.0, 1.0))
+            facing_vec_world = rv3d.view_matrix.inverted().to_3x3() @ vec_z
+
+    sel_obs = context.selected_objects if context.selected_objects else [context.object]
+    for ob in sel_obs:
+        if ob.type == 'MESH':
+            # View vector
+            match rv3d.view_perspective:
+                case 'PERSP' | 'CAMERA':
+                    eye_co_local = ob.matrix_world.inverted() @ eye_co_world
+                case _:  # 'ORTHO'
+                    eye_co_local = facing_vec_world @ ob.matrix_world
 
             mesh_select_mode = context.tool_settings.mesh_select_mode
 
@@ -126,10 +142,12 @@ def select_mesh_elems(
                     verts.foreach_get("normal", vert_normal)
                     vert_normal.shape = (vert_count, 3)
 
-                    new_vec = vert_co_local - eye_co_local
-                    new_vec /= np.linalg.norm(new_vec, axis=1, keepdims=True)
+                    if rv3d.view_perspective == 'ORTHO' or rv3d.view_perspective == 'CAMERA' and cam.data.type == 'ORTHO':
+                        verts_mask_facing = vert_normal @ eye_co_local > 0
+                    else:
+                        offset_vec = vert_co_local - eye_co_local
+                        verts_mask_facing = np.einsum('ij,ij->i', vert_normal, offset_vec) < 0
 
-                    verts_mask_facing = np.einsum('ij,ij->i',vert_normal, new_vec) < 0
                     verts_mask_vis &= verts_mask_facing
 
                 timer.add("Filter out backfacing")
@@ -324,10 +342,12 @@ def select_mesh_elems(
                     faces.foreach_get("center", face_center_co_local)
                     face_center_co_local.shape = (face_count, 3)
 
-                    new_vec = face_center_co_local - eye_co_local
-                    new_vec /= np.linalg.norm(new_vec, axis=1, keepdims=True)
+                    if rv3d.view_perspective == 'ORTHO' or rv3d.view_perspective == 'CAMERA' and cam.data.type == 'ORTHO':
+                        faces_mask_facing = face_normal @ eye_co_local > 0
+                    else:
+                        offset_vec = face_center_co_local - eye_co_local
+                        faces_mask_facing = np.einsum('ij,ij->i', face_normal, offset_vec) < 0
 
-                    faces_mask_facing = np.einsum('ij,ij->i',face_normal, new_vec) < 0
                     faces_mask_vis &= faces_mask_facing
 
                 timer.add("Filter out backfacing")
@@ -381,6 +401,7 @@ def select_mesh_elems(
                             # Bmesh pass.
                             visin_edge_indices = np.nonzero(edges_mask_visin)[0].tolist()
 
+                            # noinspection PyTypeChecker
                             visin_edges = itemgetter(*visin_edge_indices)(bm.edges)
                             visin_edges = (visin_edges,) if type(visin_edges) is not tuple else visin_edges
 
