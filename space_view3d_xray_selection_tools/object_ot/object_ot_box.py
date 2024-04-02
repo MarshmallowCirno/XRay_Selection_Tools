@@ -237,6 +237,8 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
             ('OVERLAP', "Overlap (Default)", "Select objects overlapping box", 'SELECT_SUBTRACT', 3),
             ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select overlapped",
              'UV_SYNC_SELECT', 4),
+            ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
+                                                             "right to left select contained", 'UV_SYNC_SELECT', 5)
         ],
         default='OVERLAP',
     )
@@ -457,8 +459,12 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         restore_overlays(self, context)
 
     def update_directional_behavior(self):
-        if self.behavior == 'DIRECTIONAL':
-            if self.last_mouse_region_x - self.start_mouse_region_x > 0:
+        if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:
+            right_to_left = self.last_mouse_region_x - self.start_mouse_region_x > 0
+            if (
+                    right_to_left and self.behavior == 'DIRECTIONAL' or
+                    not right_to_left and self.behavior == 'DIRECTIONAL_REVERSED'
+            ):
                 self.curr_behavior = 'OVERLAP'
                 self.override_intersect_tests = False
             else:

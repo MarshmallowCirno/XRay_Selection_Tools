@@ -266,7 +266,9 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
                ('CONTAIN', "Contain", "Select only the objects fully contained in box", 'STICKY_UVS_LOC', 2),
                ('OVERLAP', "Overlap (Default)", "Select objects overlapping box", 'SELECT_SUBTRACT', 3),
                ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select "
-                                              "overlapped", 'UV_SYNC_SELECT', 4)
+                                              "overlapped", 'UV_SYNC_SELECT', 4),
+               ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
+                                                                "right to left select contained", 'UV_SYNC_SELECT', 5)
                ],
         default='OVERLAP'
     )
@@ -286,7 +288,9 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
                ('CONTAIN', "Contain", "Select only the objects fully contained in lasso", 'STICKY_UVS_LOC', 2),
                ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
                ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select "
-                                              "overlapped", 'UV_SYNC_SELECT', 4)
+                                              "overlapped", 'UV_SYNC_SELECT', 4),
+               ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
+                                                                "right to left select contained", 'UV_SYNC_SELECT', 5)
                ],
         default='ORIGIN'
     )

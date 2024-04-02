@@ -241,6 +241,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
             ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select overlapped",
                 'UV_SYNC_SELECT', 4),
+            ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
+                                                             "right to left select contained", 'UV_SYNC_SELECT', 5)
         ],
         default='ORIGIN',
     )
@@ -466,9 +468,13 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         restore_overlays(self, context)
 
     def update_directional_behavior(self):
-        if self.behavior == 'DIRECTIONAL':
+        if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:
             start_x = self.lasso_poly[0][0]
-            if abs(self.lasso_xmin - start_x) < abs(self.lasso_xmax - start_x):
+            right_to_left = abs(self.lasso_xmin - start_x) < abs(self.lasso_xmax - start_x)
+            if (
+                    right_to_left and self.behavior == 'DIRECTIONAL' or
+                    not right_to_left and self.behavior == 'DIRECTIONAL_REVERSED'
+            ):
                 self.curr_behavior = 'OVERLAP'
             else:
                 self.curr_behavior = 'CONTAIN'
