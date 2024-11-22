@@ -9,6 +9,7 @@ from .tools_keymap import get_keymap_of_tool_from_preferences
 from .tools_keymap import remove_fallback_keymap_items
 
 icon_dir = os.path.join(os.path.dirname(__file__), "icon")
+gpencil_edit_mode = "EDIT_GREASE_PENCIL" if bpy.app.version >= (4, 3, 0) else "EDIT_GPENCIL"
 
 
 class ToolSelectBoxXrayCurve(bpy.types.WorkSpaceTool):
@@ -193,7 +194,7 @@ class ToolSelectBoxXrayPose(bpy.types.WorkSpaceTool):
 
 class ToolSelectBoxXrayGrease(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
-    bl_context_mode = 'EDIT_GPENCIL'
+    bl_context_mode = gpencil_edit_mode
 
     bl_idname = "grease_tool.select_box_xray"
     bl_label = "Select Box X-Ray"
@@ -429,7 +430,7 @@ class ToolSelectCircleXrayPose(bpy.types.WorkSpaceTool):
 
 class ToolSelectCircleXrayGrease(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
-    bl_context_mode = 'EDIT_GPENCIL'
+    bl_context_mode = gpencil_edit_mode
 
     bl_idname = "grease_tool.select_circle_xray"
     bl_label = "Select Circle X-Ray"
@@ -649,7 +650,7 @@ class ToolSelectLassoXrayPose(bpy.types.WorkSpaceTool):
 
 class ToolSelectLassoXrayGrease(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
-    bl_context_mode = 'EDIT_GPENCIL'
+    bl_context_mode = gpencil_edit_mode
 
     bl_idname = "grease_tool.select_lasso_xray"
     bl_label = "Select Lasso X-Ray"

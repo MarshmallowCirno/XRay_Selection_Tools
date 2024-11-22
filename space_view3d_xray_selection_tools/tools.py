@@ -282,7 +282,7 @@ lasso_tools = (
 
 
 def reset_active_tool() -> None:
-
+    gpencil_edit_mode = "EDIT_GREASE_PENCIL" if bpy.app.version >= (4, 3, 0) else "EDIT_GPENCIL"
     for mode in (
             'EDIT_MESH',
             'OBJECT',
@@ -291,7 +291,7 @@ def reset_active_tool() -> None:
             'EDIT_METABALL',
             'EDIT_LATTICE',
             'POSE',
-            'EDIT_GPENCIL',
+            gpencil_edit_mode,
     ):
         set_tool_in_mode(mode, "bultin.select")
 
