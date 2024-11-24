@@ -31,7 +31,7 @@ bl_info = {
 }
 
 
-reloadable_modules = (
+RELOADABLE_MODULES = (
     "view3d",
     "timer",
     "polygon_tests",
@@ -66,33 +66,37 @@ if "bpy" in locals():
     # ...so we need to reload our submodule(s) using importlib
     import importlib
 
-    for module in reloadable_modules:
+    for module in RELOADABLE_MODULES:
         if module in locals():
             importlib.reload(locals()[module])
 else:
-    from .functions import (
-        mesh_intersect,
-        mesh_modal,
-        object_intersect,
-        object_intersect_box,
-        object_intersect_circle,
-        object_intersect_lasso,
-        object_modal,
-        polygon_tests,
-        selection,
-        timer,
-        view3d,
-    )
-    from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
-    from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
-    from . import help, ot_keymap, tools, ui_preferences, startup
-    from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
+    import bpy
+    if not bpy.app.background:  # Prevent imports when run in background
+        from .functions import (
+            mesh_intersect,
+            mesh_modal,
+            object_intersect,
+            object_intersect_box,
+            object_intersect_circle,
+            object_intersect_lasso,
+            object_modal,
+            polygon_tests,
+            selection,
+            timer,
+            view3d,
+        )
+        from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
+        from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
+        from . import help, ot_keymap, tools, ui_preferences, startup
+        from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
 
 
 import bpy  # noqa
 
 
 def register():
+    if bpy.app.background:
+        return
     mesh_ot_box.register()
     mesh_ot_circle.register()
     mesh_ot_lasso.register()
@@ -109,6 +113,8 @@ def register():
 
 
 def unregister():
+    if bpy.app.background:
+        return
     mesh_ot_box.unregister()
     mesh_ot_circle.unregister()
     mesh_ot_lasso.unregister()
