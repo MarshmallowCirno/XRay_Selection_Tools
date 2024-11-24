@@ -89,6 +89,9 @@ else:
     from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
 
 
+import bpy  # noqa
+
+
 def register():
     mesh_ot_box.register()
     mesh_ot_circle.register()
@@ -116,7 +119,7 @@ def unregister():
     help.unregister()
     ui_preferences.unregister()
     ot_keymap.unregister()
-    tools.reset_active_tool()
+    tools_utils.reset_active_tool()
     tools_main.unregister()
     tools_dummy.unregister()
     startup.unregister()
