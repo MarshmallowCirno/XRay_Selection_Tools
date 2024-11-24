@@ -1,9 +1,8 @@
 import bpy
-
 from bpy.app.handlers import persistent
 
-from .functions.toolbar import set_tool_in_mode
 from .preferences import get_preferences
+from .tools.tools_utils import set_tool_in_mode
 
 
 def activate_tool():

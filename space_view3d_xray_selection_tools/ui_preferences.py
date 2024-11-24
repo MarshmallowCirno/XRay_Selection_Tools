@@ -1,11 +1,21 @@
 import bpy
 import rna_keymap_ui
-from .ot_keymap import me_keyboard_keymap, me_mouse_keymap, ob_keyboard_keymap, ob_mouse_keymap, \
-    toggles_keymap
-from .ot_keymap import toggle_me_keyboard_keymap, toggle_me_mouse_keymap, toggle_ob_keyboard_keymap, \
-    toggle_ob_mouse_keymap, toggle_toggles_keymap
-from .tools_keymap import populate_preferences_keymaps_of_tools, update_keymaps_of_tools
+
+from .ot_keymap import (
+    me_keyboard_keymap,
+    me_mouse_keymap,
+    ob_keyboard_keymap,
+    ob_mouse_keymap,
+    toggle_me_keyboard_keymap,
+    toggle_me_mouse_keymap,
+    toggle_ob_keyboard_keymap,
+    toggle_ob_mouse_keymap,
+    toggle_toggles_keymap,
+    toggles_keymap,
+)
 from .preferences import get_preferences
+from .tools import update_keymaps_of_tools, reload_tools
+from .tools.tools_keymap import populate_preferences_keymaps_of_tools
 
 
 class XRAYSELToolKmiPG(bpy.types.PropertyGroup):
@@ -16,24 +26,25 @@ class XRAYSELToolKmiPG(bpy.types.PropertyGroup):
         name="Active",
         description="Enable or disable key modifier",
         update=update_keymaps_of_tools,
-        default=True)
+        default=True,
+    )
     shift: bpy.props.BoolProperty(
         name="Shift",
         description="Shift key pressed",
         update=update_keymaps_of_tools,
-        default=False
+        default=False,
     )
     ctrl: bpy.props.BoolProperty(
         name="Ctrl",
         description="Ctrl key pressed",
         update=update_keymaps_of_tools,
-        default=False
+        default=False,
     )
     alt: bpy.props.BoolProperty(
         name="Alt",
         description="Alt key pressed",
         update=update_keymaps_of_tools,
-        default=False
+        default=False,
     )
 
 
@@ -42,13 +53,12 @@ class XRAYSELToolKeymapPG(bpy.types.PropertyGroup):
     kmis: bpy.props.CollectionProperty(name="KMIS", type=XRAYSELToolKmiPG)
 
 
-# noinspection PyTypeChecker
 class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
     # name = StringProperty() -> Instantiated by default
     select_through: bpy.props.BoolProperty(
         name="Select Through",
         description="Select verts, faces and edges laying underneath",
-        default=True
+        default=True,
     )
     default_color: bpy.props.FloatVectorProperty(
         name="Default Color",
@@ -57,7 +67,7 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
         soft_min=0.0,
         soft_max=1.0,
         size=3,
-        default=(1.0, 1.0, 1.0)
+        default=(1.0, 1.0, 1.0),
     )
     select_through_color: bpy.props.FloatVectorProperty(
         name="Select Through Color",
@@ -66,31 +76,35 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
         soft_min=0.0,
         soft_max=1.0,
         size=3,
-        default=(1.0, 1.0, 1.0)
+        default=(1.0, 1.0, 1.0),
     )
     show_xray: bpy.props.BoolProperty(
         name="Show X-Ray",
         description="Enable x-ray shading during selection",
-        default=True
+        default=True,
     )
     select_all_edges: bpy.props.BoolProperty(
         name="Select All Edges",
-        description="Additionally select edges that are partially inside the selection borders, "
-                    "not just the ones completely inside the selection borders. Works only "
-                    "in select through mode",
-        default=False
+        description=(
+            "Additionally select edges that are partially inside the selection borders, "
+            "not just the ones completely inside the selection borders. Works only "
+            "in select through mode"
+        ),
+        default=False,
     )
     select_all_faces: bpy.props.BoolProperty(
         name="Select All Faces",
-        description="Additionally select faces that are partially inside the selection borders, "
-                    "not just the ones with centers inside the selection borders. Works only "
-                    "in select through mode",
-        default=False
+        description=(
+            "Additionally select faces that are partially inside the selection borders, "
+            "not just the ones with centers inside the selection borders. Works only "
+            "in select through mode"
+        ),
+        default=False,
     )
     select_backfacing: bpy.props.BoolProperty(
         name="Select Backfacing",
         description="Select elements with normals facing away from you. Works only in select through mode",
-        default=True
+        default=True,
     )
 
 
@@ -102,45 +116,49 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
     tabs: bpy.props.EnumProperty(
         name="Tabs",
-        items=[('MESH_TOOLS', "Mesh Tools", ""),
-               ('OBJECT_TOOLS', "Object Tools", ""),
-               ('KEYMAP', "Advanced Keymap", "")
-               ],
+        items=[
+            ('MESH_TOOLS', "Mesh Tools", ""),
+            ('OBJECT_TOOLS', "Object Tools", ""),
+            ('KEYMAP', "Advanced Keymap", ""),
+        ],
         default='MESH_TOOLS',
-        options={'SKIP_SAVE'}
+        options={'SKIP_SAVE'},
     )
+
     me_directional_box: bpy.props.BoolProperty(
         name="Directional Box Behavior",
         description="Configure behavior separately for dragging directions",
-        default=False
+        default=False,
     )
     me_directional_lasso: bpy.props.BoolProperty(
         name="Directional Lasso Behavior",
         description="Configure behavior separately for dragging directions",
-        default=False
+        default=False,
     )
     me_select_through: bpy.props.BoolProperty(
         name="Select Through",
         description="Select verts, faces and edges laying underneath",
-        default=True
+        default=True,
     )
     me_select_through_toggle_key: bpy.props.EnumProperty(
         name="Selection Through Toggle Key",
         description="Toggle selection through by holding this key",
-        items=[('CTRL', "CTRL", ""),
-               ('ALT', "ALT", ""),
-               ('SHIFT', "SHIFT", ""),
-               ('DISABLED', "DISABLED", "")
-               ],
-        default='DISABLED'
+        items=[
+            ('CTRL', "CTRL", ""),
+            ('ALT', "ALT", ""),
+            ('SHIFT', "SHIFT", ""),
+            ('DISABLED', "DISABLED", ""),
+        ],
+        default='DISABLED',
     )
     me_select_through_toggle_type: bpy.props.EnumProperty(
         name="Toggle Selection Through by Press or Hold",
         description="Toggle selection through by holding or by pressing key",
-        items=[('HOLD', "Holding", ""),
-               ('PRESS', "Pressing", "")
-               ],
-        default='HOLD'
+        items=[
+            ('HOLD', "Holding", ""),
+            ('PRESS', "Pressing", ""),
+        ],
+        default='HOLD',
     )
     me_default_color: bpy.props.FloatVectorProperty(
         name="Default Color",
@@ -149,7 +167,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         soft_min=0.0,
         soft_max=1.0,
         size=3,
-        default=(1.0, 1.0, 1.0)
+        default=(1.0, 1.0, 1.0),
     )
     me_select_through_color: bpy.props.FloatVectorProperty(
         name="Select Through Color",
@@ -158,56 +176,60 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         soft_min=0.0,
         soft_max=1.0,
         size=3,
-        default=(1.0, 1.0, 1.0)
+        default=(1.0, 1.0, 1.0),
     )
     me_show_xray: bpy.props.BoolProperty(
         name="Show X-Ray",
         description="Enable x-ray shading during selection",
-        default=True
+        default=True,
     )
     me_select_all_edges: bpy.props.BoolProperty(
         name="Select All Edges",
-        description="Additionally select edges that are partially inside the selection borders, "
-                    "not just the ones completely inside the selection borders. Works only "
-                    "in select through mode",
-        default=False
+        description=(
+            "Additionally select edges that are partially inside the selection borders, "
+            "not just the ones completely inside the selection borders. Works only "
+            "in select through mode"
+        ),
+        default=False,
     )
     me_select_all_faces: bpy.props.BoolProperty(
         name="Select All Faces",
-        description="Additionally select faces that are partially inside the selection borders, "
-                    "not just the ones with centers inside the selection borders. Works only "
-                    "in select through mode",
-        default=False
+        description=(
+            "Additionally select faces that are partially inside the selection borders, "
+            "not just the ones with centers inside the selection borders. Works only "
+            "in select through mode"
+        ),
+        default=False,
     )
     me_select_backfacing: bpy.props.BoolProperty(
         name="Select Backfacing",
         description="Select elements with normals facing away from you. Works only in select through mode",
-        default=True
+        default=True,
     )
     me_hide_mirror: bpy.props.BoolProperty(
         name="Hide Mirror",
         description="Hide mirror modifiers during selection",
-        default=True
+        default=True,
     )
     me_hide_solidify: bpy.props.BoolProperty(
         name="Hide Solidify",
         description="Hide solidify modifiers during selection",
-        default=True
+        default=True,
     )
     me_hide_gizmo: bpy.props.BoolProperty(
         name="Hide Gizmo",
         description="Hide active tool gizmo during selection",
-        default=False
+        default=False,
     )
     me_show_crosshair: bpy.props.BoolProperty(
         name="Show Crosshair",
         description="Show crosshair when wait_for_input is enabled",
-        default=True
+        default=True,
     )
     me_show_lasso_icon: bpy.props.BoolProperty(
         name="Show Lasso Cursor",
         description="Show lasso cursor icon when wait_for_input is enabled",
-        default=True
+        default=True,
     )
     me_tool_to_activate: bpy.props.EnumProperty(
         name="Activate automatically at startup",
@@ -220,79 +242,164 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         ],
         default='NONE',
     )
+    me_group_with_builtins: bpy.props.BoolProperty(
+        name="Directional Box Behavior",
+        description="Configure behavior separately for dragging directions",
+        default=True,
+        update=reload_tools,
+    )
 
     ob_show_xray: bpy.props.BoolProperty(
         name="Show X-Ray",
         description="Enable x-ray shading during selection",
-        default=True
+        default=True,
     )
     ob_xray_toggle_key: bpy.props.EnumProperty(
         name="X-Ray Toggle Key",
         description="Toggle x-ray by holding this key",
-        items=[('CTRL', "CTRL", ""),
-               ('ALT', "ALT", ""),
-               ('SHIFT', "SHIFT", ""),
-               ('DISABLED', "DISABLED", "")
-               ],
-        default='DISABLED'
+        items=[
+            ('CTRL', "CTRL", ""),
+            ('ALT', "ALT", ""),
+            ('SHIFT', "SHIFT", ""),
+            ('DISABLED', "DISABLED", ""),
+        ],
+        default='DISABLED',
     )
     ob_xray_toggle_type: bpy.props.EnumProperty(
         name="Toggle X-Ray by Press or Hold",
         description="Toggle x-ray by holding or by pressing key",
-        items=[('HOLD', "Holding", ""),
-               ('PRESS', "Pressing", "")
-               ],
-        default='HOLD'
+        items=[
+            ('HOLD', "Holding", ""),
+            ('PRESS', "Pressing", ""),
+        ],
+        default='HOLD',
     )
     ob_hide_gizmo: bpy.props.BoolProperty(
         name="Hide Gizmo",
         description="Hide active tool gizmo during selection",
-        default=False
+        default=False,
     )
     ob_show_crosshair: bpy.props.BoolProperty(
         name="Show Crosshair",
         description="Show crosshair when wait_for_input is enabled",
-        default=True
+        default=True,
     )
     ob_show_lasso_icon: bpy.props.BoolProperty(
         name="Show Lasso Cursor",
         description="Show lasso cursor icon when wait_for_input is enabled",
-        default=True
+        default=True,
     )
     ob_box_select_behavior: bpy.props.EnumProperty(
         name="Box Select Behavior",
         description="Selection behavior",
-        items=[('ORIGIN', "Origin", "Select objects by origins", 'DOT', 1),
-               ('CONTAIN', "Contain", "Select only the objects fully contained in box", 'STICKY_UVS_LOC', 2),
-               ('OVERLAP', "Overlap (Default)", "Select objects overlapping box", 'SELECT_SUBTRACT', 3),
-               ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select "
-                                              "overlapped", 'UV_SYNC_SELECT', 4),
-               ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
-                                                                "right to left select contained", 'UV_SYNC_SELECT', 5)
-               ],
-        default='OVERLAP'
+        items=[
+            (
+                'ORIGIN',
+                "Origin",
+                "Select objects by origins",
+                'DOT',
+                1,
+            ),
+            (
+                'CONTAIN',
+                "Contain",
+                "Select only the objects fully contained in box",
+                'STICKY_UVS_LOC',
+                2,
+            ),
+            (
+                'OVERLAP',
+                "Overlap (Default)",
+                "Select objects overlapping box",
+                'SELECT_SUBTRACT',
+                3,
+            ),
+            (
+                'DIRECTIONAL',
+                "Directional",
+                "Dragging left to right select contained, right to left select overlapped",
+                'UV_SYNC_SELECT',
+                4,
+            ),
+            (
+                'DIRECTIONAL_REVERSED',
+                "Directional Reversed",
+                "Dragging left to right select overlapped, right to left select contained",
+                'UV_SYNC_SELECT',
+                5,
+            ),
+        ],
+        default='OVERLAP',
     )
     ob_circle_select_behavior: bpy.props.EnumProperty(
         name="Circle Select Behavior",
         description="Selection behavior",
-        items=[('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
-               ('CONTAIN', "Contain", "Select only the objects fully contained in circle", 'STICKY_UVS_LOC', 2),
-               ('OVERLAP', "Overlap", "Select objects overlapping circle", 'SELECT_SUBTRACT', 3)
-               ],
-        default='ORIGIN'
+        items=[
+            (
+                'ORIGIN',
+                "Origin (Default)",
+                "Select objects by origins",
+                'DOT',
+                1,
+            ),
+            (
+                'CONTAIN',
+                "Contain",
+                "Select only the objects fully contained in circle",
+                'STICKY_UVS_LOC',
+                2,
+            ),
+            (
+                'OVERLAP',
+                "Overlap",
+                "Select objects overlapping circle",
+                'SELECT_SUBTRACT',
+                3,
+            ),
+        ],
+        default='ORIGIN',
     )
     ob_lasso_select_behavior: bpy.props.EnumProperty(
         name="Lasso Select Behavior",
         description="Selection behavior",
-        items=[('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
-               ('CONTAIN', "Contain", "Select only the objects fully contained in lasso", 'STICKY_UVS_LOC', 2),
-               ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
-               ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select "
-                                              "overlapped", 'UV_SYNC_SELECT', 4),
-               ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
-                                                                "right to left select contained", 'UV_SYNC_SELECT', 5)
-               ],
-        default='ORIGIN'
+        items=[
+            (
+                'ORIGIN',
+                "Origin (Default)",
+                "Select objects by origins",
+                'DOT',
+                1,
+            ),
+            (
+                'CONTAIN',
+                "Contain",
+                "Select only the objects fully contained in lasso",
+                'STICKY_UVS_LOC',
+                2,
+            ),
+            (
+                'OVERLAP',
+                "Overlap",
+                "Select objects overlapping lasso",
+                'SELECT_SUBTRACT',
+                3,
+            ),
+            (
+                'DIRECTIONAL',
+                "Directional",
+                "Dragging left to right select contained, right to left select overlapped",
+                'UV_SYNC_SELECT',
+                4,
+            ),
+            (
+                'DIRECTIONAL_REVERSED',
+                "Directional Reversed",
+                "Dragging left to right select overlapped, right to left select contained",
+                'UV_SYNC_SELECT',
+                5,
+            ),
+        ],
+        default='ORIGIN',
     )
     ob_tool_to_activate: bpy.props.EnumProperty(
         name="Activate automatically at startup",
@@ -305,45 +412,57 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         ],
         default='NONE',
     )
+    ob_group_with_builtins: bpy.props.BoolProperty(
+        name="Directional Box Behavior",
+        description="Configure behavior separately for dragging directions",
+        default=True,
+        update=reload_tools,
+    )
 
     enable_me_keyboard_keymap: bpy.props.BoolProperty(
         name="Mesh Mode Keyboard Shortcuts",
         description="Activate to add shortcuts to blender keymap, deactivate to remove "
-                    "shortcuts from blender keymap",
+        "shortcuts from blender keymap",
         update=toggle_me_keyboard_keymap,
-        default=True
+        default=True,
     )
     enable_me_mouse_keymap: bpy.props.BoolProperty(
         name="Mesh Mode Mouse Shortcuts",
         description="Activate to add shortcuts to blender keymap, deactivate to remove "
-                    "shortcuts from blender keymap",
+        "shortcuts from blender keymap",
         update=toggle_me_mouse_keymap,
-        default=False
+        default=False,
     )
     enable_ob_keyboard_keymap: bpy.props.BoolProperty(
         name="Object Mode Keyboard Shortcuts",
         description="Activate to add shortcuts to blender keymap, deactivate to remove "
-                    "shortcuts from blender keymap",
+        "shortcuts from blender keymap",
         update=toggle_ob_keyboard_keymap,
-        default=True
+        default=True,
     )
     enable_ob_mouse_keymap: bpy.props.BoolProperty(
         name="Object Mode Mouse Shortcuts",
         description="Activate to add shortcuts to blender keymap, deactivate to remove "
-                    "shortcuts from blender keymap",
+        "shortcuts from blender keymap",
         update=toggle_ob_mouse_keymap,
-        default=False
+        default=False,
     )
     enable_toggles_keymap: bpy.props.BoolProperty(
         name="Preferences Toggles Shortcuts",
         description="Activate to add shortcuts to blender keymap, deactivate to remove "
-                    "shortcuts from blender keymap",
+        "shortcuts from blender keymap",
         update=toggle_toggles_keymap,
-        default=False
+        default=False,
     )
 
-    keymaps_of_tools: bpy.props.CollectionProperty(type=XRAYSELToolKeymapPG, name="Keymaps of Tools")
-    me_direction_properties: bpy.props.CollectionProperty(type=XRAYSELToolMeDirectionProps, name="Mesh Direction Props")
+    keymaps_of_tools: bpy.props.CollectionProperty(
+        type=XRAYSELToolKeymapPG,
+        name="Keymaps of Tools",
+    )
+    me_direction_properties: bpy.props.CollectionProperty(
+        type=XRAYSELToolMeDirectionProps,
+        name="Mesh Direction Props",
+    )
 
     select_mouse: bpy.props.EnumProperty(
         description="Last value of property, since keyconfig.preferences isn't available at blender startup",
@@ -365,16 +484,18 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
     tool_keymap_tabs: bpy.props.EnumProperty(
         name="Tool Selection Modifier Keys",
-        items=[('BOX', "Box Tool", ""),
-               ('CIRCLE', "Circle Tool", ""),
-               ('LASSO', "Lasso Tool", "")
-               ],
+        items=[
+            ('BOX', "Box Tool", ""),
+            ('CIRCLE', "Circle Tool", ""),
+            ('LASSO', "Lasso Tool", ""),
+        ],
         default='BOX',
-        options={'SKIP_SAVE'}
+        options={'SKIP_SAVE'},
     )
 
     def draw(self, _):
         layout = self.layout
+
         col = layout.column(align=True)
         row = col.row(align=True)
         row.prop(self, "tabs", expand=True)
@@ -390,10 +511,10 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     @staticmethod
     def draw_flow_vertical_separator(flow):
         row = flow.row()
-        row.scale_y = .7
+        row.scale_y = 0.7
         row.label(text="")
         row = flow.row()
-        row.scale_y = .7
+        row.scale_y = 0.7
         row.label(text="")
 
     def draw_mesh_tools_preferences(self, box):
@@ -634,6 +755,13 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         flow.label(text="Activate tool automatically at startup")
         flow.prop(self, "me_tool_to_activate", text="")
 
+        # Group with builtin tools
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Group with builtin selection tools in toolbar")
+        row = flow.row(align=True)
+        row.prop(self, "me_group_with_builtins", text="Group with Builtins", icon='GROUP')
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"
+
     def draw_object_tools_preferences(self, box):
         """Object Tools tab."""
 
@@ -694,6 +822,13 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         flow.label(text="Activate tool automatically at startup")
         flow.prop(self, "ob_tool_to_activate", text="")
 
+        # Group with builtin tools
+        self.draw_flow_vertical_separator(flow)
+        flow.label(text="Group with builtin selection tools in toolbar")
+        row = flow.row(align=True)
+        row.prop(self, "ob_group_with_builtins", text="Group with Builtins", icon='GROUP')
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"
+
     def draw_adv_keymap(self, box):
         """Advanced Keymap tab."""
 
@@ -707,8 +842,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         km_col = col.column(align=True)
         icon = 'CHECKBOX_HLT' if self.enable_me_keyboard_keymap else 'CHECKBOX_DEHLT'
-        km_col.prop(self, "enable_me_keyboard_keymap", text="Mesh Mode Tools: Keyboard Shortcuts",
-                    icon=icon)
+        km_col.prop(self, "enable_me_keyboard_keymap", text="Mesh Mode Tools: Keyboard Shortcuts", icon=icon)
         if self.enable_me_keyboard_keymap:
             sub_box = km_col.box()
             kmi_col = sub_box.column(align=True)
@@ -716,8 +850,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         km_col = col.column(align=True)
         icon = 'CHECKBOX_HLT' if self.enable_ob_keyboard_keymap else 'CHECKBOX_DEHLT'
-        km_col.prop(self, "enable_ob_keyboard_keymap", text="Object Mode Tools: Keyboard Shortcuts",
-                    icon=icon)
+        km_col.prop(self, "enable_ob_keyboard_keymap", text="Object Mode Tools: Keyboard Shortcuts", icon=icon)
         if self.enable_ob_keyboard_keymap:
             sub_box = km_col.box()
             kmi_col = sub_box.column(align=True)
@@ -781,11 +914,9 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             col.context_pointer_set("keymap", km)
 
         if map_type is None:
-            kmis = [kmi for kmi in km.keymap_items if
-                    kmi.idname in kmi_idnames and kmi.map_type]
+            kmis = [kmi for kmi in km.keymap_items if kmi.idname in kmi_idnames and kmi.map_type]
         else:
-            kmis = [kmi for kmi in km.keymap_items if
-                    kmi.idname in kmi_idnames and kmi.map_type in map_type]
+            kmis = [kmi for kmi in km.keymap_items if kmi.idname in kmi_idnames and kmi.map_type in map_type]
 
         for kmi in kmis:
             rna_keymap_ui.draw_kmi(['ADDON', 'USER', 'DEFAULT'], kc, km, kmi, col, 0)
@@ -798,16 +929,12 @@ def populate_preferences_direction_properties():
     left.name = "LEFT_TO_RIGHT"
 
 
-classes = (
-    XRAYSELToolMeDirectionProps,
-    XRAYSELToolKmiPG,
-    XRAYSELToolKeymapPG,
-    XRAYSELPreferences
-)
+classes = (XRAYSELToolMeDirectionProps, XRAYSELToolKmiPG, XRAYSELToolKeymapPG, XRAYSELPreferences)
 
 
 def register():
     from bpy.utils import register_class
+
     for cls in classes:
         register_class(cls)
 
@@ -820,5 +947,6 @@ def unregister():
     get_preferences().keymaps_of_tools.clear()
 
     from bpy.utils import unregister_class
+
     for cls in classes:
         unregister_class(cls)

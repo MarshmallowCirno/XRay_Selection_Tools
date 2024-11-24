@@ -53,8 +53,10 @@ reloadable_modules = (
     "help",
     "ot_keymap",
     "tools",
+    "tools_main",
     "tools_dummy",
     "tools_keymap",
+    "tools_utils",
     "ui_preferences",
     "startup",
 )
@@ -83,10 +85,8 @@ else:
     )
     from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
     from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
-    from . import help, ot_keymap, tools, tools_dummy, ui_preferences, startup
-
-
-import bpy
+    from . import help, ot_keymap, tools, ui_preferences, startup
+    from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
 
 
 def register():
@@ -100,7 +100,7 @@ def register():
     help.register()
     ui_preferences.register()
     ot_keymap.register()
-    tools.register()
+    tools_main.register()
     tools_dummy.register()
     startup.register()
 
@@ -117,6 +117,6 @@ def unregister():
     ui_preferences.unregister()
     ot_keymap.unregister()
     tools.reset_active_tool()
-    tools.unregister()
+    tools_main.unregister()
     tools_dummy.unregister()
     startup.unregister()
