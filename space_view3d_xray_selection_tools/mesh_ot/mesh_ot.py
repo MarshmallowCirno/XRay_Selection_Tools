@@ -41,7 +41,7 @@ def get_safe_draw_x(context, ui_width):
 
 
 class Toggle_Base:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.handler = None
         self.timer = None
 
@@ -82,8 +82,8 @@ class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, Toggle
     bl_label = "Toggle Select Through"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.text = "OFF" if get_preferences().me_select_through else "Select Through"
 
     def execute(self, context):
@@ -97,8 +97,8 @@ class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_
     bl_label = "Toggle Select All Edges & Faces"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.text = "Default" if get_preferences().me_select_all_edges else "Select All"
 
     def execute(self, context):
@@ -114,8 +114,8 @@ class MESH_OT_select_tools_xray_toggle_select_backfacing(bpy.types.Operator, Tog
     bl_label = "Toggle Select Backfacing"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.text = "Default" if not get_preferences().me_select_backfacing else "Exclude Backfacing"
 
     def execute(self, context):

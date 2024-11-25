@@ -300,7 +300,10 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
     def poll(cls, context):
         return context.area.type == 'VIEW_3D' and context.mode == 'EDIT_MESH'
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        if bpy.app.version >= (4, 4, 0):
+            super().__init__(*args, **kwargs)
+
         self.path = None
         self.stage = None
         self.curr_mode = self.mode
