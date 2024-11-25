@@ -1,0 +1,13 @@
+schema_version = "1.0.0"
+
+id = "space_view3d_xray_selection_tools"
+version = "4.7.0"
+name = "X-Ray Selection Tools"
+tagline = "Box, lasso and circle selection tools with x-ray"
+maintainer = "MarshmallowCirno <MarshmallowCirno@gmail.com>"
+type = "add-on"
+website = "https://blenderartists.org/t/x-ray-selection-tools/1212316"
+tags = ["3D View"]
+
+blender_version_min = "4.3.0"
+license = ["SPDX:GPL-3.0-or-later"]
