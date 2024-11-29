@@ -24,25 +24,25 @@ class XRAYSELToolKmiPG(bpy.types.PropertyGroup):
     icon: bpy.props.StringProperty(name="Icon")
     active: bpy.props.BoolProperty(
         name="Active",
-        description="Enable or disable key modifier",
+        description="Enable or disable selection mode",
         update=update_keymaps_of_tools,
         default=True,
     )
     shift: bpy.props.BoolProperty(
         name="Shift",
-        description="Shift key pressed",
+        description="Shift key is pressed",
         update=update_keymaps_of_tools,
         default=False,
     )
     ctrl: bpy.props.BoolProperty(
         name="Ctrl",
-        description="Ctrl key pressed",
+        description="Ctrl key is pressed",
         update=update_keymaps_of_tools,
         default=False,
     )
     alt: bpy.props.BoolProperty(
         name="Alt",
-        description="Alt key pressed",
+        description="Alt key is pressed",
         update=update_keymaps_of_tools,
         default=False,
     )
@@ -57,12 +57,12 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
     # name = StringProperty() -> Instantiated by default
     select_through: bpy.props.BoolProperty(
         name="Select Through",
-        description="Select verts, faces and edges laying underneath",
+        description="Select vertices, faces, and edges laying underneath",
         default=True,
     )
     default_color: bpy.props.FloatVectorProperty(
         name="Default Color",
-        description="Tool color when selection through is disabled",
+        description="Color of the selection frame when selecting through",
         subtype='COLOR',
         soft_min=0.0,
         soft_max=1.0,
@@ -71,7 +71,7 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
     )
     select_through_color: bpy.props.FloatVectorProperty(
         name="Select Through Color",
-        description="Tool color when selection through is disabled",
+        description="Color of the selection frame when not selecting through",
         subtype='COLOR',
         soft_min=0.0,
         soft_max=1.0,
@@ -80,30 +80,28 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
     )
     show_xray: bpy.props.BoolProperty(
         name="Show X-Ray",
-        description="Enable x-ray shading during selection",
+        description="Enable X-Ray shading during selection",
         default=True,
     )
     select_all_edges: bpy.props.BoolProperty(
         name="Select All Edges",
         description=(
-            "Additionally select edges that are partially inside the selection borders, "
-            "not just the ones completely inside the selection borders. Works only "
-            "in select through mode"
+            "Include edges partially within the selection area, not just those fully enclosed. Works only "
+            "in \"Select Through\" mode"
         ),
         default=False,
     )
     select_all_faces: bpy.props.BoolProperty(
         name="Select All Faces",
         description=(
-            "Additionally select faces that are partially inside the selection borders, "
-            "not just the ones with centers inside the selection borders. Works only "
-            "in select through mode"
+            "Include faces partially within the selection borders, not just those whose centers are inside. "
+            "Works only in \"Select Through\" mode"
         ),
         default=False,
     )
     select_backfacing: bpy.props.BoolProperty(
         name="Select Backfacing",
-        description="Select elements with normals facing away from you. Works only in select through mode",
+        description="Select elements with normals pointing away from the view. Works only in \"Select Through\" mode",
         default=True,
     )
 
@@ -137,12 +135,12 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     me_select_through: bpy.props.BoolProperty(
         name="Select Through",
-        description="Select verts, faces and edges laying underneath",
+        description="Select vertices, faces, and edges laying underneath",
         default=True,
     )
     me_select_through_toggle_key: bpy.props.EnumProperty(
         name="Selection Through Toggle Key",
-        description="Toggle selection through by holding this key",
+        description="Toggle selection through with this key",
         items=[
             ('CTRL', "CTRL", ""),
             ('ALT', "ALT", ""),
@@ -153,7 +151,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     me_select_through_toggle_type: bpy.props.EnumProperty(
         name="Toggle Selection Through by Press or Hold",
-        description="Toggle selection through by holding or by pressing key",
+        description="Toggle selection through by holding or by pressing a key",
         items=[
             ('HOLD', "Holding", ""),
             ('PRESS', "Pressing", ""),
@@ -162,7 +160,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     me_default_color: bpy.props.FloatVectorProperty(
         name="Default Color",
-        description="Tool color when selection through is disabled",
+        description="Color of the selection frame when not selecting through",
         subtype='COLOR',
         soft_min=0.0,
         soft_max=1.0,
@@ -171,7 +169,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     me_select_through_color: bpy.props.FloatVectorProperty(
         name="Select Through Color",
-        description="Tool color when selection through is disabled",
+        description="Color of the selection frame when selecting through",
         subtype='COLOR',
         soft_min=0.0,
         soft_max=1.0,
@@ -180,55 +178,53 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     me_show_xray: bpy.props.BoolProperty(
         name="Show X-Ray",
-        description="Enable x-ray shading during selection",
+        description="Enable X-Ray shading during selection",
         default=True,
     )
     me_select_all_edges: bpy.props.BoolProperty(
         name="Select All Edges",
         description=(
-            "Additionally select edges that are partially inside the selection borders, "
-            "not just the ones completely inside the selection borders. Works only "
-            "in select through mode"
+            "Include edges partially within the selection area, not just those fully enclosed. Works only "
+            "in \"Select Through\" mode"
         ),
         default=False,
     )
     me_select_all_faces: bpy.props.BoolProperty(
         name="Select All Faces",
         description=(
-            "Additionally select faces that are partially inside the selection borders, "
-            "not just the ones with centers inside the selection borders. Works only "
-            "in select through mode"
+            "Include faces partially within the selection borders, not just those whose centers are inside. "
+            "Works only in \"Select Through\" mode"
         ),
         default=False,
     )
     me_select_backfacing: bpy.props.BoolProperty(
         name="Select Backfacing",
-        description="Select elements with normals facing away from you. Works only in select through mode",
+        description="Select elements with normals pointing away from the view. Works only in \"Select Through\" mode",
         default=True,
     )
     me_hide_mirror: bpy.props.BoolProperty(
         name="Hide Mirror",
-        description="Hide mirror modifiers during selection",
+        description="Temporarily hide mirror modifiers during selection",
         default=True,
     )
     me_hide_solidify: bpy.props.BoolProperty(
         name="Hide Solidify",
-        description="Hide solidify modifiers during selection",
+        description="Temporarily hide solidify modifiers during selection",
         default=True,
     )
     me_hide_gizmo: bpy.props.BoolProperty(
         name="Hide Gizmo",
-        description="Hide active tool gizmo during selection",
+        description="Temporarily hide the gizmo of the active tool during selection",
         default=False,
     )
     me_show_crosshair: bpy.props.BoolProperty(
         name="Show Crosshair",
-        description="Show crosshair when wait_for_input is enabled",
+        description="Display the crosshair when wait_for_input is enabled",
         default=True,
     )
     me_show_lasso_icon: bpy.props.BoolProperty(
         name="Show Lasso Cursor",
-        description="Show lasso cursor icon when wait_for_input is enabled",
+        description="Display the lasso cursor icon when wait_for_input is enabled",
         default=True,
     )
     me_tool_to_activate: bpy.props.EnumProperty(
@@ -244,19 +240,19 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     me_group_with_builtins: bpy.props.BoolProperty(
         name="Directional Box Behavior",
-        description="Configure behavior separately for dragging directions",
+        description="Set tool behavior based on drag direction",
         default=True,
         update=reload_tools,
     )
 
     ob_show_xray: bpy.props.BoolProperty(
         name="Show X-Ray",
-        description="Enable x-ray shading during selection",
+        description="Enable X-Ray shading during selection",
         default=True,
     )
     ob_xray_toggle_key: bpy.props.EnumProperty(
         name="X-Ray Toggle Key",
-        description="Toggle x-ray by holding this key",
+        description="Toggle X-Ray with this key",
         items=[
             ('CTRL', "CTRL", ""),
             ('ALT', "ALT", ""),
@@ -267,7 +263,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     ob_xray_toggle_type: bpy.props.EnumProperty(
         name="Toggle X-Ray by Press or Hold",
-        description="Toggle x-ray by holding or by pressing key",
+        description="Toggle X-Ray by holding or by pressing a key",
         items=[
             ('HOLD', "Holding", ""),
             ('PRESS', "Pressing", ""),
@@ -276,17 +272,17 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     ob_hide_gizmo: bpy.props.BoolProperty(
         name="Hide Gizmo",
-        description="Hide active tool gizmo during selection",
+        description="Hide the gizmo of the active tool during selection",
         default=False,
     )
     ob_show_crosshair: bpy.props.BoolProperty(
         name="Show Crosshair",
-        description="Show crosshair when wait_for_input is enabled",
+        description="Display the crosshair when wait_for_input is enabled",
         default=True,
     )
     ob_show_lasso_icon: bpy.props.BoolProperty(
         name="Show Lasso Cursor",
-        description="Show lasso cursor icon when wait_for_input is enabled",
+        description="Display the lasso cursor icon when wait_for_input is enabled",
         default=True,
     )
     ob_box_select_behavior: bpy.props.EnumProperty(
@@ -414,43 +410,38 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
     ob_group_with_builtins: bpy.props.BoolProperty(
         name="Directional Box Behavior",
-        description="Configure behavior separately for dragging directions",
+        description="Set tool behavior based on drag direction",
         default=True,
         update=reload_tools,
     )
 
     enable_me_keyboard_keymap: bpy.props.BoolProperty(
         name="Mesh Mode Keyboard Shortcuts",
-        description="Activate to add shortcuts to blender keymap, deactivate to remove "
-        "shortcuts from blender keymap",
+        description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
         update=toggle_me_keyboard_keymap,
         default=True,
     )
     enable_me_mouse_keymap: bpy.props.BoolProperty(
         name="Mesh Mode Mouse Shortcuts",
-        description="Activate to add shortcuts to blender keymap, deactivate to remove "
-        "shortcuts from blender keymap",
+        description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
         update=toggle_me_mouse_keymap,
         default=False,
     )
     enable_ob_keyboard_keymap: bpy.props.BoolProperty(
         name="Object Mode Keyboard Shortcuts",
-        description="Activate to add shortcuts to blender keymap, deactivate to remove "
-        "shortcuts from blender keymap",
+        description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
         update=toggle_ob_keyboard_keymap,
         default=True,
     )
     enable_ob_mouse_keymap: bpy.props.BoolProperty(
         name="Object Mode Mouse Shortcuts",
-        description="Activate to add shortcuts to blender keymap, deactivate to remove "
-        "shortcuts from blender keymap",
+        description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
         update=toggle_ob_mouse_keymap,
         default=False,
     )
     enable_toggles_keymap: bpy.props.BoolProperty(
         name="Preferences Toggles Shortcuts",
-        description="Activate to add shortcuts to blender keymap, deactivate to remove "
-        "shortcuts from blender keymap",
+        description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
         update=toggle_toggles_keymap,
         default=False,
     )
@@ -465,7 +456,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
 
     select_mouse: bpy.props.EnumProperty(
-        description="Last value of property, since keyconfig.preferences isn't available at blender startup",
+        description="Last known value of the property, as keyconfig.preferences is unavailable at Blender startup",
         items=[
             ('LEFT', "", ""),
             ('RIGHT', "", ""),
@@ -474,7 +465,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
     )
 
     rmb_action: bpy.props.EnumProperty(
-        description="Last value of property, since keyconfig.preferences isn't available at blender startup",
+        description="Last known value of the property, as keyconfig.preferences is unavailable at Blender startup",
         items=[
             ('TWEAK', "", ""),
             ('FALLBACK_TOOL', "", ""),
@@ -541,7 +532,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Keymap
         if self.enable_me_keyboard_keymap:
-            box.label(text="Change shortcuts here or disable them by unchecking")
+            box.label(text="Modify shortcuts here or disable them by unchecking")
             col = box.column()
             self.draw_keymap_items(col, "Mesh", me_keyboard_keymap, None, False)
             box.separator(factor=1.7)
@@ -550,11 +541,11 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Select through
         if not use_directional_props:
-            flow.label(text="Start selection with enabled selection through")
+            flow.label(text="Start selection with \"Select Through\" mode enabled")
             flow.prop(self, "me_select_through", text="Select Through", icon='MOD_WIREFRAME')
 
         # Select through toggle
-        flow.label(text="Toggle select through during selection with a key")
+        flow.label(text="Toggle \"Select Through\" mode while selecting using a following key")
         split = flow.split(align=True)
         sub = split.row(align=True)
         sub.active = self.me_select_through_toggle_key != 'DISABLED'
@@ -583,7 +574,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             sub.label(text=" and ".join(def_tools))
 
             # Directions
-            flow.label(text="Direction")
+            flow.label(text="Drag direction")
             split = flow.split(align=True)
             row = split.row()
             row.label(text="", icon='BACK')
@@ -602,26 +593,26 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             sub.label(text="Any")
 
             # Select through
-            flow.label(text="Start selection with enabled selection through")
+            flow.label(text="Start selection with \"Select Through\" mode enabled")
             split = flow.split(align=True)
             split.prop(rtl_props, "select_through", text="Select Through", icon='MOD_WIREFRAME')
             split.prop(ltr_props, "select_through", text="Select Through", icon='MOD_WIREFRAME')
             split.prop(self, "me_select_through", text="Select Through", icon='MOD_WIREFRAME')
 
             # Color
-            flow.label(text="Selection frame color when selection through is disabled")
+            flow.label(text="Color of the selection frame when not selecting through")
             split = flow.split(align=True)
             split.prop(rtl_props, "default_color", text="")
             split.prop(ltr_props, "default_color", text="")
             split.prop(self, "me_default_color", text="")
-            flow.label(text="Selection frame color when selection through is enabled")
+            flow.label(text="Color of the selection frame when selecting through")
             split = flow.split(align=True)
             split.prop(rtl_props, "select_through_color", text="")
             split.prop(ltr_props, "select_through_color", text="")
             split.prop(self, "me_select_through_color", text="")
 
             # Show x-ray
-            flow.label(text="Show x-ray shading during selection through")
+            flow.label(text="Enable X-Ray shading during selection")
             split = flow.split(align=True)
             row = split.row(align=True)
             row.active = rtl_st_available
@@ -635,7 +626,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
             # All edges
             row = flow.row(align=True)
-            row.label(text="Select all edges touched by selection region")
+            row.label(text="Select all edges intersecting the selection region")
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_edges"
             split = flow.split(align=True)
             row = split.row(align=True)
@@ -650,7 +641,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
             # All faces
             row = flow.row(align=True)
-            row.label(text="Select all faces touched by selection region")
+            row.label(text="Select all faces intersecting the selection region")
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_faces"
             split = flow.split(align=True)
             row = split.row(align=True)
@@ -665,7 +656,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
             # Backfacing
             row = flow.row(align=True)
-            row.label(text="Select elements with normals facing away from you")
+            row.label(text="Select elements with normals pointing away from the view")
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_backfacing"
             split = flow.split(align=True)
             row = split.row(align=True)
@@ -680,33 +671,33 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         else:
             # Color
             self.draw_flow_vertical_separator(flow)
-            flow.label(text="Selection frame color when selection through is disabled")
+            flow.label(text="Color of the selection frame when not selecting through")
             flow.prop(self, "me_default_color", text="")
-            flow.label(text="Selection frame color when selection through is enabled")
+            flow.label(text="Color of the selection frame when selecting through")
             flow.prop(self, "me_select_through_color", text="")
 
             # Show x-ray
             self.draw_flow_vertical_separator(flow)
-            flow.label(text="Show x-ray shading during selection through")
+            flow.label(text="Enable X-Ray shading during selection")
             row = flow.row()
             row.active = def_st_available
             row.prop(self, "me_show_xray", text="Show X-Ray", icon='XRAY')
 
             # All edges and faces
             self.draw_flow_vertical_separator(flow)
-            flow.label(text="Select all edges touched by selection region")
+            flow.label(text="Select all edges intersecting the selection region")
             row = flow.row(align=True)
             row.active = def_st_available
             row.prop(self, "me_select_all_edges", text="Select All Edges", icon='EDGESEL')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_edges"
 
-            flow.label(text="Select all faces touched by selection region")
+            flow.label(text="Select all faces intersecting the selection region")
             row = flow.row(align=True)
             row.active = def_st_available
             row.prop(self, "me_select_all_faces", text="Select All Faces", icon='FACESEL')
             row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "me_select_all_faces"
 
-            flow.label(text="Select elements with normals facing away from you")
+            flow.label(text="Select elements with normals pointing away from the view")
             row = flow.row(align=True)
             row.active = def_st_available
             row.prop(self, "me_select_backfacing", text="Select Backfacing", icon='NORMALS_FACE')
@@ -714,7 +705,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Directional toggles
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Configure tool settings separately for drag directions")
+        flow.label(text="Set tool behavior based on drag direction")
         split = flow.split(align=True)
         split.prop(self, "me_directional_box", text="Directional Box", icon='UV_SYNC_SELECT')
         row = split.row(align=True)
@@ -723,7 +714,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Modifiers
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Temporary hide this modifiers during selection through")
+        flow.label(text="Temporarily hide these modifiers during selection")
         split = flow.split(align=True)
         if use_directional_props:
             split.active = rtl_st_available or ltr_st_available or def_st_available
@@ -736,14 +727,14 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Gizmo
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Temporary hide gizmo of the active tool")
+        flow.label(text="Temporarily hide the gizmo of the active tool")
         row = flow.row(align=True)
         row.prop(self, "me_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
 
         # Icon
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Show box tool crosshair or lasso tool icon")
+        flow.label(text="Display the box tool crosshair or lasso tool icon")
         split = flow.split(align=True)
         split.prop(self, "me_show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
         row = split.row(align=True)
@@ -752,12 +743,12 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Startup
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Activate tool automatically at startup")
+        flow.label(text="Automatically activate following tool at startup")
         flow.prop(self, "me_tool_to_activate", text="")
 
         # Group with builtin tools
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Group with builtin selection tools in toolbar")
+        flow.label(text="Group with built-in selection tools in the toolbar")
         row = flow.row(align=True)
         row.prop(self, "me_group_with_builtins", text="Group with Builtins", icon='GROUP')
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"
@@ -767,7 +758,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Keymap
         if self.enable_ob_keyboard_keymap:
-            box.label(text="Change shortcuts here or disable them by unchecking")
+            box.label(text="Modify shortcuts here or disable them by unchecking")
             col = box.column()
             self.draw_keymap_items(col, "Object Mode", ob_keyboard_keymap, None, False)
             box.separator(factor=1.7)
@@ -775,11 +766,11 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         flow = box.grid_flow(columns=2, row_major=True, align=True)
 
         # Select through
-        flow.label(text="Start selection with enabled x-ray shading")
+        flow.label(text="Start selection with X-Ray shading enabled")
         flow.prop(self, "ob_show_xray", text="Show X-Ray", icon='XRAY')
 
         # Select toggle
-        flow.label(text="Toggle x-ray shading during selection with a key")
+        flow.label(text="Toggle X-Ray shading while selecting using a following key")
         split = flow.split(align=True)
         sub = split.row(align=True)
         sub.active = self.ob_xray_toggle_key != 'DISABLED'
@@ -803,14 +794,14 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Gizmo
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Temporary hide gizmo of the active tool")
+        flow.label(text="Temporarily hide the gizmo of the active tool")
         row = flow.row(align=True)
         row.prop(self, "ob_hide_gizmo", text="Hide Gizmo", icon='GIZMO')
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
 
         # Icon
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Show box tool crosshair or lasso tool icon")
+        flow.label(text="Display the box tool crosshair or lasso tool icon")
         split = flow.split(align=True)
         split.prop(self, "ob_show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
         row = split.row(align=True)
@@ -819,12 +810,12 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         # Startup
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Activate tool automatically at startup")
+        flow.label(text="Automatically activate following tool at startup")
         flow.prop(self, "ob_tool_to_activate", text="")
 
         # Group with builtin tools
         self.draw_flow_vertical_separator(flow)
-        flow.label(text="Group with builtin selection tools in toolbar")
+        flow.label(text="Group with built-in selection tools in the toolbar")
         row = flow.row(align=True)
         row.prop(self, "ob_group_with_builtins", text="Group with Builtins", icon='GROUP')
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"
@@ -835,7 +826,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         # Object and Mesh Mode Keymap
         col = box.column()
         row = col.row(align=True)
-        row.label(text="Shortcuts for starting tools and changing preferences")
+        row.label(text="Shortcuts for activating tools and modifying preferences")
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_keymaps"
 
         col = box.column()
@@ -883,7 +874,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         # Tool Selection Mode Keymap
         box.separator()
         row = box.row(align=True)
-        row.label(text="Shortcuts for toolbar tool selection modes")
+        row.label(text="Shortcuts for selection modes of toolbar tools")
         row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_selection_mode_keymaps"
 
         col = box.column(align=True)
