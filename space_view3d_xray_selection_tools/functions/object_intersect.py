@@ -1,11 +1,11 @@
 from itertools import chain
 from operator import attrgetter, methodcaller
 
-import bpy
 import numpy as np
 
 from .view3d import get_co_world_of_ob, get_co_world_of_mats, get_co_2d
-from .selection import get_ob_selection_mask
+from .selection import new_object_selection_mask
+from ..mesh_attr import vert_attr, edge_attr, face_attr
 
 
 def partition(items, predicate=bool):
@@ -94,19 +94,9 @@ def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
 
 def get_vert_co_2d(me, ob, region, rv3d):
     """Look for verts inside the selection polygon path."""
-    verts = me.vertices
-    vert_count = len(verts)
 
     # Get local coordinates of vertices.
-    vert_co_local = np.empty(vert_count * 3, "f")
-    if bpy.app.version >= (3, 5, 0):
-        if "position" not in me.attributes:
-            me.attributes.new(name="position", type="FLOAT_VECTOR", domain="POINT")
-        data = me.attributes["position"].data
-        data.foreach_get("vector", vert_co_local)
-    else:
-        verts.foreach_get("co", vert_co_local)
-    vert_co_local.shape = (vert_count, 3)
+    vert_co_local = vert_attr.coordinates(me)
 
     # Get 2d coordinates of vertices.
     vert_co_world = get_co_world_of_ob(ob, vert_co_local)
@@ -116,18 +106,9 @@ def get_vert_co_2d(me, ob, region, rv3d):
 
 def get_edge_vert_co_2d(me, vert_co_2d):
     """Look for edges that intersect the selection polygon path."""
-    edges = me.edges
-    edge_count = len(edges)
 
     # For each edge get 2 indices of its vertices.
-    edge_vert_indices = np.empty(edge_count * 2, "i")
-    if bpy.app.version >= (3, 6, 0):
-        me.attributes.new(name=".edge_verts", type="INT", domain="EDGE")
-        data = me.attributes[".edge_verts"].data
-        data.foreach_get("value", edge_vert_indices)
-    else:
-        edges.foreach_get("vertices", edge_vert_indices)
-    edge_vert_indices.shape = (edge_count, 2)
+    edge_vert_indices = edge_attr.vertex_indices(me)
 
     # For each edge get 2 coordinates of its vertices.
     edge_vert_co_2d = vert_co_2d[edge_vert_indices]
@@ -136,20 +117,12 @@ def get_edge_vert_co_2d(me, vert_co_2d):
 
 def get_face_vert_co_2d(me, vert_co_2d):
     """Look for faces."""
-    faces = me.polygons
-    face_count = len(faces)
-
-    # Loops - edges that forms face polygons, sorted by polygon indices.
-    loops = me.loops
-    loop_count = len(loops)
 
     # Number of vertices for each face.
-    face_loop_totals = np.empty(face_count, "i")
-    faces.foreach_get("loop_total", face_loop_totals)
+    face_loop_totals = face_attr.vertex_count(me)
 
     # Sequence of vertices of all faces.
-    face_vert_indices = np.zeros(loop_count, "i")
-    faces.foreach_get("vertices", face_vert_indices)
+    face_vert_indices = face_attr.vertex_indices(me)
 
     # Coordinates of vertices of faces.
     face_vert_co_2d = vert_co_2d[face_vert_indices]
@@ -174,6 +147,6 @@ def get_ob_loc_co_2d(obs, region, rv3d):
 def do_selection(mask_of_obs_to_select, obs_to_select, mode):
     obs_mask_selected = map(methodcaller("select_get"), obs_to_select)
     obs_mask_selected = np.fromiter(obs_mask_selected, "?")
-    select = get_ob_selection_mask(obs_mask_selected, mask_of_obs_to_select, mode).tolist()
+    select = new_object_selection_mask(obs_mask_selected, mask_of_obs_to_select, mode).tolist()
     for ob, sel in zip(obs_to_select, select):
         ob.select_set(sel)

@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Literal
 
 from itertools import chain
@@ -23,7 +24,8 @@ from .polygon_tests import (
     segments_intersect_polygon,
 )
 from .view3d import get_co_world_of_ob, get_co_2d
-from .selection import get_mesh_selection_mask
+from .selection import new_mesh_selection_mask
+from ..mesh_attr import vert_attr, edge_attr, face_attr
 
 
 def lookup_isin(array, lut):
@@ -115,32 +117,16 @@ def select_mesh_elems(
                 vert_count = len(verts)
 
                 # Local coordinates of vertices.
-                vert_co_local = np.empty(vert_count * 3, "f")
-                if bpy.app.version >= (3, 5, 0):
-                    me.attributes.new(name="position", type="FLOAT_VECTOR", domain="POINT")
-                    data = me.attributes["position"].data
-                    data.foreach_get("vector", vert_co_local)
-                else:
-                    verts.foreach_get("co", vert_co_local)
-                vert_co_local.shape = (vert_count, 3)
+                vert_co_local = vert_attr.coordinates(me)
 
                 # Mask of visible vertices.
-                verts_mask_vis = np.empty(vert_count, "?")
-                if bpy.app.version >= (3, 4, 0):
-                    me.attributes.new(name=".hide_vert", type="BOOLEAN", domain="POINT")
-                    data = me.attributes[".hide_vert"].data
-                    data.foreach_get("value", verts_mask_vis)
-                else:
-                    verts.foreach_get("hide", verts_mask_vis)
-                verts_mask_vis = ~verts_mask_vis
+                verts_mask_vis = vert_attr.visibility_mask(me)
 
                 timer.add("Getting vertex attributes")
 
                 # Filter out backfacing.
                 if (mesh_select_mode[0] or mesh_select_mode[1]) and not select_backfacing:
-                    vert_normal = np.empty(vert_count * 3, "f")
-                    verts.foreach_get("normal", vert_normal)
-                    vert_normal.shape = (vert_count, 3)
+                    vert_normal = vert_attr.normal_vector(me)
 
                     if rv3d.view_perspective == 'ORTHO' or rv3d.view_perspective == 'CAMERA' and cam.data.type == 'ORTHO':
                         verts_mask_facing = vert_normal @ eye_co_local > 0
@@ -181,14 +167,10 @@ def select_mesh_elems(
 
                 # Do selection.
                 if mesh_select_mode[0]:
-                    if bpy.app.version >= (3, 4, 0):
-                        me.attributes.new(name=".select_vert", type="BOOLEAN", domain="POINT")
-                        data = me.attributes[".select_vert"].data
-                        select = get_mesh_selection_mask(data, vert_count, verts_mask_visin, mode)
-                    else:
-                        select = get_mesh_selection_mask(verts, vert_count, verts_mask_visin, mode)
+                    cur_selection_mask_getter = partial(vert_attr.selection_mask, me)
+                    verts_mask_sel = new_mesh_selection_mask(cur_selection_mask_getter, verts_mask_visin, mode)
 
-                    select_list = select.tolist()
+                    select_list = verts_mask_sel.tolist()
                     # noinspection PyTypeChecker
                     for v, sel in zip(bm.verts, select_list):
                         v.select = sel
@@ -201,24 +183,10 @@ def select_mesh_elems(
                 edge_count = len(edges)
 
                 # For each edge get 2 indices of its vertices.
-                edge_vert_indices = np.empty(edge_count * 2, "i")
-                if bpy.app.version >= (3, 6, 0):
-                    me.attributes.new(name=".edge_verts", type="INT", domain="EDGE")
-                    data = me.attributes[".edge_verts"].data
-                    data.foreach_get("value", edge_vert_indices)
-                else:
-                    edges.foreach_get("vertices", edge_vert_indices)
-                edge_vert_indices.shape = (edge_count, 2)
+                edge_vert_indices = edge_attr.vertex_indices(me)
 
                 # Mask of visible edges.
-                edges_mask_vis = np.empty(edge_count, "?")
-                if bpy.app.version >= (3, 4, 0):
-                    me.attributes.new(name=".hide_edge", type="BOOLEAN", domain="EDGE")
-                    data = me.attributes[".hide_edge"].data
-                    data.foreach_get("value", edges_mask_vis)
-                else:
-                    edges.foreach_get("hide", edges_mask_vis)
-                edges_mask_vis = ~edges_mask_vis
+                edges_mask_vis = edge_attr.visibility_mask(me)
 
                 timer.add("Getting edge attributes")
 
@@ -301,14 +269,10 @@ def select_mesh_elems(
 
                 # Do selection.
                 if mesh_select_mode[1]:
-                    if bpy.app.version >= (3, 4, 0):
-                        me.attributes.new(name=".select_edge", type="BOOLEAN", domain="EDGE")
-                        data = me.attributes[".select_edge"].data
-                        select = get_mesh_selection_mask(data, edge_count, edges_mask_visin, mode)
-                    else:
-                        select = get_mesh_selection_mask(edges, edge_count, edges_mask_visin, mode)
+                    cur_selection_mask_getter = partial(edge_attr.selection_mask, me)
+                    edges_mask_sel = new_mesh_selection_mask(cur_selection_mask_getter, edges_mask_visin, mode)
 
-                    select_list = select.tolist()
+                    select_list = edges_mask_sel.tolist()
                     # noinspection PyTypeChecker
                     for e, sel in zip(bm.edges, select_list):
                         e.select = sel
@@ -321,26 +285,15 @@ def select_mesh_elems(
                 face_count = len(faces)
 
                 # Get mask of visible faces.
-                faces_mask_vis = np.empty(face_count, "?")
-                if bpy.app.version >= (3, 4, 0):
-                    me.attributes.new(name=".hide_poly", type="BOOLEAN", domain="FACE")
-                    data = me.attributes[".hide_poly"].data
-                    data.foreach_get("value", faces_mask_vis)
-                else:
-                    faces.foreach_get("hide", faces_mask_vis)
-                faces_mask_vis = ~faces_mask_vis
+                faces_mask_vis = face_attr.visibility_mask(me)
 
                 timer.add("Getting face attributes")
 
                 # Filter out backfacing.
                 if not select_backfacing:
-                    face_normal = np.empty(face_count * 3, "f")
-                    faces.foreach_get("normal", face_normal)
-                    face_normal.shape = (face_count, 3)
+                    face_normal = face_attr.normal_vector(me)
 
-                    face_center_co_local = np.empty(face_count * 3, "f")
-                    faces.foreach_get("center", face_center_co_local)
-                    face_center_co_local.shape = (face_count, 3)
+                    face_center_co_local = face_attr.center_coordinates(me)
 
                     if rv3d.view_perspective == 'ORTHO' or rv3d.view_perspective == 'CAMERA' and cam.data.type == 'ORTHO':
                         faces_mask_facing = face_normal @ eye_co_local > 0
@@ -355,9 +308,7 @@ def select_mesh_elems(
                 # Select faces which centers are inside the selection rectangle.
                 if not select_all_faces:
                     # Local coordinates of face centers.
-                    face_center_co_local = np.empty(face_count * 3, "f")
-                    faces.foreach_get("center", face_center_co_local)
-                    face_center_co_local.shape = (face_count, 3)
+                    face_center_co_local = face_attr.center_coordinates(me)
 
                     # Local coordinates of visible face centers.
                     vis_face_center_co_local = face_center_co_local[faces_mask_vis]
@@ -382,13 +333,8 @@ def select_mesh_elems(
                     faces_mask_visin = np.full(face_count, False, "?")
                     faces_mask_visin[faces_mask_vis] = vis_faces_mask_in
                 else:
-                    # Mesh loops - edges that forms face polygons, sorted by face indices.
-                    loops = me.loops
-                    loop_count = len(loops)
-
                     # Number of vertices for each face.
-                    face_loop_totals = np.empty(face_count, "i")
-                    faces.foreach_get("loop_total", face_loop_totals)
+                    face_loop_totals = face_attr.vertex_count(me)
 
                     # Skip getting faces from edges if there is no edges inside selection border.
                     in_edge_count = np.count_nonzero(edges_mask_visin)
@@ -414,8 +360,7 @@ def select_mesh_elems(
                         else:
                             # Numpy pass.
                             # Indices of face edges.
-                            loop_edge_indices = np.empty(loop_count, "i")
-                            loops.foreach_get("edge_index", loop_edge_indices)
+                            loop_edge_indices = face_attr.edge_indices(me)
 
                             # Index of face for each edge in mesh loop.
                             face_indices = np.arange(face_count)
@@ -460,8 +405,7 @@ def select_mesh_elems(
                                 raise ValueError("Tool is invalid")
 
                         # Indices of vertices of all faces.
-                        face_vert_indices = np.empty(loop_count, "i")
-                        faces.foreach_get("vertices", face_vert_indices)
+                        face_vert_indices = face_attr.vertex_indices(me)
 
                         # Mask of vertices not in the selection polygon from face vertices.
                         face_verts_mask_visnoin = np.repeat(faces_mask_visnoin, face_loop_totals)
@@ -488,14 +432,10 @@ def select_mesh_elems(
                         timer.add("Getting faces under cursor")
 
                 # Do selection.
-                if bpy.app.version >= (3, 4, 0):
-                    me.attributes.new(name=".select_poly", type="BOOLEAN", domain="FACE")
-                    data = me.attributes[".select_poly"].data
-                    select = get_mesh_selection_mask(data, face_count, faces_mask_visin, mode)
-                else:
-                    select = get_mesh_selection_mask(faces, face_count, faces_mask_visin, mode)
+                cur_selection_mask_getter = partial(face_attr.selection_mask, me)
+                faces_mask_sel = new_mesh_selection_mask(cur_selection_mask_getter, faces_mask_visin, mode)
 
-                select_list = select.tolist()
+                select_list = faces_mask_sel.tolist()
                 # noinspection PyTypeChecker
                 for f, sel in zip(bm.faces, select_list):
                     f.select = sel

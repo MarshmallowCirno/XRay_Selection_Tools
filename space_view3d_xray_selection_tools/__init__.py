@@ -32,6 +32,9 @@ bl_info = {
 
 
 RELOADABLE_MODULES = (
+    "vert_attr",
+    "edge_attr",
+    "face_attr",
     "view3d",
     "timer",
     "polygon_tests",
@@ -73,6 +76,7 @@ else:
     import bpy
 
     if not bpy.app.background:  # Prevent imports when run in background
+        from .mesh_attr import vert_attr, edge_attr, face_attr
         from .functions import (
             mesh_intersect,
             mesh_modal,

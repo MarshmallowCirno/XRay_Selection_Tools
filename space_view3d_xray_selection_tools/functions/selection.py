@@ -1,53 +1,72 @@
-import bpy
+from typing import Literal, Callable
+
 import numpy as np
+from numpy.typing import NDArray
 
 
-def get_ob_selection_mask(select_mask, inside_mask, mode):
+def new_object_selection_mask(
+    selection_mask: NDArray[np.bool_],
+    inside_mask: NDArray[np.bool_],
+    mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND'],
+) -> NDArray[np.bool_]:
+    """
+    Updates the current selection mask by combining it with the mask of objects inside the tool frame.
+
+    Args:
+        selection_mask: Current selection mask of objects.
+        inside_mask: The mask of objects within the tool frame.
+        mode: Tool selection mode.
+
+    Returns:
+        The new selection mask.
+    """
     # https://stackoverflow.com/questions/33384529/difference-between-numpy-logical-and-and
     match mode:
         case 'SET':
-            select = inside_mask
+            selection_mask = inside_mask
         case 'ADD':
-            select = select_mask | inside_mask
+            selection_mask |= inside_mask
         case 'SUB':
-            select = select_mask & ~inside_mask
+            selection_mask &= ~inside_mask
         case 'XOR':
-            select = select_mask ^ inside_mask
+            selection_mask ^= inside_mask
         case 'AND':
-            select = select_mask & inside_mask
+            selection_mask &= inside_mask
         case _:
-            raise ValueError("mode is invalid")
+            raise ValueError("Mode is invalid")
 
-    return select
+    return selection_mask
 
 
-def get_mesh_selection_mask(data, shape, inside_mask, mode):
+def new_mesh_selection_mask(
+    selection_mask_getter: Callable[[], NDArray[np.bool_]],
+    inside_mask: NDArray[np.bool_],
+    mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND'],
+) -> NDArray[np.bool_]:
+    """
+    Updates the current selection mask by combining it with the mask of mesh elements inside the tool frame.
+
+    Args:
+        selection_mask_getter: Function that retrieves the current selection mask of mesh elements.
+        inside_mask: The mask of mesh elements within the tool frame.
+        mode: Tool selection mode.
+
+    Returns:
+        The new selection mask.
+    """
     # https://stackoverflow.com/questions/33384529/difference-between-numpy-logical-and-and
-    if bpy.app.version >= (3, 4, 0):
-        attr = "value"
-    else:
-        attr = "select"
-
     match mode:
         case 'SET':
-            select = inside_mask
+            selection_mask = inside_mask
         case 'ADD':
-            select = np.zeros(shape, "?")
-            data.foreach_get(attr, select)
-            select = select | inside_mask
+            selection_mask = selection_mask_getter() | inside_mask
         case 'SUB':
-            select = np.zeros(shape, "?")
-            data.foreach_get(attr, select)
-            select = select & ~inside_mask
+            selection_mask = selection_mask_getter() & ~inside_mask
         case 'XOR':
-            select = np.zeros(shape, "?")
-            data.foreach_get(attr, select)
-            select = select ^ inside_mask
+            selection_mask = selection_mask_getter() ^ inside_mask
         case 'AND':
-            select = np.zeros(shape, "?")
-            data.foreach_get(attr, select)
-            select = select & inside_mask
+            selection_mask = selection_mask_getter() & inside_mask
         case _:
-            raise ValueError("mode is invalid")
+            raise ValueError("Mode is invalid")
 
-    return select
+    return selection_mask
