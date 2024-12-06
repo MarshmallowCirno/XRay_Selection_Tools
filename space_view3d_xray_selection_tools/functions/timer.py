@@ -1,15 +1,15 @@
-import time
+from time import perf_counter
+from contextlib import contextmanager
 
 
-class Timer:
-    ENABLED = False
+@contextmanager
+def time_section(label, prefix="", suffix="", debug=False):
+    """Context manager to measure elapsed time for a code block."""
+    if not debug:
+        yield
+        return
 
-    def __init__(self):
-        if self.ENABLED:
-            self.time_start = time.perf_counter()
-
-    def add(self, label):
-        if self.ENABLED:
-            exec_time = time.perf_counter() - self.time_start
-            print(f"{label}: {exec_time:.4f} sec")
-            self.time_start = time.perf_counter()
+    start = perf_counter()
+    yield
+    end = perf_counter()
+    print(f"{prefix}[{label}] elapsed time: {end - start:.3f} seconds{suffix}")
