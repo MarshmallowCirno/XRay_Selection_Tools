@@ -1,7 +1,6 @@
-from functools import partial
 from typing import Literal
 
-from itertools import chain
+from itertools import chain, compress
 from operator import itemgetter, attrgetter
 
 import bmesh
@@ -161,13 +160,15 @@ def select_mesh_elems(
                 # Do selection.
                 if mesh_select_mode[0]:
                     with time_section("Select vertices"):
-                        cur_selection_mask_getter = partial(vert_attr.selection_mask, me)
-                        verts_mask_sel = new_mesh_selection_mask(cur_selection_mask_getter, verts_mask_visin, mode)
+                        cur_selection_mask = vert_attr.selection_mask(me)
+                        new_selection_mask = new_mesh_selection_mask(cur_selection_mask, verts_mask_visin, mode)
+                        update_mask = cur_selection_mask ^ new_selection_mask
 
-                        select_list = verts_mask_sel.tolist()
-                        # noinspection PyTypeChecker
-                        for v, sel in zip(bm.verts, select_list):
-                            v.select = sel
+                        update_list: list[bool] = update_mask.tolist()
+                        state_list: list[bool] = new_selection_mask.tolist()
+
+                        for v, state in compress(zip(bm.verts, state_list), update_list):
+                            v.select = state
 
             # EDGE PASS
             if mesh_select_mode[1] or mesh_select_mode[2] and select_all_faces:
@@ -260,13 +261,15 @@ def select_mesh_elems(
                 # Do selection.
                 if mesh_select_mode[1]:
                     with time_section("Select edges"):
-                        cur_selection_mask_getter = partial(edge_attr.selection_mask, me)
-                        edges_mask_sel = new_mesh_selection_mask(cur_selection_mask_getter, edges_mask_visin, mode)
+                        cur_selection_mask = edge_attr.selection_mask(me)
+                        new_selection_mask = new_mesh_selection_mask(cur_selection_mask, edges_mask_visin, mode)
+                        update_mask = cur_selection_mask ^ new_selection_mask
 
-                        select_list = edges_mask_sel.tolist()
-                        # noinspection PyTypeChecker
-                        for e, sel in zip(bm.edges, select_list):
-                            e.select = sel
+                        update_list: list[bool] = update_mask.tolist()
+                        state_list: list[bool] = new_selection_mask.tolist()
+
+                        for e, state in compress(zip(bm.edges, state_list), update_list):
+                            e.select = state
 
             # FACE PASS
             if mesh_select_mode[2]:
@@ -419,13 +422,15 @@ def select_mesh_elems(
 
                 with time_section("Select faces"):
                     # Do selection.
-                    cur_selection_mask_getter = partial(face_attr.selection_mask, me)
-                    faces_mask_sel = new_mesh_selection_mask(cur_selection_mask_getter, faces_mask_visin, mode)
+                    cur_selection_mask = face_attr.selection_mask(me)
+                    new_selection_mask = new_mesh_selection_mask(cur_selection_mask, faces_mask_visin, mode)
+                    update_mask = cur_selection_mask ^ new_selection_mask
 
-                    select_list = faces_mask_sel.tolist()
-                    # noinspection PyTypeChecker
-                    for f, sel in zip(bm.faces, select_list):
-                        f.select = sel
+                    update_list: list[bool] = update_mask.tolist()
+                    state_list: list[bool] = new_selection_mask.tolist()
+
+                    for f, state in compress(zip(bm.faces, state_list), update_list):
+                        f.select = state
 
             with time_section("Finalize", prefix=">> END\n"):
                 if bpy.app.version >= (3, 4, 0):
