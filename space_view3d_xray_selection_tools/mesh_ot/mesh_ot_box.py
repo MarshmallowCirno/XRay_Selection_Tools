@@ -5,7 +5,7 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 
 from ..functions.mesh_intersect import select_mesh_elements
-from ..functions.mesh_modal import (
+from ..functions.modals.mesh_modal import (
     gather_modifiers,
     gather_overlays,
     get_select_through_toggle_key_list,

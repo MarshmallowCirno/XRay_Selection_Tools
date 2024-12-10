@@ -1,4 +1,4 @@
-from ..preferences import get_preferences
+from ...preferences import get_preferences
 
 
 def gather_overlays(context):
@@ -48,6 +48,7 @@ def toggle_overlays(self, context):
     if self.hide_gizmo:
         context.space_data.show_gizmo = False
 
+
 def restore_overlays(self, context):
     if self.init_overlays:
         context.space_data.shading.show_xray = self.init_overlays["show_xray"]
@@ -69,9 +70,12 @@ def get_xray_toggle_key_list():
 
 def toggle_alt_mode(self, event):
     if (
-        event.ctrl and self.alt_mode_toggle_key == 'CTRL'
-        or event.alt and self.alt_mode_toggle_key == 'ALT'
-        or event.shift and self.alt_mode_toggle_key == 'SHIFT'
+        event.ctrl
+        and self.alt_mode_toggle_key == 'CTRL'
+        or event.alt
+        and self.alt_mode_toggle_key == 'ALT'
+        or event.shift
+        and self.alt_mode_toggle_key == 'SHIFT'
     ):
         self.curr_mode = self.alt_mode
     else:

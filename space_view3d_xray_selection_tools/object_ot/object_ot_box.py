@@ -4,8 +4,7 @@ import bpy
 import gpu
 from gpu_extras.batch import batch_for_shader
 
-from ..functions.object_intersect_box import select_obs_in_box
-from ..functions.object_modal import (
+from ..functions.modals.object_modal import (
     gather_overlays,
     get_xray_toggle_key_list,
     restore_overlays,
@@ -14,6 +13,7 @@ from ..functions.object_modal import (
     toggle_alt_mode,
     toggle_overlays,
 )
+from ..functions.object_intersect_box import select_obs_in_box
 
 
 # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line

@@ -80,17 +80,16 @@ else:
         from .mesh_attr import vert_attr, edge_attr, face_attr
         from .functions import (
             mesh_intersect,
-            mesh_modal,
             object_intersect,
             object_intersect_box,
             object_intersect_circle,
             object_intersect_lasso,
-            object_modal,
             geometry_tests,
             selection,
             timer,
             view3d,
         )
+        from .functions.modals import mesh_modal, object_modal
         from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
         from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
         from . import types, help, ot_keymap, tools, ui_preferences, startup
