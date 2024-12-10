@@ -8,7 +8,7 @@ import bpy
 import numpy as np
 from mathutils import Vector
 
-from .polygon_tests import (
+from .geometry_tests import (
     circle_bbox,
     point_inside_polygons_prefiltered,
     points_inside_circle,

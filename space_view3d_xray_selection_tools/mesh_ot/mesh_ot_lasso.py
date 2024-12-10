@@ -26,6 +26,7 @@ from bgl import (
 from gpu_extras.batch import batch_for_shader
 from mathutils import geometry, Vector
 
+from ..functions.geometry_tests import polygon_bbox
 from ..functions.mesh_intersect import select_mesh_elements
 from ..functions.mesh_modal import (
     gather_modifiers,
@@ -41,7 +42,6 @@ from ..functions.mesh_modal import (
     toggle_alt_mode,
     update_shader_color,
 )
-from ..functions.polygon_tests import polygon_bbox
 from ..icon.lasso_cursor import lasso_cursor
 from ..preferences import get_preferences
 

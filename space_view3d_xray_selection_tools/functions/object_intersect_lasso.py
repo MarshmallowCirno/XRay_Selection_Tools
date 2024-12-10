@@ -2,6 +2,14 @@ from itertools import compress
 
 import numpy as np
 
+from .geometry_tests import (
+    point_inside_polygons_prefiltered,
+    point_inside_rectangles,
+    points_inside_polygon,
+    points_inside_polygon_prefiltered,
+    segments_intersect_polygon,
+    segments_intersect_polygon_prefiltered,
+)
 from .object_intersect import (
     do_selection,
     get_edge_vert_co_2d,
@@ -10,14 +18,6 @@ from .object_intersect import (
     get_ob_loc_co_2d,
     get_vert_co_2d,
     partition,
-)
-from .polygon_tests import (
-    point_inside_polygons_prefiltered,
-    point_inside_rectangles,
-    points_inside_polygon,
-    points_inside_polygon_prefiltered,
-    segments_intersect_polygon,
-    segments_intersect_polygon_prefiltered,
 )
 
 
