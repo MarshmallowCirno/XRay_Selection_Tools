@@ -11,3 +11,11 @@ tags = ["3D View"]
 
 blender_version_min = "4.3.0"
 license = ["SPDX:GPL-3.0-or-later"]
+
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  ".*",
+  "*.zip",
+  "dev/",
+]
