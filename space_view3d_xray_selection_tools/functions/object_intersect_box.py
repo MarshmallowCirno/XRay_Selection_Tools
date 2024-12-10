@@ -3,7 +3,7 @@ from itertools import compress
 import numpy as np
 
 from .geometry_tests import point_inside_rectangles, points_inside_rectangle, segments_intersect_rectangle
-from .object_intersect import do_selection, get_ob_2dbboxes, get_ob_loc_co_2d, get_vert_co_2d, partition
+from .object_intersect_shared import do_selection, get_ob_2dbboxes, get_ob_loc_co_2d, get_vert_co_2d, partition
 
 
 def get_obs_mask_in_selbox(obs, obs_mask_check, depsgraph, region, rv3d, xmin, xmax, ymin, ymax):

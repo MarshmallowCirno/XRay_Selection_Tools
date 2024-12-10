@@ -42,7 +42,7 @@ RELOADABLE_MODULES = (
     "selection",
     "mesh_intersect",
     "mesh_modal",
-    "object_intersect",
+    "object_intersect_shared",
     "object_intersect_box",
     "object_intersect_circle",
     "object_intersect_lasso",
@@ -80,7 +80,7 @@ else:
         from .mesh_attr import vert_attr, edge_attr, face_attr
         from .functions import (
             mesh_intersect,
-            object_intersect,
+            object_intersect_shared,
             object_intersect_box,
             object_intersect_circle,
             object_intersect_lasso,

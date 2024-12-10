@@ -9,7 +9,7 @@ from .geometry_tests import (
     segments_intersect_circle,
     segments_intersect_circle_prefiltered,
 )
-from .object_intersect import (
+from .object_intersect_shared import (
     do_selection,
     get_edge_vert_co_2d,
     get_face_vert_co_2d,
