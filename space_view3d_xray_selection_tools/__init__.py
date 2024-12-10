@@ -32,6 +32,7 @@ bl_info = {
 
 
 RELOADABLE_MODULES = (
+    "types",
     "vert_attr",
     "edge_attr",
     "face_attr",
@@ -92,7 +93,7 @@ else:
         )
         from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
         from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
-        from . import help, ot_keymap, tools, ui_preferences, startup
+        from . import types, help, ot_keymap, tools, ui_preferences, startup
         from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
 
 

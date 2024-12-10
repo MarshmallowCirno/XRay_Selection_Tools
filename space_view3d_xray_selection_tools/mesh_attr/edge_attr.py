@@ -1,9 +1,10 @@
 import bpy
 import numpy as np
-from numpy.typing import NDArray
+
+from ..types import Bool1DArray, Int2DArray
 
 
-def vertex_indices(me: bpy.types.Mesh) -> NDArray[np.int32]:
+def vertex_indices(me: bpy.types.Mesh) -> Int2DArray:
     """
     Retrieve indices of edge vertices.
     """
@@ -19,7 +20,7 @@ def vertex_indices(me: bpy.types.Mesh) -> NDArray[np.int32]:
     return edge_vert_indices
 
 
-def visibility_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
+def visibility_mask(me: bpy.types.Mesh) -> Bool1DArray:
     """
     Retrieve a mask of visible edges.
     """
@@ -35,7 +36,7 @@ def visibility_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
     return ~edges_mask_hid
 
 
-def selection_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
+def selection_mask(me: bpy.types.Mesh) -> Bool1DArray:
     """
     Retrieve a mask of selected edges.
     """

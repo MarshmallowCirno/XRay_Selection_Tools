@@ -6,32 +6,41 @@ from math import hypot
 import bpy
 import gpu
 from bgl import (
-    glEnable,
-    glDisable,
-    glClear,
-    glColorMask,
-    glStencilOp,
-    glStencilMask,
-    glStencilFunc,
-    GL_FALSE,
-    GL_TRUE,
     GL_ALWAYS,
+    GL_BLEND,
     GL_EQUAL,
-    GL_KEEP,
+    GL_FALSE,
     GL_INVERT,
+    GL_KEEP,
     GL_STENCIL_BUFFER_BIT,
     GL_STENCIL_TEST,
-    GL_BLEND,
+    GL_TRUE,
+    glClear,
+    glColorMask,
+    glDisable,
+    glEnable,
+    glStencilFunc,
+    glStencilMask,
+    glStencilOp,
 )
 from gpu_extras.batch import batch_for_shader
 from mathutils import geometry, Vector
 
-from ..icon.lasso_cursor import lasso_cursor
 from ..functions.object_intersect_lasso import select_obs_in_lasso
-from ..functions.object_modal import *
+from ..functions.object_modal import (
+    gather_overlays,
+    get_xray_toggle_key_list,
+    restore_overlays,
+    set_properties,
+    sync_properties,
+    toggle_alt_mode,
+    toggle_overlays,
+)
 from ..functions.polygon_tests import polygon_bbox
+from ..icon.lasso_cursor import lasso_cursor
 
 
+# noinspection PyTypeChecker
 class _UBO_struct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
@@ -44,18 +53,20 @@ class _UBO_struct(ctypes.Structure):
         ("u_FillColor", 4 * ctypes.c_float),
         # ("_pad", ctypes.c_int * 1),
     ]
-UBO_source = (
-    "struct Data"
-    "{"
-    "  int u_X;"
-    "  int u_Y;"
-    "  float u_Scale;"
-    "  bool u_Dashed;"
-    "  vec4 u_SegmentColor;"
-    "  vec4 u_GapColor;"
-    "  vec4 u_FillColor;"
-    "};"
-)
+
+
+UBO_source = """
+struct Data
+{
+  int u_X;
+  int u_Y;
+  float u_Scale;
+  bool u_Dashed;
+  vec4 u_SegmentColor;
+  vec4 u_GapColor;
+  vec4 u_FillColor;
+};
+"""
 
 # Icon shader.
 shader_info = gpu.types.GPUShaderCreateInfo()
@@ -65,20 +76,24 @@ shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 shader_info.vertex_in(0, 'VEC2', "pos")
 
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  gl_Position = u_ViewProjectionMatrix * vec4("
-    "    pos.x * ub.u_Scale + ub.u_X, pos.y * ub.u_Scale + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      gl_Position = u_ViewProjectionMatrix * vec4(
+        pos.x * ub.u_Scale + ub.u_X, pos.y * ub.u_Scale + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  FragColor = ub.u_SegmentColor;"
-    "}"
+    """
+    void main()
+    {
+      FragColor = ub.u_SegmentColor;
+    }
+    """
 )
-icon_shader = gpu.shader.create_from_info(shader_info)
+ICON_SHADER = gpu.shader.create_from_info(shader_info)
 del shader_info
 
 # Fill shader.
@@ -88,19 +103,23 @@ shader_info.uniform_buf(0, "Data", "ub")
 shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  gl_Position = u_ViewProjectionMatrix * vec4(pos.x, pos.y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x, pos.y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  FragColor = ub.u_FillColor;"
-    "}"
+    """
+    void main()
+    {
+      FragColor = ub.u_FillColor;
+    }
+    """
 )
-fill_shader = gpu.shader.create_from_info(shader_info)
+FILL_SHADER = gpu.shader.create_from_info(shader_info)
 del shader_info
 
 # Border shader.
@@ -115,26 +134,30 @@ shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_in(1, 'FLOAT', "len")
 shader_info.vertex_out(vert_out)
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  v_Len = len;"
-    "  gl_Position = u_ViewProjectionMatrix * vec4(pos.x, pos.y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      v_Len = len;
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x, pos.y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  float dash_size = 1;"
-    "  float gap_size = 1;"
-    "  vec4 col = ub.u_SegmentColor;"
-    "  if (ub.u_Dashed)"
-    "    if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))"
-    "      col = ub.u_GapColor;"
-    "    FragColor = col;"
-    "}"
+    """
+    void main()
+    {
+      float dash_size = 1;
+      float gap_size = 1;
+      vec4 col = ub.u_SegmentColor;
+      if (ub.u_Dashed)
+        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+          col = ub.u_GapColor;
+        FragColor = col;
+    }
+    """
 )
-border_shader = gpu.shader.create_from_info(shader_info)
+BORDER_SHADER = gpu.shader.create_from_info(shader_info)
 del vert_out
 del shader_info
 
@@ -142,6 +165,7 @@ del shader_info
 # noinspection PyTypeChecker
 class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
     """Select items using lasso selection with x-ray"""
+
     bl_idname = "object.select_lasso_xray"
     bl_label = "Lasso Select X-Ray"
     bl_options = {'REGISTER'}
@@ -182,8 +206,10 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
     )
     wait_for_input: bpy.props.BoolProperty(
         name="Wait for input",
-        description="Wait for mouse input or initialize lasso selection immediately "
-                    "(enable when assigning the operator to a keyboard key)",
+        description=(
+            "Wait for mouse input or initialize lasso selection immediately "
+            "(enable when assigning the operator to a keyboard key)"
+        ),
         default=False,
     )
     override_global_props: bpy.props.BoolProperty(
@@ -239,10 +265,20 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             ('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
             ('CONTAIN', "Contain", "Select only the objects fully contained in lasso", 'STICKY_UVS_LOC', 2),
             ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
-            ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select overlapped",
-                'UV_SYNC_SELECT', 4),
-            ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
-                                                             "right to left select contained", 'UV_SYNC_SELECT', 5)
+            (
+                'DIRECTIONAL',
+                "Directional",
+                "Dragging left to right select contained, right to left select overlapped",
+                'UV_SYNC_SELECT',
+                4,
+            ),
+            (
+                'DIRECTIONAL_REVERSED',
+                "Directional Reversed",
+                "Dragging left to right select overlapped, right to left select contained",
+                'UV_SYNC_SELECT',
+                5,
+            ),
         ],
         default='ORIGIN',
     )
@@ -345,14 +381,17 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             if event.type == 'MOUSEMOVE':
                 # To simplify path and improve performance
                 # only append points with enough distance between them.
-                if hypot(event.mouse_region_x - self.last_mouse_region_x,
-                         event.mouse_region_y - self.last_mouse_region_y) > 10:
+                if (
+                    hypot(
+                        event.mouse_region_x - self.last_mouse_region_x, event.mouse_region_y - self.last_mouse_region_y
+                    )
+                    > 10
+                ):
 
                     # Append path point.
-                    self.path.append({
-                        "name": "",
-                        "loc": (event.mouse_region_x, event.mouse_region_y),
-                        "time": time.time()})
+                    self.path.append(
+                        {"name": "", "loc": (event.mouse_region_x, event.mouse_region_y), "time": time.time()}
+                    )
                     self.lasso_poly.append((event.mouse_region_x, event.mouse_region_y))
                     self.lasso_xmin, self.lasso_xmax, self.lasso_ymin, self.lasso_ymax = polygon_bbox(self.lasso_poly)
 
@@ -378,11 +417,11 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
                     self.finish_modal(context)
                     bpy.ops.ed.undo_push(message="Lasso Select")
                     return {'FINISHED'}
-                else:
-                    self.exec_inbuilt_lasso_select()
-                    self.finish_modal(context)
-                    bpy.ops.ed.undo_push(message="Lasso Select")
-                    return {'FINISHED'}
+
+                self.exec_inbuilt_lasso_select()
+                self.finish_modal(context)
+                bpy.ops.ed.undo_push(message="Lasso Select")
+                return {'FINISHED'}
 
         if self.stage == 'INBUILT_OP':
             # Inbuilt op was finished, now finish modal.
@@ -434,7 +473,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         context.window.cursor_modal_set('CROSSHAIR')
         status_text = "RMB, ESC: Cancel"
         if self.xray_toggle_key != 'DISABLED':
-            status_text += "  |  %s: Toggle Toggle X-Ray" % self.xray_toggle_key
+            status_text += f"  |  {self.xray_toggle_key}: Toggle X-Ray"
         context.workspace.status_text_set(text=status_text)
 
         # Store initial path point.
@@ -447,8 +486,9 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         if bpy.app.version >= (4, 0, 0):
             self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader, (), 'WINDOW', 'POST_PIXEL')
         else:
-            self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader_bgl, (context,), 'WINDOW',
-                                                               'POST_PIXEL')
+            self.handler = context.space_data.draw_handler_add(
+                self.draw_lasso_shader_bgl, (context,), 'WINDOW', 'POST_PIXEL'
+            )
         self.update_shader_position(context, event)
 
     def finish_custom_selection_stage(self, context):
@@ -475,14 +515,16 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             start_x = self.lasso_poly[0][0]
             right_to_left = abs(self.lasso_xmin - start_x) < abs(self.lasso_xmax - start_x)
             if (
-                    right_to_left and self.behavior == 'DIRECTIONAL' or
-                    not right_to_left and self.behavior == 'DIRECTIONAL_REVERSED'
+                right_to_left
+                and self.behavior == 'DIRECTIONAL'
+                or not right_to_left
+                and self.behavior == 'DIRECTIONAL_REVERSED'
             ):
                 self.curr_behavior = 'OVERLAP'
             else:
                 self.curr_behavior = 'CONTAIN'
 
-    def update_UBO(self):
+    def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
 
     def update_shader_position(self, context, event):
@@ -497,7 +539,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        self.icon_batch = batch_for_shader(icon_shader, 'LINES', {"pos": vertices})
+        self.icon_batch = batch_for_shader(ICON_SHADER, 'LINES', {"pos": vertices})
 
     def draw_icon_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -508,13 +550,13 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.UBO_data.u_Y = self.last_mouse_region_y
         self.UBO_data.u_Scale = 25
         self.UBO_data.u_SegmentColor = segment_color
-        self.update_UBO()
+        self.update_ubo()
 
         # Icon.
-        icon_shader.bind()
-        icon_shader.uniform_block("ub", self.UBO)
-        icon_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.icon_batch.draw(icon_shader)
+        ICON_SHADER.bind()
+        ICON_SHADER.uniform_block("ub", self.UBO)
+        ICON_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.icon_batch.draw(ICON_SHADER)
 
     def draw_lasso_shader_bgl(self, context):
         # Create batches.
@@ -532,23 +574,23 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             (self.lasso_xmax, self.lasso_ymax),
         )
 
-        fill_batch = batch_for_shader(fill_shader, 'TRI_FAN', {"pos": vertices})
-        border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
-        stencil_batch = batch_for_shader(fill_shader, 'TRI_FAN', {"pos": bbox_vertices})
+        fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
+        border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        stencil_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": bbox_vertices})
 
         matrix = gpu.matrix.get_projection_matrix()
         segment_color = (1.0, 1.0, 1.0, 1.0)
         gap_color = (0.2, 0.2, 0.2, 1.0)
         shadow_color = (0.3, 0.3, 0.3, 1.0)
         fill_color = (1.0, 1.0, 1.0, 0.04)
-        dashed = False if self.curr_behavior == 'CONTAIN' else True
+        dashed = not self.curr_behavior == 'CONTAIN'
 
         # UBO.
         self.UBO_data.u_FillColor = fill_color
         self.UBO_data.u_Dashed = dashed
         self.UBO_data.u_GapColor = gap_color
         self.UBO_data.u_SegmentColor = segment_color
-        self.update_UBO()
+        self.update_ubo()
 
         # Stencil mask.
         # https://stackoverflow.com/a/25468363/5106051
@@ -559,10 +601,10 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         glStencilOp(GL_KEEP, GL_KEEP, GL_INVERT)
         glStencilMask(1)
 
-        fill_shader.bind()
-        fill_shader.uniform_block("ub", self.UBO)
-        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        fill_batch.draw(fill_shader)
+        FILL_SHADER.bind()
+        FILL_SHADER.uniform_block("ub", self.UBO)
+        FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        fill_batch.draw(FILL_SHADER)
 
         if context.space_data.shading.type in {'MATERIAL', 'RENDERED'}:
             glStencilFunc(GL_EQUAL, 0, 1)
@@ -573,37 +615,37 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
         # Fill.
         glEnable(GL_BLEND)
-        stencil_batch.draw(fill_shader)
+        stencil_batch.draw(FILL_SHADER)
         glDisable(GL_BLEND)
 
         # Border.
         if not dashed:
             # Solid border shadow.
             self.UBO_data.u_SegmentColor = shadow_color
-            self.update_UBO()
+            self.update_ubo()
 
             gpu.state.line_width_set(3)
-            border_shader.bind()
-            border_shader.uniform_block("ub", self.UBO)
-            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            border_batch.draw(border_shader)
+            BORDER_SHADER.bind()
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_batch.draw(BORDER_SHADER)
             gpu.state.line_width_set(1)
 
             # Solid border.
             self.UBO_data.u_SegmentColor = segment_color
-            self.update_UBO()
+            self.update_ubo()
 
             glDisable(GL_STENCIL_TEST)
-            border_shader.uniform_block("ub", self.UBO)
-            border_batch.draw(border_shader)
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            border_batch.draw(BORDER_SHADER)
 
         else:
             # Dashed border.
             glDisable(GL_STENCIL_TEST)
-            border_shader.bind()
-            border_shader.uniform_block("ub", self.UBO)
-            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            border_batch.draw(border_shader)
+            BORDER_SHADER.bind()
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_batch.draw(BORDER_SHADER)
 
     def draw_lasso_shader(self):
         # Create batches.
@@ -617,57 +659,57 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        fill_batch = batch_for_shader(fill_shader, 'TRIS', {"pos": triangles})
-        border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        fill_batch = batch_for_shader(FILL_SHADER, 'TRIS', {"pos": triangles})
+        border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         matrix = gpu.matrix.get_projection_matrix()
         segment_color = (1.0, 1.0, 1.0, 1.0)
         gap_color = (0.2, 0.2, 0.2, 1.0)
         shadow_color = (0.3, 0.3, 0.3, 1.0)
         fill_color = (1.0, 1.0, 1.0, 0.04)
-        dashed = False if self.curr_behavior == 'CONTAIN' else True
+        dashed = not self.curr_behavior == 'CONTAIN'
 
         # UBO.
         self.UBO_data.u_FillColor = fill_color
         self.UBO_data.u_Dashed = dashed
         self.UBO_data.u_GapColor = gap_color
         self.UBO_data.u_SegmentColor = segment_color
-        self.update_UBO()
+        self.update_ubo()
 
         # Fill.
         gpu.state.blend_set('ALPHA')
-        fill_shader.bind()
-        fill_shader.uniform_block("ub", self.UBO)
-        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        fill_batch.draw(fill_shader)
+        FILL_SHADER.bind()
+        FILL_SHADER.uniform_block("ub", self.UBO)
+        FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        fill_batch.draw(FILL_SHADER)
         gpu.state.blend_set('NONE')
 
         # Border.
         if not dashed:
             # Solid border shadow.
             self.UBO_data.u_SegmentColor = shadow_color
-            self.update_UBO()
+            self.update_ubo()
 
             gpu.state.line_width_set(3)
-            border_shader.bind()
-            border_shader.uniform_block("ub", self.UBO)
-            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            border_batch.draw(border_shader)
+            BORDER_SHADER.bind()
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_batch.draw(BORDER_SHADER)
             gpu.state.line_width_set(1)
 
             # Solid border.
             self.UBO_data.u_SegmentColor = segment_color
-            self.update_UBO()
+            self.update_ubo()
 
-            border_shader.uniform_block("ub", self.UBO)
-            border_batch.draw(border_shader)
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            border_batch.draw(BORDER_SHADER)
 
         else:
             # Dashed border.
-            border_shader.bind()
-            border_shader.uniform_block("ub", self.UBO)
-            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            border_batch.draw(border_shader)
+            BORDER_SHADER.bind()
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            border_batch.draw(BORDER_SHADER)
 
 
 classes = (OBJECT_OT_select_lasso_xray,)

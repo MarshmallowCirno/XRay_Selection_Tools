@@ -3,9 +3,9 @@ from operator import attrgetter, methodcaller
 
 import numpy as np
 
-from .view3d import get_co_world_of_ob, get_co_world_of_mats, get_co_2d
-from .selection import new_object_selection_mask
-from ..mesh_attr import vert_attr, edge_attr, face_attr
+from .selection import calculate_selection_mask
+from .view3d import batch_transform_local_to_world_co, transform_local_to_world_co, transform_world_to_2d_co
+from ..mesh_attr import edge_attr, face_attr, vert_attr
 
 
 def partition(items, predicate=bool):
@@ -27,10 +27,12 @@ def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
     ob_mats = np.fromiter(ob_mat_flat_list, "f", mesh_ob_count * 16).reshape((mesh_ob_count, 4, 4))
 
     # Get world space coordinates of 3d bboxes of objects.
-    ob_3dbbox_co_world = get_co_world_of_mats(ob_mats, ob_3dbbox_co_local)
+    ob_3dbbox_co_world = batch_transform_local_to_world_co(ob_mats, ob_3dbbox_co_local)
 
     # Get 2d coordinates of 3d bboxes of objects.
-    ob_3dbbox_co_2d, ob_3dbbox_co_2d_mask_clip = get_co_2d(region, rv3d, ob_3dbbox_co_world, get_clipped=True)
+    ob_3dbbox_co_2d, ob_3dbbox_co_2d_mask_clip = transform_world_to_2d_co(
+        region, rv3d, ob_3dbbox_co_world.reshape(-1, 3), apply_clipping_mask=False
+    )
     ob_3dbbox_co_2d.shape = (mesh_ob_count, 8, 2)
     ob_3dbbox_co_2d_mask_clip.shape = (mesh_ob_count, 8)
 
@@ -99,8 +101,8 @@ def get_vert_co_2d(me, ob, region, rv3d):
     vert_co_local = vert_attr.coordinates(me)
 
     # Get 2d coordinates of vertices.
-    vert_co_world = get_co_world_of_ob(ob, vert_co_local)
-    vert_co_2d = get_co_2d(region, rv3d, vert_co_world)
+    vert_co_world = transform_local_to_world_co(ob.matrix_world, vert_co_local)
+    vert_co_2d = transform_world_to_2d_co(region, rv3d, vert_co_world)
     return vert_co_2d
 
 
@@ -140,13 +142,13 @@ def get_ob_loc_co_2d(obs, region, rv3d):
     ob_co_world = chain.from_iterable(ob_co_world)
     c = len(obs)
     ob_co_world = np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3))
-    ob_co_2d = get_co_2d(region, rv3d, ob_co_world)
+    ob_co_2d = transform_world_to_2d_co(region, rv3d, ob_co_world)
     return ob_co_2d
 
 
 def do_selection(mask_of_obs_to_select, obs_to_select, mode):
     obs_mask_selected = map(methodcaller("select_get"), obs_to_select)
     obs_mask_selected = np.fromiter(obs_mask_selected, "?")
-    select = new_object_selection_mask(obs_mask_selected, mask_of_obs_to_select, mode).tolist()
+    select = calculate_selection_mask(obs_mask_selected, mask_of_obs_to_select, mode).tolist()
     for ob, sel in zip(obs_to_select, select):
         ob.select_set(sel)

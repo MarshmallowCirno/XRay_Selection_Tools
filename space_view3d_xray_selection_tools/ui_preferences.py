@@ -14,7 +14,7 @@ from .ot_keymap import (
     toggles_keymap,
 )
 from .preferences import get_preferences
-from .tools import update_keymaps_of_tools, reload_tools
+from .tools import reload_tools, update_keymaps_of_tools
 from .tools.tools_keymap import populate_preferences_keymaps_of_tools
 
 

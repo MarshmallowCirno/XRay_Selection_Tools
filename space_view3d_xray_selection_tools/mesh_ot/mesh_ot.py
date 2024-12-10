@@ -1,5 +1,6 @@
-import bpy
 import blf
+import bpy
+
 from ..preferences import get_preferences
 
 
@@ -49,8 +50,7 @@ class Toggle_Base:
         self.execute(context)
 
         context.window_manager.modal_handler_add(self)
-        self.handler = context.space_data.draw_handler_add(
-            self.draw_ui, (context,), 'WINDOW', 'POST_PIXEL')
+        self.handler = context.space_data.draw_handler_add(self.draw_ui, (context,), 'WINDOW', 'POST_PIXEL')
         context.area.tag_redraw()
         self.timer = context.window_manager.event_timer_add(0.1, window=context.window)
         return {'RUNNING_MODAL'}
@@ -78,6 +78,7 @@ class Toggle_Base:
 
 class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, Toggle_Base):
     """Toggle selection through for mesh xray selection tools."""
+
     bl_idname = "mesh.select_tools_xray_toggle_select_through"
     bl_label = "Toggle Select Through"
     bl_options = {'REGISTER', 'UNDO'}
@@ -93,6 +94,7 @@ class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, Toggle
 
 class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_Base):
     """Toggle mesh selection behavior for mesh xray selection tools."""
+
     bl_idname = "mesh.select_tools_xray_toggle_mesh_behavior"
     bl_label = "Toggle Select All Edges & Faces"
     bl_options = {'REGISTER', 'UNDO'}
@@ -110,6 +112,7 @@ class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_
 
 class MESH_OT_select_tools_xray_toggle_select_backfacing(bpy.types.Operator, Toggle_Base):
     """Toggle backfacing selection for mesh xray selection tools."""
+
     bl_idname = "mesh.select_tools_xray_toggle_select_backfacing"
     bl_label = "Toggle Select Backfacing"
     bl_options = {'REGISTER', 'UNDO'}
@@ -132,11 +135,13 @@ classes = (
 
 def register():
     from bpy.utils import register_class
+
     for cls in classes:
         register_class(cls)
 
 
 def unregister():
     from bpy.utils import unregister_class
+
     for cls in classes:
         unregister_class(cls)

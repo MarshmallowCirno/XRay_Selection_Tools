@@ -6,10 +6,23 @@ import numpy as np
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 
-from ..functions.mesh_intersect import select_mesh_elems
-from ..functions.mesh_modal import *
+from ..functions.mesh_intersect import select_mesh_elements
+from ..functions.mesh_modal import (
+    gather_modifiers,
+    gather_overlays,
+    get_select_through_toggle_key_list,
+    initialize_shading_from_properties,
+    restore_modifiers,
+    restore_overlays,
+    set_modifiers_from_properties,
+    set_properties_from_preferences,
+    set_shading_from_properties,
+    toggle_alt_mode,
+    update_shader_color,
+)
 
 
+# noinspection PyTypeChecker
 class _UBO_struct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
@@ -21,17 +34,19 @@ class _UBO_struct(ctypes.Structure):
         ("u_GapColor", 4 * ctypes.c_float),
         ("u_FillColor", 4 * ctypes.c_float),
     ]
-UBO_source = (
-    "struct Data"
-    "{"
-    "  int u_X;"
-    "  int u_Y;"
-    "  float u_Scale;"
-    "  vec4 u_SegmentColor;"
-    "  vec4 u_GapColor;"
-    "  vec4 u_FillColor;"
-    "};"
-)
+
+
+UBO_source = """
+struct Data
+{
+  int u_X;
+  int u_Y;
+  float u_Scale;
+  vec4 u_SegmentColor;
+  vec4 u_GapColor;
+  vec4 u_FillColor;
+};
+"""
 
 # Fill shader.
 shader_info = gpu.types.GPUShaderCreateInfo()
@@ -40,19 +55,23 @@ shader_info.uniform_buf(0, "Data", "ub")
 shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  FragColor = ub.u_FillColor;"
-    "}"
+    """
+    void main()
+    {
+      FragColor = ub.u_FillColor;
+    }
+    """
 )
-fill_shader = gpu.shader.create_from_info(shader_info)
+FILL_SHADER = gpu.shader.create_from_info(shader_info)
 del shader_info
 
 # Border shader.
@@ -67,25 +86,29 @@ shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_in(1, 'FLOAT', "len")
 shader_info.vertex_out(vert_out)
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  v_Len = len;"
-    "  gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      v_Len = len;
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  float dash_size = 2;"
-    "  float gap_size = 2;"
-    "  vec4 col = ub.u_SegmentColor;"
-    "  if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))"
-    "    col = ub.u_GapColor;"
-    "  FragColor = col;"
-    "}"
+    """
+    void main() 
+    {
+      float dash_size = 2;
+      float gap_size = 2;
+      vec4 col = ub.u_SegmentColor;
+      if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+        col = ub.u_GapColor;
+      FragColor = col;
+    }
+    """
 )
-border_shader = gpu.shader.create_from_info(shader_info)
+BORDER_SHADER = gpu.shader.create_from_info(shader_info)
 del vert_out
 del shader_info
 
@@ -93,6 +116,7 @@ del shader_info
 # noinspection PyTypeChecker
 class MESH_OT_select_circle_xray(bpy.types.Operator):
     """Select items using circle selection with x-ray"""
+
     bl_idname = "mesh.select_circle_xray"
     bl_label = "Circle Select X-Ray"
     bl_options = {'REGISTER', 'GRAB_CURSOR'}
@@ -138,8 +162,10 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
     )
     wait_for_input: bpy.props.BoolProperty(
         name="Wait for Input",
-        description="Wait for mouse input or initialize circle selection immediately (usually you "
-                    "should enable it when you assign the operator to a keyboard key)",
+        description=(
+            "Wait for mouse input or initialize circle selection immediately (usually you "
+            "should enable it when you assign the operator to a keyboard key)"
+        ),
         default=False,
         options={'SKIP_SAVE'},
     )
@@ -205,17 +231,21 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
     )
     select_all_edges: bpy.props.BoolProperty(
         name="Select All Edges",
-        description="Additionally select edges that are partially inside the selection circle, "
-                    "not just the ones completely inside the selection circle. Works only in "
-                    "select through mode",
+        description=(
+            "Additionally select edges that are partially inside the selection circle, "
+            "not just the ones completely inside the selection circle. Works only in "
+            "select through mode"
+        ),
         default=False,
         options={'SKIP_SAVE'},
     )
     select_all_faces: bpy.props.BoolProperty(
         name="Select All Faces",
-        description="Additionally select faces that are partially inside the selection circle, "
-                    "not just the ones with centers inside the selection circle. Works only in "
-                    "select through mode",
+        description=(
+            "Additionally select faces that are partially inside the selection circle, "
+            "not just the ones with centers inside the selection circle. Works only in "
+            "select through mode"
+        ),
         default=False,
         options={'SKIP_SAVE'},
     )
@@ -283,18 +313,24 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         set_properties_from_preferences(self, tool='CIRCLE')
 
         self.override_intersect_tests = (
-            self.select_all_faces and context.tool_settings.mesh_select_mode[2]
-            or self.select_all_edges and context.tool_settings.mesh_select_mode[1]
+            self.select_all_faces
+            and context.tool_settings.mesh_select_mode[2]
+            or self.select_all_edges
+            and context.tool_settings.mesh_select_mode[1]
             or not self.select_backfacing
-            or bpy.app.version >= (4, 1, 0) and self.select_through and not self.show_xray
+            or bpy.app.version >= (4, 1, 0)
+            and self.select_through
+            and not self.show_xray
         )
 
         self.override_modal = (
             self.select_through_toggle_key != 'DISABLED'
             or self.alt_mode_toggle_key != 'SHIFT'
             or self.alt_mode != 'SUB'
-            or not self.select_through and self.default_color[:] != (1.0, 1.0, 1.0)
-            or self.select_through and self.select_through_color[:] != (1.0, 1.0, 1.0)
+            or not self.select_through
+            and self.default_color[:] != (1.0, 1.0, 1.0)
+            or self.select_through
+            and self.select_through_color[:] != (1.0, 1.0, 1.0)
             or self.override_intersect_tests
         )
 
@@ -468,12 +504,11 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
     def begin_custom_intersect_tests(self, context):
         center = (self.last_mouse_region_x, self.last_mouse_region_y)
-        circle = (center, self.radius)
-        select_mesh_elems(
+        select_mesh_elements(
             context,
             mode=self.curr_mode,
             tool='CIRCLE',
-            tool_co=circle,
+            tool_co_kwargs={"circle_center": center, "circle_radius": self.radius},
             select_all_edges=self.select_all_edges,
             select_all_faces=self.select_all_faces,
             select_backfacing=self.select_backfacing,
@@ -486,7 +521,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         restore_modifiers(self)
         context.window_manager.operator_properties_last("mesh.select_circle_xray").radius = self.radius
 
-    def update_UBO(self):
+    def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
 
     def update_shader_position(self, context, event):
@@ -512,11 +547,11 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         vertices = self.get_circle_verts_orig(self.radius)
         segment = (Vector(vertices[0]) - Vector(vertices[1])).length
         lengths = [segment * i for i in range(32)]
-        self.border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch_for_shader(fill_shader, 'TRI_FAN', {"pos": vertices})
+        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -539,21 +574,21 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.UBO_data.u_SegmentColor = segment_color
         self.UBO_data.u_GapColor = gap_color
         self.UBO_data.u_FillColor = fill_color
-        self.update_UBO()
+        self.update_ubo()
 
         # Fill.
         gpu.state.blend_set("ALPHA")
-        fill_shader.bind()
-        fill_shader.uniform_block("ub", self.UBO)
-        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.fill_batch.draw(fill_shader)
+        FILL_SHADER.bind()
+        FILL_SHADER.uniform_block("ub", self.UBO)
+        FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.fill_batch.draw(FILL_SHADER)
         gpu.state.blend_set("NONE")
 
         # Border.
-        border_shader.bind()
-        border_shader.uniform_block("ub", self.UBO)
-        border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.border_batch.draw(border_shader)
+        BORDER_SHADER.bind()
+        BORDER_SHADER.uniform_block("ub", self.UBO)
+        BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.border_batch.draw(BORDER_SHADER)
 
 
 classes = (MESH_OT_select_circle_xray,)

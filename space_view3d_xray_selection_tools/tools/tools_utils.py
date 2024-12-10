@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import bpy
-from bl_ui.space_toolsystem_common import activate_by_id, ToolSelectPanelHelper, ToolDef
+from bl_ui.space_toolsystem_common import activate_by_id, ToolDef, ToolSelectPanelHelper
 
 # Constants
 ICON_PATH = Path(__file__).parent.parent / "icon"

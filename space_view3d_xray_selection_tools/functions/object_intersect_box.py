@@ -2,7 +2,7 @@ from itertools import compress
 
 import numpy as np
 
-from .object_intersect import partition, get_ob_2dbboxes, get_vert_co_2d, get_ob_loc_co_2d, do_selection
+from .object_intersect import do_selection, get_ob_2dbboxes, get_ob_loc_co_2d, get_vert_co_2d, partition
 from .polygon_tests import point_inside_rectangles, points_inside_rectangle, segments_intersect_rectangle
 
 
@@ -51,7 +51,7 @@ def select_obs_in_box(context, mode, xmin, xmax, ymin, ymax, behavior):
         # Speed up finding overlaps or intersections by doing polygon tests on bounding boxes.
 
         # Ob bbox intersects selection box.
-        segment_bools = segments_intersect_rectangle(ob_2dbbox_segments, xmin, xmax, ymin, ymax, prefilter=True)
+        segment_bools = segments_intersect_rectangle(ob_2dbbox_segments, xmin, xmax, ymin, ymax)
         segment_bools.shape = (mesh_ob_count, 4)
         obs_mask_2dbbox_isect_selbox = np.any(segment_bools, axis=1)
 

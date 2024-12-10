@@ -7,9 +7,18 @@ from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 
 from ..functions.object_intersect_circle import select_obs_in_circle
-from ..functions.object_modal import *
+from ..functions.object_modal import (
+    gather_overlays,
+    get_xray_toggle_key_list,
+    restore_overlays,
+    set_properties,
+    sync_properties,
+    toggle_alt_mode,
+    toggle_overlays,
+)
 
 
+# noinspection PyTypeChecker
 class _UBO_struct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
@@ -22,18 +31,20 @@ class _UBO_struct(ctypes.Structure):
         ("u_FillColor", 4 * ctypes.c_float),
         # ("_pad", ctypes.c_int * 1),
     ]
-UBO_source = (
-    "struct Data"
-    "{"
-    "  int u_X;"
-    "  int u_Y;"
-    "  float u_Scale;"
-    "  bool u_Dashed;"
-    "  vec4 u_SegmentColor;"
-    "  vec4 u_GapColor;"
-    "  vec4 u_FillColor;"
-    "};"
-)
+
+
+UBO_source = """
+struct Data
+{
+  int u_X;
+  int u_Y;
+  float u_Scale;
+  bool u_Dashed;
+  vec4 u_SegmentColor;
+  vec4 u_GapColor;
+  vec4 u_FillColor;
+};
+"""
 
 # Fill shader.
 shader_info = gpu.types.GPUShaderCreateInfo()
@@ -42,19 +53,23 @@ shader_info.uniform_buf(0, "Data", "ub")
 shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  FragColor = ub.u_FillColor;"
-    "}"
+    """
+    void main()
+    {
+      FragColor = ub.u_FillColor;
+    }
+    """
 )
-fill_shader = gpu.shader.create_from_info(shader_info)
+FILL_SHADER = gpu.shader.create_from_info(shader_info)
 del shader_info
 
 # Border shader.
@@ -69,26 +84,30 @@ shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_in(1, 'FLOAT', "len")
 shader_info.vertex_out(vert_out)
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  v_Len = len;"
-    "  gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      v_Len = len;
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  float dash_size = 2;"
-    "  float gap_size = 2;"
-    "  vec4 col = ub.u_SegmentColor;"
-    "  if (ub.u_Dashed)"
-    "    if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))"
-    "      col = ub.u_GapColor;"
-    "    FragColor = col;"
-    "}"
+    """
+    void main()
+    {
+      float dash_size = 2;
+      float gap_size = 2;
+      vec4 col = ub.u_SegmentColor;
+      if (ub.u_Dashed)
+        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+          col = ub.u_GapColor;
+        FragColor = col;
+    }
+    """
 )
-border_shader = gpu.shader.create_from_info(shader_info)
+BORDER_SHADER = gpu.shader.create_from_info(shader_info)
 del vert_out
 del shader_info
 
@@ -141,8 +160,10 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
     )
     wait_for_input: bpy.props.BoolProperty(
         name="Wait for input",
-        description="Wait for mouse input or initialize box selection immediately "
-                    "(enable when assigning the operator to a keyboard key)",
+        description=(
+            "Wait for mouse input or initialize box selection immediately "
+            "(enable when assigning the operator to a keyboard key)"
+        ),
         default=True,
     )
     override_global_props: bpy.props.BoolProperty(
@@ -412,7 +433,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         restore_overlays(self, context)
         context.window_manager.operator_properties_last("object.select_circle_xray").radius = self.radius
 
-    def update_UBO(self):
+    def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
 
     def update_shader_position(self, context, event):
@@ -438,14 +459,14 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         vertices = self.get_circle_verts_orig(self.radius)
         segment = (Vector(vertices[0]) - Vector(vertices[1])).length
         lengths = [segment * i for i in range(32)]
-        self.border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         shadow_vertices = self.get_circle_verts_orig(self.radius - 1)
-        self.shadow_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": shadow_vertices, "len": lengths})
+        self.shadow_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": shadow_vertices, "len": lengths})
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch_for_shader(fill_shader, 'TRI_FAN', {"pos": vertices})
+        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -453,7 +474,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         gap_color = (0.2, 0.2, 0.2, 1.0)
         shadow_color = (0.3, 0.3, 0.3, 1.0)
         fill_color = (1.0, 1.0, 1.0, 0.04)
-        dashed = False if self.behavior == 'CONTAIN' else True
+        dashed = not self.behavior == 'CONTAIN'
 
         # UBO.
         self.UBO_data.u_X = self.last_mouse_region_x
@@ -461,40 +482,40 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         self.UBO_data.u_SegmentColor = segment_color
         self.UBO_data.u_GapColor = gap_color
         self.UBO_data.u_FillColor = fill_color
-        self.update_UBO()
+        self.update_ubo()
 
         # Fill.
         gpu.state.blend_set("ALPHA")
-        fill_shader.bind()
-        fill_shader.uniform_block("ub", self.UBO)
-        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.fill_batch.draw(fill_shader)
+        FILL_SHADER.bind()
+        FILL_SHADER.uniform_block("ub", self.UBO)
+        FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.fill_batch.draw(FILL_SHADER)
         gpu.state.blend_set("NONE")
 
         # Border.
         if not dashed:
             # Solid border shadow.
             self.UBO_data.u_SegmentColor = shadow_color
-            self.update_UBO()
+            self.update_ubo()
 
-            border_shader.bind()
-            border_shader.uniform_block("ub", self.UBO)
-            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.shadow_batch.draw(border_shader)
+            BORDER_SHADER.bind()
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            self.shadow_batch.draw(BORDER_SHADER)
 
             # Solid border.
             self.UBO_data.u_SegmentColor = segment_color
-            self.update_UBO()
+            self.update_ubo()
 
-            border_shader.uniform_block("ub", self.UBO)
-            self.border_batch.draw(border_shader)
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            self.border_batch.draw(BORDER_SHADER)
 
         else:
             # Dashed border.
-            border_shader.bind()
-            border_shader.uniform_block("ub", self.UBO)
-            border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.border_batch.draw(border_shader)
+            BORDER_SHADER.bind()
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            self.border_batch.draw(BORDER_SHADER)
 
 
 classes = (OBJECT_OT_select_circle_xray,)

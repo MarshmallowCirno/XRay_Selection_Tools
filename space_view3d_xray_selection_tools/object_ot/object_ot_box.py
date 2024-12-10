@@ -2,15 +2,23 @@ import ctypes
 
 import bpy
 import gpu
-from bgl import glEnable, glDisable, GL_BLEND
 from gpu_extras.batch import batch_for_shader
 
 from ..functions.object_intersect_box import select_obs_in_box
-from ..functions.object_modal import *
+from ..functions.object_modal import (
+    gather_overlays,
+    get_xray_toggle_key_list,
+    restore_overlays,
+    set_properties,
+    sync_properties,
+    toggle_alt_mode,
+    toggle_overlays,
+)
 
 
 # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
 # https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
+# noinspection PyTypeChecker
 class _UBO_struct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
@@ -24,19 +32,21 @@ class _UBO_struct(ctypes.Structure):
         ("u_Dashed", ctypes.c_bool),
         ("_pad", ctypes.c_int * 3),
     ]
-UBO_source = (
-    "struct Data"
-    "{"
-    "  int u_X;"
-    "  int u_Y;"
-    "  int u_Height;"
-    "  int u_Width;"
-    "  vec4 u_SegmentColor;"
-    "  vec4 u_GapColor;"
-    "  vec4 u_FillColor;"
-    "  bool u_Dashed;"
-    "};"
-)
+
+
+UBO_source = """
+struct Data
+{
+  int u_X;
+  int u_Y;
+  int u_Height;
+  int u_Width;
+  vec4 u_SegmentColor;
+  vec4 u_GapColor;
+  vec4 u_FillColor;
+  bool u_Dashed;
+};
+"""
 
 # Crosshair shader.
 vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # noqa
@@ -51,25 +61,29 @@ shader_info.vertex_in(1, 'INT', "len")
 shader_info.vertex_out(vert_out)
 
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  v_Len = len;"
-    "  gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      v_Len = len;
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  float dash_size = 4;"
-    "  float gap_size = 4;"
-    "  vec4 col = ub.u_SegmentColor;"
-    "  if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))"
-    "    col = ub.u_GapColor;"
-    "  FragColor = col;"
-    "}"
+    """
+    void main()
+    {
+      float dash_size = 4;
+      float gap_size = 4;
+      vec4 col = ub.u_SegmentColor;
+      if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+        col = ub.u_GapColor;
+      FragColor = col;
+    }
+    """
 )
-crosshair_shader = gpu.shader.create_from_info(shader_info)
+CROSSHAIR_SHADER = gpu.shader.create_from_info(shader_info)
 del vert_out
 del shader_info
 
@@ -80,20 +94,24 @@ shader_info.uniform_buf(0, "Data", "ub")
 shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  gl_Position = u_ViewProjectionMatrix * vec4("
-    "    pos.x * ub.u_Width + ub.u_X, pos.y * ub.u_Height + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      gl_Position = u_ViewProjectionMatrix * vec4(
+        pos.x * ub.u_Width + ub.u_X, pos.y * ub.u_Height + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  FragColor = ub.u_FillColor;"
-    "}"
+    """
+    void main()
+    {
+      FragColor = ub.u_FillColor;
+    }
+    """
 )
-fill_shader = gpu.shader.create_from_info(shader_info)
+FILL_SHADER = gpu.shader.create_from_info(shader_info)
 del shader_info
 
 # Border shader.
@@ -108,27 +126,31 @@ shader_info.vertex_in(0, 'VEC2', "pos")
 shader_info.vertex_in(1, 'VEC2', "len")
 shader_info.vertex_out(vert_out)
 shader_info.vertex_source(
-    "void main()"
-    "{"
-    "  v_Len = len.x * ub.u_Width + len.y * ub.u_Height;"
-    "  gl_Position = u_ViewProjectionMatrix * vec4("
-    "    pos.x * ub.u_Width + ub.u_X, pos.y * ub.u_Height + ub.u_Y, 0.0f, 1.0f);"
-    "}"
+    """
+    void main()
+    {
+      v_Len = len.x * ub.u_Width + len.y * ub.u_Height;
+      gl_Position = u_ViewProjectionMatrix * vec4(
+        pos.x * ub.u_Width + ub.u_X, pos.y * ub.u_Height + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
-    "void main()"
-    "{"
-    "  float dash_size = 4;"
-    "  float gap_size = 4;"
-    "  vec4 col = ub.u_SegmentColor;"
-    "  if (ub.u_Dashed)"
-    "    if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))"
-    "      col = ub.u_GapColor;"
-    "    FragColor = col;"
-    "}"
+    """
+    void main()
+    {
+      float dash_size = 4;
+      float gap_size = 4;
+      vec4 col = ub.u_SegmentColor;
+      if (ub.u_Dashed)
+        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+          col = ub.u_GapColor;
+        FragColor = col;
+    }
+    """
 )
-border_shader = gpu.shader.create_from_info(shader_info)
+BORDER_SHADER = gpu.shader.create_from_info(shader_info)
 del vert_out
 del shader_info
 
@@ -177,8 +199,10 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
     )
     wait_for_input: bpy.props.BoolProperty(
         name="Wait for input",
-        description="Wait for mouse input or initialize box selection immediately "
-                    "(enable when assigning the operator to a keyboard key)",
+        description=(
+            "Wait for mouse input or initialize box selection immediately "
+            "(enable when assigning the operator to a keyboard key)"
+        ),
         default=False,
         options={'SKIP_SAVE'},
     )
@@ -192,7 +216,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         name="Show X-Ray",
         description="Enable x-ray shading during selection",
         default=True,
-        options={'SKIP_SAVE'}
+        options={'SKIP_SAVE'},
     )
     xray_toggle_key: bpy.props.EnumProperty(
         name="X-Ray Toggle Key",
@@ -235,10 +259,20 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
             ('ORIGIN', "Origin", "Select objects by origins", 'DOT', 1),
             ('CONTAIN', "Contain", "Select only the objects fully contained in box", 'STICKY_UVS_LOC', 2),
             ('OVERLAP', "Overlap (Default)", "Select objects overlapping box", 'SELECT_SUBTRACT', 3),
-            ('DIRECTIONAL', "Directional", "Dragging left to right select contained, right to left select overlapped",
-             'UV_SYNC_SELECT', 4),
-            ('DIRECTIONAL_REVERSED', "Directional Reversed", "Dragging left to right select overlapped, "
-                                                             "right to left select contained", 'UV_SYNC_SELECT', 5)
+            (
+                'DIRECTIONAL',
+                "Directional",
+                "Dragging left to right select contained, right to left select overlapped",
+                'UV_SYNC_SELECT',
+                4,
+            ),
+            (
+                'DIRECTIONAL_REVERSED',
+                "Directional Reversed",
+                "Dragging left to right select overlapped, right to left select contained",
+                'UV_SYNC_SELECT',
+                5,
+            ),
         ],
         default='OVERLAP',
     )
@@ -364,11 +398,11 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
                     self.finish_modal(context)
                     bpy.ops.ed.undo_push(message="Box Select")
                     return {'FINISHED'}
-                else:
-                    self.exec_inbuilt_box_select()
-                    self.finish_modal(context)
-                    bpy.ops.ed.undo_push(message="Box Select")
-                    return {'FINISHED'}
+
+                self.exec_inbuilt_box_select()
+                self.finish_modal(context)
+                bpy.ops.ed.undo_push(message="Box Select")
+                return {'FINISHED'}
 
         if self.stage == 'INBUILT_OP':
             # Inbuilt op was finished, now finish modal.
@@ -465,8 +499,10 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:
             right_to_left = self.last_mouse_region_x - self.start_mouse_region_x > 0
             if (
-                    right_to_left and self.behavior == 'DIRECTIONAL' or
-                    not right_to_left and self.behavior == 'DIRECTIONAL_REVERSED'
+                right_to_left
+                and self.behavior == 'DIRECTIONAL'
+                or not right_to_left
+                and self.behavior == 'DIRECTIONAL_REVERSED'
             ):
                 self.curr_behavior = 'OVERLAP'
                 self.override_intersect_tests = False
@@ -474,7 +510,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
                 self.curr_behavior = 'CONTAIN'
                 self.override_intersect_tests = True
 
-    def update_UBO(self):
+    def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
 
     def update_shader_position(self, context, event):
@@ -487,7 +523,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         height = context.region.height
         vertices = ((0, -height), (0, height), (-width, 0), (width, 0))
         lengths = (0, 2 * height, 0, 2 * width)
-        self.crosshair_batch = batch_for_shader(crosshair_shader, 'LINES', {"pos": vertices, "len": lengths})
+        self.crosshair_batch = batch_for_shader(CROSSHAIR_SHADER, 'LINES', {"pos": vertices, "len": lengths})
 
     def draw_crosshair_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -499,21 +535,21 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         self.UBO_data.u_Y = self.last_mouse_region_y
         self.UBO_data.u_SegmentColor = segment_color
         self.UBO_data.u_GapColor = gap_color
-        self.update_UBO()
+        self.update_ubo()
 
         # Crosshair.
-        crosshair_shader.bind()
-        border_shader.uniform_block("ub", self.UBO)
-        crosshair_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.crosshair_batch.draw(crosshair_shader)
+        CROSSHAIR_SHADER.bind()
+        BORDER_SHADER.uniform_block("ub", self.UBO)
+        CROSSHAIR_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.crosshair_batch.draw(CROSSHAIR_SHADER)
 
     def build_box_shader(self):
         vertices = ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0))
         lengths = ((0, 0), (1, 0), (1, 1), (2, 1), (2, 2))
-        self.border_batch = batch_for_shader(border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         vertices = ((0, 0), (1, 0), (0, 1), (1, 1))
-        self.fill_batch = batch_for_shader(fill_shader, 'TRI_STRIP', {"pos": vertices})
+        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_STRIP', {"pos": vertices})
 
     def draw_box_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -534,31 +570,31 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         self.UBO_data.u_SegmentColor = segment_color
         self.UBO_data.u_GapColor = gap_color
         self.UBO_data.u_FillColor = fill_color
-        self.update_UBO()
+        self.update_ubo()
 
         # Fill.
         gpu.state.blend_set("ALPHA")
-        fill_shader.bind()
-        fill_shader.uniform_block("ub", self.UBO)
-        fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.fill_batch.draw(fill_shader)
+        FILL_SHADER.bind()
+        FILL_SHADER.uniform_block("ub", self.UBO)
+        FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.fill_batch.draw(FILL_SHADER)
         gpu.state.blend_set("NONE")
 
         # Border.
-        border_shader.bind()
-        border_shader.uniform_block("ub", self.UBO)
-        border_shader.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.border_batch.draw(border_shader)
+        BORDER_SHADER.bind()
+        BORDER_SHADER.uniform_block("ub", self.UBO)
+        BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.border_batch.draw(BORDER_SHADER)
 
         # Solid border shadow.
         if not dashed:
             self.UBO_data.u_X = self.start_mouse_region_x + 1
             self.UBO_data.u_Y = self.start_mouse_region_y - 1
             self.UBO_data.u_SegmentColor = shadow_color
-            self.update_UBO()
+            self.update_ubo()
 
-            border_shader.uniform_block("ub", self.UBO)
-            self.border_batch.draw(border_shader)
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            self.border_batch.draw(BORDER_SHADER)
 
 
 classes = (OBJECT_OT_select_box_xray,)

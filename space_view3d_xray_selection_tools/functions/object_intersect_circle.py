@@ -3,19 +3,20 @@ from itertools import compress
 import numpy as np
 
 from .object_intersect import (
-    partition,
-    get_ob_2dbboxes,
-    get_vert_co_2d,
+    do_selection,
     get_edge_vert_co_2d,
     get_face_vert_co_2d,
+    get_ob_2dbboxes,
     get_ob_loc_co_2d,
-    do_selection,
+    get_vert_co_2d,
+    partition,
 )
 from .polygon_tests import (
+    point_inside_polygons_prefiltered,
     point_inside_rectangles,
-    point_inside_polygons,
     points_inside_circle,
-    segments_inside_or_intersect_circle,
+    segments_intersect_circle,
+    segments_intersect_circle_prefiltered,
 )
 
 
@@ -32,9 +33,7 @@ def get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d,
             bool_list.append(True)
         else:
             edge_vert_co_2d = get_edge_vert_co_2d(me, vert_co_2d)
-            edges_mask_isect_selcircle = segments_inside_or_intersect_circle(
-                edge_vert_co_2d, center, radius, prefilter=True
-            )
+            edges_mask_isect_selcircle = segments_intersect_circle_prefiltered(edge_vert_co_2d, center, radius)
             if np.any(edges_mask_isect_selcircle):
                 bool_list.append(True)
             else:
@@ -43,8 +42,8 @@ def get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d,
                         me, vert_co_2d
                     )
                     if face_loop_totals.size > 0:
-                        faces_mask_cursor_in = point_inside_polygons(
-                            center, face_vert_co_2d, face_cell_starts, face_cell_ends, face_loop_totals, prefilter=True
+                        faces_mask_cursor_in = point_inside_polygons_prefiltered(
+                            center, face_vert_co_2d, face_cell_starts, face_loop_totals
                         )
                         bool_list.append(np.any(faces_mask_cursor_in))
                     else:
@@ -100,7 +99,7 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
     # Speed up finding overlaps or intersections by doing polygon tests on bounding boxes.
 
     # Ob bbox intersects selection circle.
-    segment_bools = segments_inside_or_intersect_circle(ob_2dbbox_segments, center, radius).reshape((mesh_ob_count, 4))
+    segment_bools = segments_intersect_circle(ob_2dbbox_segments, center, radius).reshape((mesh_ob_count, 4))
     obs_mask_2dbbox_isect_selcircle = np.any(segment_bools, axis=1)
 
     # Ob bbox entirely inside selection circle.

@@ -1,9 +1,10 @@
 import bpy
 import numpy as np
-from numpy.typing import NDArray
+
+from ..types import Bool1DArray, Float3DArray, Int1DArray
 
 
-def center_coordinates(me: bpy.types.Mesh) -> NDArray[np.float32]:
+def center_coordinates(me: bpy.types.Mesh) -> Float3DArray:
     """
     Retrieve local coordinates of face centers.
     """
@@ -13,7 +14,7 @@ def center_coordinates(me: bpy.types.Mesh) -> NDArray[np.float32]:
     return face_center_co_local
 
 
-def vertex_count(me: bpy.types.Mesh) -> NDArray[np.int32]:
+def vertex_count(me: bpy.types.Mesh) -> Int1DArray:
     """
     Retrieve count of face vertices.
     """
@@ -23,7 +24,7 @@ def vertex_count(me: bpy.types.Mesh) -> NDArray[np.int32]:
     return face_loop_totals
 
 
-def vertex_indices(me: bpy.types.Mesh) -> NDArray[np.int32]:
+def vertex_indices(me: bpy.types.Mesh) -> Int1DArray:
     """
     Retrieve indices of face vertices.
     """
@@ -39,7 +40,7 @@ def vertex_indices(me: bpy.types.Mesh) -> NDArray[np.int32]:
     return face_vert_indices
 
 
-def edge_indices(me: bpy.types.Mesh) -> NDArray[np.int32]:
+def edge_indices(me: bpy.types.Mesh) -> Int1DArray:
     """
     Retrieve indices of face edges.
     """
@@ -55,7 +56,7 @@ def edge_indices(me: bpy.types.Mesh) -> NDArray[np.int32]:
     return loop_edge_indices
 
 
-def visibility_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
+def visibility_mask(me: bpy.types.Mesh) -> Bool1DArray:
     """
     Retrieve a mask of visible faces.
     """
@@ -71,7 +72,7 @@ def visibility_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
     return ~faces_mask_hid
 
 
-def normal_vector(me: bpy.types.Mesh) -> NDArray[np.float32]:
+def normal_vector(me: bpy.types.Mesh) -> Float3DArray:
     """
     Retrieve normals of faces.
     """
@@ -81,7 +82,7 @@ def normal_vector(me: bpy.types.Mesh) -> NDArray[np.float32]:
     return face_normal
 
 
-def selection_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
+def selection_mask(me: bpy.types.Mesh) -> Bool1DArray:
     """
     Retrieve a mask of selected faces.
     """

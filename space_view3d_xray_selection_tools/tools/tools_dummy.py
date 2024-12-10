@@ -9,7 +9,7 @@ from .tools_keymap import (
     get_tool_keymap_from_preferences,
     remove_fallback_keymap_items,
 )
-from .tools_utils import ICON_PATH, EDIT_GPENCIL, fix_ordering
+from .tools_utils import EDIT_GPENCIL, fix_ordering, ICON_PATH
 from ..preferences import get_preferences
 
 

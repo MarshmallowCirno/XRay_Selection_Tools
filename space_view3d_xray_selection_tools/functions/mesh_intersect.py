@@ -1,69 +1,84 @@
-from typing import Literal
-
+from dataclasses import dataclass
 from itertools import chain, compress
-from operator import itemgetter, attrgetter
+from operator import attrgetter, itemgetter
+from typing import Iterator, Literal
 
 import bmesh
 import bpy
 import numpy as np
-from bpy.types import Context
 from mathutils import Vector
 
-from ..functions.timer import time_section
 from .polygon_tests import (
     circle_bbox,
-    polygon_bbox,
-    points_inside_rectangle,
-    segments_completely_outside_rectangle,
-    segments_intersect_rectangle,
+    point_inside_polygons_prefiltered,
     points_inside_circle,
-    segments_inside_or_intersect_circle,
-    points_inside_polygon,
-    point_inside_polygons,
+    points_inside_polygon_prefiltered,
+    points_inside_rectangle,
+    polygon_bbox,
+    segments_intersect_circle,
     segments_intersect_polygon,
+    segments_intersect_rectangle,
+    segments_on_same_rectangle_side,
 )
-from .view3d import get_co_world_of_ob, get_co_2d
-from .selection import new_mesh_selection_mask
-from ..mesh_attr import vert_attr, edge_attr, face_attr
+from .selection import calculate_selection_mask
+from .view3d import transform_local_to_world_co, transform_world_to_2d_co
+from ..functions.timer import time_section
+from ..mesh_attr import edge_attr, face_attr, vert_attr
+from ..types import Bool1DArray, Int1DArray
 
 
-def lookup_isin(array, lut):
+def _lookup_isin(index_array: Int1DArray, lut: Bool1DArray) -> Bool1DArray:
     """Faster np.isin."""
     # https://stackoverflow.com/questions/67391617/faster-membership-test-numpy-isin-too-slow/67393797#67393797
 
-    # size of lookup table
+    # Size of lookup table.
     bound = lut.size
 
-    # pre-filter the invalid ranges and locate the value to check further
-    mask = array < bound
+    # Pre-filter the invalid ranges and locate the value to check further.
+    mask = index_array < bound
     idx = np.where(mask)
 
-    # correct the mask by using the very fast LUT
-    mask[idx] = lut[array[idx]]
+    # Correct the mask by using the very fast LUT.
+    mask[idx] = lut[index_array[idx]]
     return mask
 
 
-def select_mesh_elems(
-    context: Context,
+@dataclass
+class _ToolCoordinates:
+    box_xmin: float = float()
+    box_xmax: float = float()
+    box_ymin: float = float()
+    box_ymax: float = float()
+    circle_center: tuple[float, float] = tuple()
+    circle_radius: float = float()
+    lasso_poly: tuple[tuple[int, int], ...] = tuple()
+
+
+def select_mesh_elements(
+    context: bpy.types.Context,
     mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND'],
     tool: Literal['BOX', 'CIRCLE', 'LASSO'],
-    tool_co: list[int],
+    tool_co_kwargs: dict,
     select_all_edges: bool,
     select_all_faces: bool,
     select_backfacing: bool,
-):
-    box_xmin = box_xmax = box_ymin = box_ymax = center = radius = lasso = None
-    vert_co = verts_mask_visin = vis_edges_mask_in = edge_count = edges_mask_visin = cam = eye_co_world = facing_vec_world = None
+) -> None:
+    """
+    Select mesh elements of selected objects that intersect or lie within the tool region.
 
-    match tool:
-        case 'BOX':
-            box_xmin, box_xmax, box_ymin, box_ymax = tool_co
-        case 'CIRCLE':
-            center, radius = tool_co
-        case 'LASSO':
-            lasso = tool_co
-        case _:
-            raise ValueError("Tool is invalid")
+    Args:
+        context: The Blender context.
+        mode: The selection mode:
+        tool: The selection tool to use:
+        tool_co_kwargs: A dictionary of tool-specific coordinates or parameters. Expected keys depend on the tool used.
+        select_all_edges: If True, select all edges within the specified area.
+        select_all_faces: If True, select all faces within the specified area.
+        select_backfacing: If True, include back-facing geometry in the selection.
+
+    Returns:
+        None
+    """
+    tool_co = _ToolCoordinates(**tool_co_kwargs)
 
     scene = context.scene
     region = context.region
@@ -71,6 +86,10 @@ def select_mesh_elems(
     rv3d = context.region_data
 
     # View vector
+    eye_co_world = Vector
+    facing_vec_world = Vector
+    cam = bpy.types.Object
+
     match rv3d.view_perspective:
         case 'PERSP':
             eye = Vector(rv3d.view_matrix[2][:3])
@@ -95,16 +114,14 @@ def select_mesh_elems(
 
             mesh_select_mode = context.tool_settings.mesh_select_mode
 
-            with time_section("Get mesh", prefix="\n>> BEGIN\n"):
+            with time_section("Retrieve mesh", prefix="\n>> BEGIN\n"):
                 if bpy.app.version >= (3, 4, 0):
-                    # noinspection PyTypeChecker
                     bm = bmesh.from_edit_mesh(ob.data)
                     me = bpy.data.meshes.new("xray_select_temp_mesh")
                     bm.to_mesh(me)
                 else:
                     ob.update_from_editmode()
                     me = ob.data
-                    # noinspection PyTypeChecker
                     bm = bmesh.from_edit_mesh(me)
 
             # VERTEX PASS
@@ -124,7 +141,11 @@ def select_mesh_elems(
                     with time_section("Filter out vertex backfacing"):
                         vert_normal = vert_attr.normal_vector(me)
 
-                        if rv3d.view_perspective == 'ORTHO' or rv3d.view_perspective == 'CAMERA' and cam.data.type == 'ORTHO':
+                        if (
+                            rv3d.view_perspective == 'ORTHO'
+                            or rv3d.view_perspective == 'CAMERA'
+                            and cam.data.type == 'ORTHO'
+                        ):
                             verts_mask_facing = vert_normal @ eye_co_local > 0
                         else:
                             offset_vec = vert_co_local - eye_co_local
@@ -136,32 +157,36 @@ def select_mesh_elems(
                     # Local coordinates of visible vertices.
                     vis_vert_co_local = vert_co_local[verts_mask_vis]
                     # World coordinates of visible vertices.
-                    vis_vert_co_world = get_co_world_of_ob(ob, vis_vert_co_local)
+                    vis_vert_co_world = transform_local_to_world_co(ob.matrix_world, vis_vert_co_local)
                     # 2d coordinates of visible vertices.
                     vert_co = np.full((vert_count, 2), np.nan, "f")
-                    vert_co[verts_mask_vis] = vis_vert_co = get_co_2d(region, rv3d, vis_vert_co_world)
+                    vert_co[verts_mask_vis] = vis_vert_co = transform_world_to_2d_co(region, rv3d, vis_vert_co_world)
 
                 with time_section("Calculate vertex intersection"):
-                    # Mask of vertices inside the selection polygon from visible vertices.
+                    # Mask of vertices inside the selection region from visible vertices.
                     match tool:
                         case 'BOX':
-                            vis_verts_mask_in = points_inside_rectangle(vis_vert_co, box_xmin, box_xmax, box_ymin, box_ymax)
+                            vis_verts_mask_in = points_inside_rectangle(
+                                vis_vert_co, tool_co.box_xmin, tool_co.box_xmax, tool_co.box_ymin, tool_co.box_ymax
+                            )
                         case 'CIRCLE':
-                            vis_verts_mask_in = points_inside_circle(vis_vert_co, center, radius)
+                            vis_verts_mask_in = points_inside_circle(
+                                vis_vert_co, tool_co.circle_center, tool_co.circle_radius
+                            )
                         case 'LASSO':
-                            vis_verts_mask_in = points_inside_polygon(vis_vert_co, lasso, prefilter=True)
+                            vis_verts_mask_in = points_inside_polygon_prefiltered(vis_vert_co, tool_co.lasso_poly)
                         case _:
-                            raise ValueError("tool is invalid")
+                            raise ValueError("Tool is invalid")
 
-                    # Mask of visible vertices inside the selection polygon from all vertices.
-                    verts_mask_visin = np.full(vert_count, False, "?")
+                    # Mask of visible vertices inside the selection region from all vertices.
+                    verts_mask_visin = np.zeros(vert_count, "?")
                     verts_mask_visin[verts_mask_vis] = vis_verts_mask_in
 
                 # Do selection.
                 if mesh_select_mode[0]:
                     with time_section("Select vertices"):
                         cur_selection_mask = vert_attr.selection_mask(me)
-                        new_selection_mask = new_mesh_selection_mask(cur_selection_mask, verts_mask_visin, mode)
+                        new_selection_mask = calculate_selection_mask(cur_selection_mask, verts_mask_visin, mode)
                         update_mask = cur_selection_mask ^ new_selection_mask
 
                         update_list: list[bool] = update_mask.tolist()
@@ -185,84 +210,97 @@ def select_mesh_elems(
                 with time_section("Calculate edge intersection"):
                     # For each visible edge get 2 vertex indices.
                     vis_edge_vert_indices = edge_vert_indices[edges_mask_vis]
-                    # For each visible edge get mask of vertices in the selection polygon.
+                    # For each visible edge get mask of vertices in the selection region.
                     vis_edge_verts_mask_in = verts_mask_visin[vis_edge_vert_indices]
 
-                    # Try to select edges that are completely inside the selection polygon.
+                    # Try to select edges that are completely inside the selection region.
                     if not select_all_edges:
-                        # Mask of edges inside the selection polygon from visible edges.
+                        # Mask of edges inside the selection region from visible edges.
                         vis_edges_mask_in = vis_edge_verts_mask_in[:, 0] & vis_edge_verts_mask_in[:, 1]
 
                     # If select_all_edges enabled or no inner edges found
-                    # then select edges that intersect the selection polygon.
+                    # then select edges that intersect the selection region.
                     if (
-                            select_all_edges
-                            or (not select_all_edges and not np.any(vis_edges_mask_in))
-                            or (mesh_select_mode[2] and select_all_faces)
+                        select_all_edges
+                        or (not select_all_edges and not np.any(vis_edges_mask_in))
+                        or (mesh_select_mode[2] and select_all_faces)
                     ):
 
                         # Coordinates of vertices of visible edges.
                         vis_edge_vert_co = vert_co[vis_edge_vert_indices]
 
-                        # Mask of edges from visible edges that have vertex inside the selection polygon and
+                        # Mask of edges from visible edges that have vertex inside the selection region and
                         # should be selected.
                         vis_edges_mask_vert_in = vis_edge_verts_mask_in[:, 0] | vis_edge_verts_mask_in[:, 1]
 
-                        # Selection polygon bbox.
+                        # Selection region bbox.
                         match tool:
                             case 'BOX':
-                                xmin, xmax, ymin, ymax = box_xmin, box_xmax, box_ymin, box_ymax
+                                xmin, xmax, ymin, ymax = (
+                                    tool_co.box_xmin,
+                                    tool_co.box_xmax,
+                                    tool_co.box_ymin,
+                                    tool_co.box_ymax,
+                                )
                             case 'CIRCLE':
-                                xmin, xmax, ymin, ymax = circle_bbox(center, radius)
+                                xmin, xmax, ymin, ymax = circle_bbox(tool_co.circle_center, tool_co.circle_radius)
                             case 'LASSO':
-                                xmin, xmax, ymin, ymax = polygon_bbox(lasso)
+                                xmin, xmax, ymin, ymax = polygon_bbox(tool_co.lasso_poly)
                             case _:
                                 raise ValueError("Tool is invalid")
 
-                        # Mask of edges from visible edges that have verts both laying outside of one of sides
-                        # of selection polygon bbox, so they can't intersect the selection polygon and
-                        # shouldn't be selected.
-                        vis_edges_mask_cant_isect = segments_completely_outside_rectangle(
-                            vis_edge_vert_co, xmin, xmax, ymin, ymax)
+                        # A mask of edges from visible edges whose vertices are both located outside any
+                        # side of the selection region's bounding box. These edges cannot
+                        # intersect the selection region and should not be selected.
+                        vis_edges_mask_cant_isect = segments_on_same_rectangle_side(
+                            vis_edge_vert_co, xmin, xmax, ymin, ymax
+                        )
 
-                        # Mask of edges from visible edges that may intersect selection polygon and
+                        # Mask of edges from visible edges that may intersect the selection region and
                         # should be tested for intersection.
                         vis_edges_mask_may_isect = ~vis_edges_mask_vert_in & ~vis_edges_mask_cant_isect
 
                         # Skip if there is no edges that need to be tested for intersection.
                         if np.any(vis_edges_mask_may_isect):
-                            # Get coordinates of verts of visible edges that may intersect the selection polygon.
+                            # Get coordinates of verts of visible edges that may intersect the selection region.
                             may_isect_vis_edge_co = vis_edge_vert_co[vis_edges_mask_may_isect]
 
-                            # Mask of edges that intersect the selection polygon from edges that may intersect it.
+                            # Mask of edges that intersect the selection region from edges that may intersect it.
                             match tool:
                                 case 'BOX':
                                     may_isect_vis_edges_mask_isect = segments_intersect_rectangle(
-                                        may_isect_vis_edge_co, box_xmin, box_xmax, box_ymin, box_ymax)
+                                        may_isect_vis_edge_co,
+                                        tool_co.box_xmin,
+                                        tool_co.box_xmax,
+                                        tool_co.box_ymin,
+                                        tool_co.box_ymax,
+                                    )
                                 case 'CIRCLE':
-                                    may_isect_vis_edges_mask_isect = segments_inside_or_intersect_circle(
-                                        may_isect_vis_edge_co, center, radius)
+                                    may_isect_vis_edges_mask_isect = segments_intersect_circle(
+                                        may_isect_vis_edge_co, tool_co.circle_center, tool_co.circle_radius
+                                    )
                                 case 'LASSO':
                                     may_isect_vis_edges_mask_isect = segments_intersect_polygon(
-                                        may_isect_vis_edge_co, lasso)
+                                        may_isect_vis_edge_co, tool_co.lasso_poly
+                                    )
                                 case _:
                                     raise ValueError("Tool is invalid")
 
-                            # Mask of edges that intersect the selection polygon from visible edges.
+                            # Mask of edges that intersect the selection region from visible edges.
                             vis_edges_mask_in = vis_edges_mask_vert_in
                             vis_edges_mask_in[vis_edges_mask_may_isect] = may_isect_vis_edges_mask_isect
                         else:
                             vis_edges_mask_in = vis_edges_mask_vert_in
 
-                    # Mask of visible edges inside the selection polygon from all edges.
-                    edges_mask_visin = np.full(edge_count, False, "?")
+                    # Mask of visible edges inside the selection region from all edges.
+                    edges_mask_visin = np.zeros(edge_count, "?")
                     edges_mask_visin[edges_mask_vis] = vis_edges_mask_in
 
                 # Do selection.
                 if mesh_select_mode[1]:
                     with time_section("Select edges"):
                         cur_selection_mask = edge_attr.selection_mask(me)
-                        new_selection_mask = new_mesh_selection_mask(cur_selection_mask, edges_mask_visin, mode)
+                        new_selection_mask = calculate_selection_mask(cur_selection_mask, edges_mask_visin, mode)
                         update_mask = cur_selection_mask ^ new_selection_mask
 
                         update_list: list[bool] = update_mask.tolist()
@@ -287,7 +325,11 @@ def select_mesh_elems(
 
                         face_center_co_local = face_attr.center_coordinates(me)
 
-                        if rv3d.view_perspective == 'ORTHO' or rv3d.view_perspective == 'CAMERA' and cam.data.type == 'ORTHO':
+                        if (
+                            rv3d.view_perspective == 'ORTHO'
+                            or rv3d.view_perspective == 'CAMERA'
+                            and cam.data.type == 'ORTHO'
+                        ):
                             faces_mask_facing = face_normal @ eye_co_local > 0
                         else:
                             offset_vec = face_center_co_local - eye_co_local
@@ -295,7 +337,7 @@ def select_mesh_elems(
 
                         faces_mask_vis &= faces_mask_facing
 
-                # Select faces which centers are inside the selection rectangle.
+                # Select faces which centers are inside the selection region.
                 if not select_all_faces:
                     with time_section("Calculate faces centers intersection"):
                         # Local coordinates of face centers.
@@ -304,51 +346,74 @@ def select_mesh_elems(
                         # Local coordinates of visible face centers.
                         vis_face_center_co_local = face_center_co_local[faces_mask_vis]
                         # world coordinates of visible face centers.
-                        vis_vert_co_world = get_co_world_of_ob(ob, vis_face_center_co_local)
+                        vis_vert_co_world = transform_local_to_world_co(ob.matrix_world, vis_face_center_co_local)
                         # 2d coordinates of visible face centers.
-                        vis_face_center_co = get_co_2d(region, rv3d, vis_vert_co_world)
+                        vis_face_center_co = transform_world_to_2d_co(region, rv3d, vis_vert_co_world)
 
-                        # Mask of face centers inside the selection polygon from visible faces.
+                        # Mask of face centers inside the selection region from visible faces.
                         match tool:
                             case 'BOX':
                                 vis_faces_mask_in = points_inside_rectangle(
-                                    vis_face_center_co, box_xmin, box_xmax, box_ymin, box_ymax)
+                                    vis_face_center_co,
+                                    tool_co.box_xmin,
+                                    tool_co.box_xmax,
+                                    tool_co.box_ymin,
+                                    tool_co.box_ymax,
+                                )
                             case 'CIRCLE':
-                                vis_faces_mask_in = points_inside_circle(vis_face_center_co, center, radius)
+                                vis_faces_mask_in = points_inside_circle(
+                                    vis_face_center_co, tool_co.circle_center, tool_co.circle_radius
+                                )
                             case 'LASSO':
-                                vis_faces_mask_in = points_inside_polygon(vis_face_center_co, lasso, prefilter=True)
+                                vis_faces_mask_in = points_inside_polygon_prefiltered(
+                                    vis_face_center_co, tool_co.lasso_poly
+                                )
                             case _:
                                 raise ValueError("Tool is invalid")
 
-                        # Mask of visible faces inside the selection polygon from all faces.
-                        faces_mask_visin = np.full(face_count, False, "?")
+                        # Mask of visible faces inside the selection region from all faces.
+                        faces_mask_visin = np.zeros(face_count, "?")
                         faces_mask_visin[faces_mask_vis] = vis_faces_mask_in
                 else:
-                    with time_section("Calculate faces by verts and edges"):
+                    with time_section("Calculate faces by edges"):
                         # Number of vertices for each face.
                         face_loop_totals = face_attr.vertex_count(me)
 
-                        # Skip getting faces from edges if there is no edges inside selection border.
+                        # Skip calculating faces from edges if there is no edges inside selection region.
                         in_edge_count = np.count_nonzero(edges_mask_visin)
                         if in_edge_count:
-                            # Getting faces from bmesh is faster when a low number of faces need to be
+                            # Retrieving faces from bmesh is faster when a low number of faces need to be
                             # selected from a large number of total faces, otherwise numpy is faster.
+                            edge_count = len(me.edges)
                             ratio = edge_count / in_edge_count
 
                             if ratio > 5.9:
                                 # Bmesh pass.
-                                visin_edge_indices = np.nonzero(edges_mask_visin)[0].tolist()
+                                # Indices of visible edges inside the selection region.
+                                visin_edge_indices: list[int] = np.nonzero(edges_mask_visin)[0].tolist()
 
-                                # noinspection PyTypeChecker
-                                visin_edges = itemgetter(*visin_edge_indices)(bm.edges)
-                                visin_edges = (visin_edges,) if type(visin_edges) is not tuple else visin_edges
+                                # Visible edges inside the selection region.
+                                # noinspection PyArgumentList, PyTypeChecker
+                                visin_edges_: tuple[bmesh.types.BMEdge] | bmesh.types.BMEdge = itemgetter(
+                                    *visin_edge_indices
+                                )(bm.edges)
+                                # itemgetter return-type is not consistent
+                                visin_edges: tuple[bmesh.types.BMEdge] = (
+                                    visin_edges_ if isinstance(visin_edges_, tuple) else (visin_edges_,)
+                                )
 
-                                link_faces = map(attrgetter("link_faces"), visin_edges)
-                                link_faces = set(chain.from_iterable(link_faces))
+                                # Faces per visible edge inside the selection region.
+                                visin_edge_faces: Iterator[tuple[bmesh.types.BMFace]] = map(
+                                    attrgetter("link_faces"), visin_edges
+                                )
+                                # Faces inside the selection region.
+                                in_faces: set[bmesh.types.BMFace] = set(chain.from_iterable(visin_edge_faces))
 
-                                in_face_indices = map(attrgetter("index"), link_faces)
-
-                                in_face_indices = np.fromiter(in_face_indices, "i")
+                                # Indices of faces inside the selection region.
+                                in_face_indices_: Iterator[int] = map(attrgetter("index"), in_faces)
+                                in_face_indices: np.ndarray[tuple[int], np.dtype[np.int32]] = np.fromiter(
+                                    in_face_indices_, np.int32
+                                )
                             else:
                                 # Numpy pass.
                                 # Indices of face edges.
@@ -358,72 +423,74 @@ def select_mesh_elems(
                                 face_indices = np.arange(face_count)
                                 loop_face_indices = np.repeat(face_indices, face_loop_totals)
 
-                                # Mask of visible edges in the selection polygon that are in mesh loops,
-                                # therefore forming face polygons in the selection border.
-                                loop_edges_mask_visin = lookup_isin(loop_edge_indices, edges_mask_visin)
+                                # Mask of visible edges in the selection region that are part of mesh loops,
+                                # therefore forming face polygons in the selection region.
+                                loop_edges_mask_visin = _lookup_isin(loop_edge_indices, edges_mask_visin)
 
-                                # Indices of faces inside the selection polygon.
+                                # Indices of faces inside the selection region.
                                 in_face_indices = np.unique(loop_face_indices[loop_edges_mask_visin])
 
-                            # Mask of all faces in the selection polygon.
-                            faces_mask_in = np.full(face_count, False, "?")
+                            # Mask of all faces in the selection region.
+                            faces_mask_in = np.zeros(face_count, "?")
                             faces_mask_in[in_face_indices] = np.True_
-                            # Mask of visible faces in the selection polygon.
+                            # Mask of visible faces in the selection region.
                             faces_mask_visin = faces_mask_vis & faces_mask_in
                         else:
-                            faces_mask_in = faces_mask_visin = np.full(face_count, False, "?")
+                            faces_mask_in = faces_mask_visin = np.zeros(face_count, "?")
 
                     with time_section("Calculate faces under cursor"):
-                        # FACE POLY PASS ####
-                        # Select faces under cursor (faces that have the selection polygon inside their area).
+                        # Select faces under cursor (faces that have the selection region inside their area).
 
-                        # Visible faces not in the selection polygon.
+                        # Visible faces not in the selection region.
                         faces_mask_visnoin = ~faces_mask_in & faces_mask_vis
 
-                        # Number of vertices of each visible face not in the selection polygon.
+                        # Number of vertices of each visible face not in the selection region.
                         visnoin_face_loop_totals = face_loop_totals[faces_mask_visnoin]
 
                         # Skip if all faces are already selected.
                         if visnoin_face_loop_totals.size > 0:
                             match tool:
                                 case 'BOX':
-                                    cursor_co = (box_xmax, box_ymin)  # bottom right box corner
+                                    cursor_co = (tool_co.box_xmax, tool_co.box_ymin)  # bottom right box corner
                                 case 'CIRCLE':
-                                    cursor_co = center
+                                    cursor_co = tool_co.circle_center
                                 case 'LASSO':
-                                    cursor_co = lasso[0]
+                                    cursor_co = tool_co.lasso_poly[0]
                                 case _:
                                     raise ValueError("Tool is invalid")
 
                             # Indices of vertices of all faces.
                             face_vert_indices = face_attr.vertex_indices(me)
 
-                            # Mask of vertices not in the selection polygon from face vertices.
+                            # Mask of vertices not in the selection region from face vertices.
                             face_verts_mask_visnoin = np.repeat(faces_mask_visnoin, face_loop_totals)
-                            # Indices of vertices of visible faces not in the selection polygon.
+                            # Indices of vertices of visible faces not in the selection region.
                             visnoin_face_vert_indices = face_vert_indices[face_verts_mask_visnoin]
-                            # Coordinates of vertices of visible faces not in the selection polygon.
+                            # Coordinates of vertices of visible faces not in the selection region.
                             visnoin_face_vert_co = vert_co[visnoin_face_vert_indices]
                             # Index of first face vertex in face vertex sequence.
                             visnoin_face_cell_starts = np.insert(visnoin_face_loop_totals[:-1].cumsum(), 0, 0)
 
                             # Mask of faces that have cursor inside their polygon area.
-                            # From visible faces not in the selection polygon.
-                            visnoin_faces_mask_under = point_inside_polygons(
-                                cursor_co, visnoin_face_vert_co, visnoin_face_cell_starts, None,
-                                visnoin_face_loop_totals, prefilter=True)
+                            # From visible faces not in the selection region.
+                            visnoin_faces_mask_under = point_inside_polygons_prefiltered(
+                                cursor_co,
+                                visnoin_face_vert_co,
+                                visnoin_face_cell_starts,
+                                visnoin_face_loop_totals,
+                            )
 
                             # Mask of visible faces under cursor from all faces.
-                            faces_mask_visunder = np.full(face_count, False, "?")
+                            faces_mask_visunder = np.zeros(face_count, "?")
                             faces_mask_visunder[faces_mask_visnoin] = visnoin_faces_mask_under
 
-                            # Mask of visible faces in the selection polygon and under cursor.
+                            # Mask of visible faces in the selection region and under cursor.
                             faces_mask_visin[faces_mask_visunder] = np.True_
 
                 with time_section("Select faces"):
                     # Do selection.
                     cur_selection_mask = face_attr.selection_mask(me)
-                    new_selection_mask = new_mesh_selection_mask(cur_selection_mask, faces_mask_visin, mode)
+                    new_selection_mask = calculate_selection_mask(cur_selection_mask, faces_mask_visin, mode)
                     update_mask = cur_selection_mask ^ new_selection_mask
 
                     update_list: list[bool] = update_mask.tolist()
@@ -439,5 +506,4 @@ def select_mesh_elems(
                 # Flush face selection after selecting/deselecting edges and vertices.
                 bm.select_flush_mode()
 
-                # noinspection PyTypeChecker
                 bmesh.update_edit_mesh(ob.data, loop_triangles=False, destructive=False)

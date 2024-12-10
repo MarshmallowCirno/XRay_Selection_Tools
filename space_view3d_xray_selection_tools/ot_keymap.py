@@ -1,6 +1,6 @@
 import bpy
-from .preferences import get_preferences
 
+from .preferences import get_preferences
 
 me_keyboard_keymap = []
 me_mouse_keymap = []
@@ -38,7 +38,7 @@ def register_me_mouse_keymap():
         kmi = km.keymap_items.new("mesh.select_lasso_xray", 'LEFTMOUSE', 'CLICK_DRAG', ctrl=True, shift=True)
         kmi.properties.mode = 'SUB'
         me_mouse_keymap.append((km, kmi))
-        
+
         kmi = km.keymap_items.new("mesh.select_lasso_xray", 'LEFTMOUSE', 'CLICK_DRAG', ctrl=True)
         kmi.properties.mode = 'ADD'
         me_mouse_keymap.append((km, kmi))
@@ -65,12 +65,12 @@ def register_ob_keyboard_keymap():
         kmi.properties.mode = 'ADD'
         kmi.properties.wait_for_input = True
         ob_keyboard_keymap.append((km, kmi))
-        
+
         kmi = km.keymap_items.new("object.select_circle_xray", 'C', 'PRESS')
         kmi.properties.mode = 'ADD'
         kmi.properties.wait_for_input = True
         ob_keyboard_keymap.append((km, kmi))
-        
+
         kmi = km.keymap_items.new("object.select_box_xray", 'B', 'PRESS')
         kmi.properties.mode = 'ADD'
         kmi.properties.wait_for_input = True
@@ -108,7 +108,9 @@ def register_toggles_keymap():
     if kc:
         km = kc.keymaps.new(name="Mesh", space_type='EMPTY')
 
-        kmi = km.keymap_items.new("mesh.select_tools_xray_toggle_select_backfacing", 'X', 'PRESS', ctrl=True, shift=True, alt=True)
+        kmi = km.keymap_items.new(
+            "mesh.select_tools_xray_toggle_select_backfacing", 'X', 'PRESS', ctrl=True, shift=True, alt=True
+        )
         toggles_keymap.append((km, kmi))
 
         kmi = km.keymap_items.new("mesh.select_tools_xray_toggle_mesh_behavior", 'X', 'PRESS', ctrl=True, shift=True)

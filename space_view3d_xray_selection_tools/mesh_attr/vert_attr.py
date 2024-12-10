@@ -1,9 +1,10 @@
 import bpy
 import numpy as np
-from numpy.typing import NDArray
+
+from ..types import Bool1DArray, Float3DArray
 
 
-def coordinates(me: bpy.types.Mesh) -> NDArray[np.float32]:
+def coordinates(me: bpy.types.Mesh) -> Float3DArray:
     """
     Retrieve local coordinates of vertices.
     """
@@ -19,7 +20,7 @@ def coordinates(me: bpy.types.Mesh) -> NDArray[np.float32]:
     return vert_co_local
 
 
-def visibility_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
+def visibility_mask(me: bpy.types.Mesh) -> Bool1DArray:
     """
     Retrieve a mask of visible vertices.
     """
@@ -35,7 +36,7 @@ def visibility_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
     return ~verts_mask_hid
 
 
-def normal_vector(me: bpy.types.Mesh) -> NDArray[np.float32]:
+def normal_vector(me: bpy.types.Mesh) -> Float3DArray:
     """
     Retrieve normals of vertices.
     """
@@ -45,7 +46,7 @@ def normal_vector(me: bpy.types.Mesh) -> NDArray[np.float32]:
     return vert_normal
 
 
-def selection_mask(me: bpy.types.Mesh) -> NDArray[np.bool_]:
+def selection_mask(me: bpy.types.Mesh) -> Bool1DArray:
     """
     Retrieve a mask of selected vertices.
     """

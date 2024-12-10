@@ -3,19 +3,21 @@ from itertools import compress
 import numpy as np
 
 from .object_intersect import (
-    partition,
-    get_ob_2dbboxes,
-    get_vert_co_2d,
+    do_selection,
     get_edge_vert_co_2d,
     get_face_vert_co_2d,
+    get_ob_2dbboxes,
     get_ob_loc_co_2d,
-    do_selection,
+    get_vert_co_2d,
+    partition,
 )
 from .polygon_tests import (
+    point_inside_polygons_prefiltered,
     point_inside_rectangles,
-    point_inside_polygons,
     points_inside_polygon,
+    points_inside_polygon_prefiltered,
     segments_intersect_polygon,
+    segments_intersect_polygon_prefiltered,
 )
 
 
@@ -27,12 +29,12 @@ def get_obs_mask_overlap_lasso(obs, obs_mask_check, depsgraph, region, rv3d, las
         ob_eval = ob.evaluated_get(depsgraph)
         me = ob_eval.to_mesh(preserve_all_data_layers=False, depsgraph=None)
         vert_co_2d = get_vert_co_2d(me, ob_eval, region, rv3d)
-        verts_mask_in_lasso = points_inside_polygon(vert_co_2d, lasso_poly, prefilter=True)
+        verts_mask_in_lasso = points_inside_polygon_prefiltered(vert_co_2d, lasso_poly)
         if np.any(verts_mask_in_lasso):
             bool_list.append(True)
         else:
             edge_vert_co_2d = get_edge_vert_co_2d(me, vert_co_2d)
-            edges_mask_isect_lasso = segments_intersect_polygon(edge_vert_co_2d, lasso_poly, prefilter=True)
+            edges_mask_isect_lasso = segments_intersect_polygon_prefiltered(edge_vert_co_2d, lasso_poly)
             if np.any(edges_mask_isect_lasso):
                 bool_list.append(True)
             else:
@@ -41,13 +43,11 @@ def get_obs_mask_overlap_lasso(obs, obs_mask_check, depsgraph, region, rv3d, las
                         me, vert_co_2d
                     )
                     if face_loop_totals.size > 0:
-                        faces_mask_cursor_in = point_inside_polygons(
+                        faces_mask_cursor_in = point_inside_polygons_prefiltered(
                             lasso_poly[0],
                             face_vert_co_2d,
                             face_cell_starts,
-                            face_cell_ends,
                             face_loop_totals,
-                            prefilter=True,
                         )
                         bool_list.append(np.any(faces_mask_cursor_in))
                     else:
@@ -68,7 +68,7 @@ def get_obs_mask_in_lasso(obs, obs_mask_check, depsgraph, region, rv3d, lasso_po
         ob_eval = ob.evaluated_get(depsgraph)
         me = ob_eval.to_mesh(preserve_all_data_layers=False, depsgraph=None)
         vert_co_2d = get_vert_co_2d(me, ob_eval, region, rv3d)
-        verts_mask_in_lasso = points_inside_polygon(vert_co_2d, lasso_poly, prefilter=True)
+        verts_mask_in_lasso = points_inside_polygon_prefiltered(vert_co_2d, lasso_poly)
         if np.all(verts_mask_in_lasso):
             bool_list.append(True)
         else:
