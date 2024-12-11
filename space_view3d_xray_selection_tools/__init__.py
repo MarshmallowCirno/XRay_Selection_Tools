@@ -48,10 +48,10 @@ RELOADABLE_MODULES = (
     "object_intersect_shared",
     "mesh_modal",
     "object_modal",
-    "mesh_ot",
     "mesh_ot_box",
     "mesh_ot_circle",
     "mesh_ot_lasso",
+    "mesh_ot_toggle",
     "object_ot_box",
     "object_ot_circle",
     "object_ot_lasso",
@@ -93,7 +93,7 @@ else:
         )
         from .functions.intersections import mesh_intersect, object_intersect
         from .functions.modals import mesh_modal, object_modal
-        from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
+        from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
         from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
         from . import types, help, ot_keymap, tools, ui_preferences, startup
         from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
@@ -108,7 +108,7 @@ def register():
     mesh_ot_box.register()
     mesh_ot_circle.register()
     mesh_ot_lasso.register()
-    mesh_ot.register()
+    mesh_ot_toggle.register()
     object_ot_box.register()
     object_ot_circle.register()
     object_ot_lasso.register()
@@ -126,7 +126,7 @@ def unregister():
     mesh_ot_box.unregister()
     mesh_ot_circle.unregister()
     mesh_ot_lasso.unregister()
-    mesh_ot.unregister()
+    mesh_ot_toggle.unregister()
     object_ot_box.unregister()
     object_ot_circle.unregister()
     object_ot_lasso.unregister()
