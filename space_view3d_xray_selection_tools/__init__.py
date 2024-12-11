@@ -39,7 +39,7 @@ RELOADABLE_MODULES = (
     "view3d",
     "timer",
     "geometry_tests",
-    "selection",
+    "selection_utils",
     "mesh_intersect",
     "object_intersect",
     "object_intersect_box",
@@ -81,10 +81,10 @@ else:
         from .mesh_attr import vert_attr, edge_attr, face_attr
         from .functions import (
             geometry_tests,
-            selection,
             timer,
             view3d,
         )
+        from .functions.intersections import selection_utils
         from .functions.intersections.object_intersect import (
             object_intersect_box,
             object_intersect_circle,

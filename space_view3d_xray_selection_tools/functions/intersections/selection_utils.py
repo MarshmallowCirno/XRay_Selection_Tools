@@ -1,6 +1,6 @@
 from typing import Literal
 
-from ..types import Bool1DArray
+from ...types import Bool1DArray
 
 
 def calculate_selection_mask(

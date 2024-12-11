@@ -8,6 +8,7 @@ import bpy
 import numpy as np
 from mathutils import Vector
 
+from ..selection_utils import calculate_selection_mask
 from ...geometry_tests import (
     circle_bbox,
     point_inside_polygons_prefiltered,
@@ -20,7 +21,6 @@ from ...geometry_tests import (
     segments_intersect_rectangle,
     segments_on_same_rectangle_side,
 )
-from ...selection import calculate_selection_mask
 from ...view3d import transform_local_to_world_co, transform_world_to_2d_co
 from ....functions.timer import time_section
 from ....mesh_attr import edge_attr, face_attr, vert_attr
