@@ -41,11 +41,12 @@ RELOADABLE_MODULES = (
     "geometry_tests",
     "selection",
     "mesh_intersect",
-    "mesh_modal",
-    "object_intersect_shared",
+    "object_intersect",
     "object_intersect_box",
     "object_intersect_circle",
     "object_intersect_lasso",
+    "object_intersect_shared",
+    "mesh_modal",
     "object_modal",
     "mesh_ot",
     "mesh_ot_box",
@@ -79,16 +80,18 @@ else:
     if not bpy.app.background:  # Prevent imports when run in background
         from .mesh_attr import vert_attr, edge_attr, face_attr
         from .functions import (
-            mesh_intersect,
-            object_intersect_shared,
-            object_intersect_box,
-            object_intersect_circle,
-            object_intersect_lasso,
             geometry_tests,
             selection,
             timer,
             view3d,
         )
+        from .functions.intersections.object_intersect import (
+            object_intersect_box,
+            object_intersect_circle,
+            object_intersect_lasso,
+            object_intersect_shared,
+        )
+        from .functions.intersections import mesh_intersect, object_intersect
         from .functions.modals import mesh_modal, object_modal
         from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot
         from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
