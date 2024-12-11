@@ -1,6 +1,6 @@
 import bpy
 
-from .preferences import get_preferences
+from ..preferences import get_preferences
 
 me_keyboard_keymap = []
 me_mouse_keymap = []

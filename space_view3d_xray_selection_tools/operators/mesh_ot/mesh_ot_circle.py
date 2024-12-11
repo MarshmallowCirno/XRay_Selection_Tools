@@ -6,15 +6,19 @@ import numpy as np
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 
-from ..functions.intersections.object_intersect import select_obs_in_circle
-from ..functions.modals.object_modal import (
+from ...functions.intersections.mesh_intersect import select_mesh_elements
+from ...functions.modals.mesh_modal import (
+    gather_modifiers,
     gather_overlays,
-    get_xray_toggle_key_list,
+    get_select_through_toggle_key_list,
+    initialize_shading_from_properties,
+    restore_modifiers,
     restore_overlays,
-    set_properties,
-    sync_properties,
+    set_modifiers_from_properties,
+    set_properties_from_preferences,
+    set_shading_from_properties,
     toggle_alt_mode,
-    toggle_overlays,
+    update_shader_color,
 )
 
 
@@ -25,11 +29,10 @@ class _UBO_struct(ctypes.Structure):
         ("u_X", ctypes.c_int),
         ("u_Y", ctypes.c_int),
         ("u_Scale", ctypes.c_float),
-        ("u_Dashed", ctypes.c_bool),
+        ("_pad", ctypes.c_int * 1),
         ("u_SegmentColor", 4 * ctypes.c_float),
         ("u_GapColor", 4 * ctypes.c_float),
         ("u_FillColor", 4 * ctypes.c_float),
-        # ("_pad", ctypes.c_int * 1),
     ]
 
 
@@ -39,7 +42,6 @@ struct Data
   int u_X;
   int u_Y;
   float u_Scale;
-  bool u_Dashed;
   vec4 u_SegmentColor;
   vec4 u_GapColor;
   vec4 u_FillColor;
@@ -95,15 +97,14 @@ shader_info.vertex_source(
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
     """
-    void main()
+    void main() 
     {
       float dash_size = 2;
       float gap_size = 2;
       vec4 col = ub.u_SegmentColor;
-      if (ub.u_Dashed)
-        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
-          col = ub.u_GapColor;
-        FragColor = col;
+      if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+        col = ub.u_GapColor;
+      FragColor = col;
     }
     """
 )
@@ -113,15 +114,16 @@ del shader_info
 
 
 # noinspection PyTypeChecker
-class OBJECT_OT_select_circle_xray(bpy.types.Operator):
+class MESH_OT_select_circle_xray(bpy.types.Operator):
     """Select items using circle selection with x-ray"""
 
-    bl_idname = "object.select_circle_xray"
+    bl_idname = "mesh.select_circle_xray"
     bl_label = "Circle Select X-Ray"
-    bl_options = {'REGISTER'}
+    bl_options = {'REGISTER', 'GRAB_CURSOR'}
 
     mode: bpy.props.EnumProperty(
         name="Mode",
+        description="Default selection mode",
         items=[
             ('SET', "Set", "Set a new selection", 'SELECT_SET', 1),
             ('ADD', "Extend", "Extend existing selection", 'SELECT_EXTEND', 2),
@@ -159,12 +161,13 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         min=1,
     )
     wait_for_input: bpy.props.BoolProperty(
-        name="Wait for input",
+        name="Wait for Input",
         description=(
-            "Wait for mouse input or initialize box selection immediately "
-            "(enable when assigning the operator to a keyboard key)"
+            "Wait for mouse input or initialize circle selection immediately (usually you "
+            "should enable it when you assign the operator to a keyboard key)"
         ),
-        default=True,
+        default=False,
+        options={'SKIP_SAVE'},
     )
     override_global_props: bpy.props.BoolProperty(
         name="Override Global Properties",
@@ -172,14 +175,15 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         default=False,
         options={'SKIP_SAVE'},
     )
-    show_xray: bpy.props.BoolProperty(
-        name="Show X-Ray",
-        description="Enable x-ray shading during selection",
+    select_through: bpy.props.BoolProperty(
+        name="Select Through",
+        description="Select verts, faces and edges laying underneath",
         default=True,
+        options={'SKIP_SAVE'},
     )
-    xray_toggle_key: bpy.props.EnumProperty(
-        name="X-Ray Toggle Key",
-        description="Toggle x-ray by holding this key",
+    select_through_toggle_key: bpy.props.EnumProperty(
+        name="Selection Through Toggle Key",
+        description="Toggle selection through by holding this key",
         items=[
             ('CTRL', "CTRL", ""),
             ('ALT', "ALT", ""),
@@ -189,14 +193,78 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         default='DISABLED',
         options={'SKIP_SAVE'},
     )
-    xray_toggle_type: bpy.props.EnumProperty(
-        name="Toggle X-Ray by Press or Hold",
-        description="Toggle x-ray by holding or by pressing key",
+    select_through_toggle_type: bpy.props.EnumProperty(
+        name="Selection Through Toggle Press / Hold",
+        description="Toggle selection through by holding or by pressing key",
         items=[
             ('HOLD', "Holding", ""),
             ('PRESS', "Pressing", ""),
         ],
         default='HOLD',
+        options={'SKIP_SAVE'},
+    )
+    default_color: bpy.props.FloatVectorProperty(
+        name="Default Color",
+        description="Tool color when disabled selection through",
+        subtype='COLOR',
+        soft_min=0.0,
+        soft_max=1.0,
+        size=3,
+        default=(1.0, 1.0, 1.0),
+        options={'SKIP_SAVE'},
+    )
+    select_through_color: bpy.props.FloatVectorProperty(
+        name="Select Through Color",
+        description="Tool color when enabled selection through",
+        subtype='COLOR',
+        soft_min=0.0,
+        soft_max=1.0,
+        size=3,
+        default=(1.0, 1.0, 1.0),
+        options={'SKIP_SAVE'},
+    )
+    show_xray: bpy.props.BoolProperty(
+        name="Show X-Ray",
+        description="Enable x-ray shading during selection",
+        default=True,
+        options={'SKIP_SAVE'},
+    )
+    select_all_edges: bpy.props.BoolProperty(
+        name="Select All Edges",
+        description=(
+            "Additionally select edges that are partially inside the selection circle, "
+            "not just the ones completely inside the selection circle. Works only in "
+            "select through mode"
+        ),
+        default=False,
+        options={'SKIP_SAVE'},
+    )
+    select_all_faces: bpy.props.BoolProperty(
+        name="Select All Faces",
+        description=(
+            "Additionally select faces that are partially inside the selection circle, "
+            "not just the ones with centers inside the selection circle. Works only in "
+            "select through mode"
+        ),
+        default=False,
+        options={'SKIP_SAVE'},
+    )
+    select_backfacing: bpy.props.BoolProperty(
+        name="Select Backfacing",
+        description="Select elements with normals facing away from you. Works only in select through mode",
+        default=True,
+        options={'SKIP_SAVE'},
+    )
+    hide_mirror: bpy.props.BoolProperty(
+        name="Hide Mirror",
+        description="Hide mirror modifiers during selection",
+        default=True,
+        options={'SKIP_SAVE'},
+    )
+    hide_solidify: bpy.props.BoolProperty(
+        name="Hide Solidify",
+        description="Hide solidify modifiers during selection",
+        default=True,
         options={'SKIP_SAVE'},
     )
     hide_gizmo: bpy.props.BoolProperty(
@@ -205,20 +273,10 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         default=False,
         options={'SKIP_SAVE'},
     )
-    behavior: bpy.props.EnumProperty(
-        name="Selection Behavior",
-        description="Selection behavior",
-        items=[
-            ('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
-            ('CONTAIN', "Contain", "Select only the objects fully contained in circle", 'STICKY_UVS_LOC', 2),
-            ('OVERLAP', "Overlap", "Select objects overlapping circle", 'SELECT_SUBTRACT', 3),
-        ],
-        default='ORIGIN',
-    )
 
     @classmethod
     def poll(cls, context):
-        return context.area.type == 'VIEW_3D' and context.mode == 'OBJECT'
+        return context.area.type == 'VIEW_3D' and context.mode == 'EDIT_MESH'
 
     def __init__(self, *args, **kwargs):
         if bpy.app.version >= (4, 4, 0):
@@ -226,46 +284,62 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
 
         self.stage = None
         self.curr_mode = self.mode
-        self.circle_verts_orig = None
+        self.directional = False
+        self.direction = None
 
         self.last_mouse_region_x = 0
         self.last_mouse_region_y = 0
 
+        self.init_mods = None
         self.init_overlays = None
 
         self.override_modal = False
         self.override_intersect_tests = False
 
-        self.xray_toggle_key_list = get_xray_toggle_key_list()
+        self.invert_select_through = False
+        self.select_through_toggle_key_list = get_select_through_toggle_key_list()
 
         self.handler = None
         self.border_batch = None
-        self.shadow_batch = None
         self.fill_batch = None
+        self.circle_verts_orig = None
         self.UBO_data = _UBO_struct()
         self.UBO = gpu.types.GPUUniformBuf(
             gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # noqa
         )
 
     def invoke(self, context, event):
-        set_properties(self, tool='CIRCLE')
+        # Set operator properties from addon preferences.
+        set_properties_from_preferences(self, tool='CIRCLE')
 
-        self.override_intersect_tests = self.behavior != 'ORIGIN'
+        self.override_intersect_tests = (
+            self.select_all_faces
+            and context.tool_settings.mesh_select_mode[2]
+            or self.select_all_edges
+            and context.tool_settings.mesh_select_mode[1]
+            or not self.select_backfacing
+            or bpy.app.version >= (4, 1, 0)
+            and self.select_through
+            and not self.show_xray
+        )
 
         self.override_modal = (
-            self.xray_toggle_key != 'DISABLED'
+            self.select_through_toggle_key != 'DISABLED'
             or self.alt_mode_toggle_key != 'SHIFT'
             or self.alt_mode != 'SUB'
+            or not self.select_through
+            and self.default_color[:] != (1.0, 1.0, 1.0)
+            or self.select_through
+            and self.select_through_color[:] != (1.0, 1.0, 1.0)
             or self.override_intersect_tests
         )
 
+        self.init_mods = gather_modifiers(self, context)  # save initial modifier states
         self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
 
-        # Sync operator properties with current shading.
-        sync_properties(self, context)
-
-        # Enable x-ray overlays.
-        toggle_overlays(self, context)
+        # Set x-ray overlays and modifiers.
+        initialize_shading_from_properties(self, context)
+        set_modifiers_from_properties(self)
 
         context.window_manager.modal_handler_add(self)
 
@@ -286,16 +360,17 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
             if event.type == 'MOUSEMOVE':
                 self.update_shader_position(context, event)
 
-            # Toggle overlays.
-            if event.type in self.xray_toggle_key_list:
+            # Toggle modifiers and overlays.
+            if event.type in self.select_through_toggle_key_list:
                 if (
                     event.value in {'PRESS', 'RELEASE'}
-                    and self.xray_toggle_type == 'HOLD'
+                    and self.select_through_toggle_type == 'HOLD'
                     or event.value == 'PRESS'
-                    and self.xray_toggle_type == 'PRESS'
+                    and self.select_through_toggle_type == 'PRESS'
                 ):
-                    self.show_xray = not self.show_xray
-                    toggle_overlays(self, context)
+                    self.invert_select_through = not self.invert_select_through
+                    set_shading_from_properties(self, context)
+                    update_shader_color(self, context)
 
             # Change radius.
             if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
@@ -305,7 +380,12 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
             if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
                 self.stage = 'CUSTOM_SELECTION'
                 toggle_alt_mode(self, event)
-                if self.override_intersect_tests:
+                if self.override_intersect_tests and (
+                    self.select_through
+                    and not self.invert_select_through
+                    or not self.select_through
+                    and self.invert_select_through
+                ):
                     self.begin_custom_intersect_tests(context)
                 else:
                     self.exec_inbuilt_circle_select()
@@ -314,21 +394,22 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
             # Update shader.
             if event.type == 'MOUSEMOVE':
                 self.update_shader_position(context, event)
-                if self.override_intersect_tests:
+                if self.override_intersect_tests and self.select_through:
                     self.begin_custom_intersect_tests(context)
                 else:
                     self.exec_inbuilt_circle_select()
 
-            # Toggle overlays.
-            if event.type in self.xray_toggle_key_list:
+            # Toggle modifiers and overlays.
+            if event.type in self.select_through_toggle_key_list:
                 if (
                     event.value in {'PRESS', 'RELEASE'}
-                    and self.xray_toggle_type == 'HOLD'
+                    and self.select_through_toggle_type == 'HOLD'
                     or event.value == 'PRESS'
-                    and self.xray_toggle_type == 'PRESS'
+                    and self.select_through_toggle_type == 'PRESS'
                 ):
-                    self.show_xray = not self.show_xray
-                    toggle_overlays(self, context)
+                    self.invert_select_through = not self.invert_select_through
+                    set_shading_from_properties(self, context)
+                    update_shader_color(self, context)
 
             # Change radius.
             if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
@@ -369,8 +450,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def show_custom_ui(self, context, event):
-        """Set cursor and status text, draw shader."""
-        context.window.cursor_modal_set('CROSSHAIR')
+        """Set status text, draw shader."""
         enum_items = self.properties.bl_rna.properties["mode"].enum_items
         curr_mode_name = enum_items[self.curr_mode].name
         enum_items = self.properties.bl_rna.properties["alt_mode"].enum_items
@@ -383,8 +463,8 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
             )
         else:
             status_text = "RMB, ESC: Cancel  |  WhDown/Pad+: Add  |  WhUp/Pad-: Subtract"
-        if self.xray_toggle_key != 'DISABLED':
-            status_text += f"  |  {self.xray_toggle_key}: Toggle X-Ray"
+        if self.select_through_toggle_key != 'DISABLED':
+            status_text += f"  |  {self.select_through_toggle_key}: Toggle Select Through"
         context.workspace.status_text_set(text=status_text)
 
         self.build_circle_shader()
@@ -401,7 +481,6 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
 
     def remove_custom_ui(self, context):
         """Restore cursor and status text, remove shader."""
-        context.window.cursor_modal_restore()
         context.workspace.status_text_set(text=None)
         context.space_data.draw_handler_remove(self.handler, 'WINDOW')
         context.region.tag_redraw()
@@ -425,13 +504,22 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
 
     def begin_custom_intersect_tests(self, context):
         center = (self.last_mouse_region_x, self.last_mouse_region_y)
-        select_obs_in_circle(context, mode=self.curr_mode, center=center, radius=self.radius, behavior=self.behavior)
+        select_mesh_elements(
+            context,
+            mode=self.curr_mode,
+            tool='CIRCLE',
+            tool_co_kwargs={"circle_center": center, "circle_radius": self.radius},
+            select_all_edges=self.select_all_edges,
+            select_all_faces=self.select_all_faces,
+            select_backfacing=self.select_backfacing,
+        )
         if self.curr_mode == 'SET':
             self.curr_mode = 'ADD'
 
     def finish_modal(self, context):
         restore_overlays(self, context)
-        context.window_manager.operator_properties_last("object.select_circle_xray").radius = self.radius
+        restore_modifiers(self)
+        context.window_manager.operator_properties_last("mesh.select_circle_xray").radius = self.radius
 
     def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
@@ -461,20 +549,24 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         lengths = [segment * i for i in range(32)]
         self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
-        shadow_vertices = self.get_circle_verts_orig(self.radius - 1)
-        self.shadow_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": shadow_vertices, "len": lengths})
-
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
         self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
-        segment_color = (1.0, 1.0, 1.0, 1.0)
-        gap_color = (0.2, 0.2, 0.2, 1.0)
-        shadow_color = (0.3, 0.3, 0.3, 1.0)
-        fill_color = (1.0, 1.0, 1.0, 0.04)
-        dashed = not self.behavior == 'CONTAIN'
+        if (
+            self.select_through
+            and not self.invert_select_through
+            or not self.select_through
+            and self.invert_select_through
+        ):
+            segment_color = (*self.select_through_color, 1)
+            fill_color = (*self.select_through_color, 0.04)
+        else:
+            segment_color = (*self.default_color, 1)
+            fill_color = (*self.default_color, 0.04)
+        gap_color = (0.0, 0.0, 0.0, 1.0)
 
         # UBO.
         self.UBO_data.u_X = self.last_mouse_region_x
@@ -493,32 +585,13 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         gpu.state.blend_set("NONE")
 
         # Border.
-        if not dashed:
-            # Solid border shadow.
-            self.UBO_data.u_SegmentColor = shadow_color
-            self.update_ubo()
-
-            BORDER_SHADER.bind()
-            BORDER_SHADER.uniform_block("ub", self.UBO)
-            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.shadow_batch.draw(BORDER_SHADER)
-
-            # Solid border.
-            self.UBO_data.u_SegmentColor = segment_color
-            self.update_ubo()
-
-            BORDER_SHADER.uniform_block("ub", self.UBO)
-            self.border_batch.draw(BORDER_SHADER)
-
-        else:
-            # Dashed border.
-            BORDER_SHADER.bind()
-            BORDER_SHADER.uniform_block("ub", self.UBO)
-            BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
-            self.border_batch.draw(BORDER_SHADER)
+        BORDER_SHADER.bind()
+        BORDER_SHADER.uniform_block("ub", self.UBO)
+        BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.border_batch.draw(BORDER_SHADER)
 
 
-classes = (OBJECT_OT_select_circle_xray,)
+classes = (MESH_OT_select_circle_xray,)
 
 
 def register():

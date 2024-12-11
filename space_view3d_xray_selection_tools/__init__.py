@@ -55,7 +55,7 @@ RELOADABLE_MODULES = (
     "object_ot_box",
     "object_ot_circle",
     "object_ot_lasso",
-    "help_ot",
+    "help",
     "ot_keymap",
     "tools",
     "tools_main",
@@ -93,9 +93,10 @@ else:
         )
         from .functions.intersections import mesh_intersect, object_intersect
         from .functions.modals import mesh_modal, object_modal
-        from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
-        from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
-        from . import types, help_ot, ot_keymap, tools, ui_preferences, startup
+        from .operators.mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
+        from .operators.object_ot import object_ot_box, object_ot_circle, object_ot_lasso
+        from .operators import help_ot, ot_keymap
+        from . import types, tools, ui_preferences, startup
         from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
 
 

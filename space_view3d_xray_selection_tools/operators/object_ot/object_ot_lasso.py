@@ -26,9 +26,9 @@ from bgl import (
 from gpu_extras.batch import batch_for_shader
 from mathutils import geometry, Vector
 
-from ..functions.geometry_tests import polygon_bbox
-from ..functions.intersections.object_intersect import select_obs_in_lasso
-from ..functions.modals.object_modal import (
+from ...functions.geometry_tests import polygon_bbox
+from ...functions.intersections.object_intersect import select_obs_in_lasso
+from ...functions.modals.object_modal import (
     gather_overlays,
     get_xray_toggle_key_list,
     restore_overlays,
@@ -37,7 +37,7 @@ from ..functions.modals.object_modal import (
     toggle_alt_mode,
     toggle_overlays,
 )
-from ..icon.lasso_cursor import lasso_cursor
+from ...icon.lasso_cursor import lasso_cursor
 
 
 # noinspection PyTypeChecker

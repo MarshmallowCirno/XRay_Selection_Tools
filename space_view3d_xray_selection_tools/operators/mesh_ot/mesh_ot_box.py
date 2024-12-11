@@ -2,12 +2,10 @@ import ctypes
 
 import bpy
 import gpu
-import numpy as np
 from gpu_extras.batch import batch_for_shader
-from mathutils import Vector
 
-from ..functions.intersections.mesh_intersect import select_mesh_elements
-from ..functions.modals.mesh_modal import (
+from ...functions.intersections.mesh_intersect import select_mesh_elements
+from ...functions.modals.mesh_modal import (
     gather_modifiers,
     gather_overlays,
     get_select_through_toggle_key_list,
@@ -15,24 +13,30 @@ from ..functions.modals.mesh_modal import (
     restore_modifiers,
     restore_overlays,
     set_modifiers_from_properties,
+    set_properties_from_direction,
     set_properties_from_preferences,
     set_shading_from_properties,
     toggle_alt_mode,
     update_shader_color,
 )
+from ...preferences import get_preferences
 
 
+# https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
+# https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
 # noinspection PyTypeChecker
 class _UBO_struct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
         ("u_X", ctypes.c_int),
         ("u_Y", ctypes.c_int),
-        ("u_Scale", ctypes.c_float),
-        ("_pad", ctypes.c_int * 1),
+        ("u_Height", ctypes.c_int),
+        ("u_Width", ctypes.c_int),
         ("u_SegmentColor", 4 * ctypes.c_float),
         ("u_GapColor", 4 * ctypes.c_float),
         ("u_FillColor", 4 * ctypes.c_float),
+        ("u_Dashed", ctypes.c_bool),
+        ("_pad", ctypes.c_int * 3),
     ]
 
 
@@ -41,12 +45,53 @@ struct Data
 {
   int u_X;
   int u_Y;
-  float u_Scale;
+  int u_Height;
+  int u_Width;
   vec4 u_SegmentColor;
   vec4 u_GapColor;
   vec4 u_FillColor;
+  bool u_Dashed;
 };
 """
+
+# Crosshair shader.
+vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # noqa
+vert_out.smooth('FLOAT', "v_Len")
+
+shader_info = gpu.types.GPUShaderCreateInfo()
+shader_info.typedef_source(UBO_source)
+shader_info.uniform_buf(0, "Data", "ub")
+shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
+shader_info.vertex_in(0, 'VEC2', "pos")
+shader_info.vertex_in(1, 'INT', "len")
+shader_info.vertex_out(vert_out)
+
+shader_info.vertex_source(
+    """
+    void main()
+    {
+      v_Len = len;
+      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+    }
+    """
+)
+shader_info.fragment_out(0, 'VEC4', "FragColor")
+shader_info.fragment_source(
+    """
+    void main()
+    {
+      float dash_size = 4;
+      float gap_size = 4;
+      vec4 col = ub.u_SegmentColor;
+      if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+        col = ub.u_GapColor;
+      FragColor = col;
+    }
+    """
+)
+CROSSHAIR_SHADER = gpu.shader.create_from_info(shader_info)
+del vert_out
+del shader_info
 
 # Fill shader.
 shader_info = gpu.types.GPUShaderCreateInfo()
@@ -58,7 +103,8 @@ shader_info.vertex_source(
     """
     void main()
     {
-      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+      gl_Position = u_ViewProjectionMatrix * vec4(
+        pos.x * ub.u_Width + ub.u_X, pos.y * ub.u_Height + ub.u_Y, 0.0f, 1.0f);
     }
     """
 )
@@ -83,28 +129,30 @@ shader_info.typedef_source(UBO_source)
 shader_info.uniform_buf(0, "Data", "ub")
 shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 shader_info.vertex_in(0, 'VEC2', "pos")
-shader_info.vertex_in(1, 'FLOAT', "len")
+shader_info.vertex_in(1, 'VEC2', "len")
 shader_info.vertex_out(vert_out)
 shader_info.vertex_source(
     """
     void main()
     {
-      v_Len = len;
-      gl_Position = u_ViewProjectionMatrix * vec4(pos.x + ub.u_X, pos.y + ub.u_Y, 0.0f, 1.0f);
+      v_Len = len.x * ub.u_Width + len.y * ub.u_Height;
+      gl_Position = u_ViewProjectionMatrix * vec4(
+        pos.x * ub.u_Width + ub.u_X, pos.y * ub.u_Height + ub.u_Y, 0.0f, 1.0f);
     }
     """
 )
 shader_info.fragment_out(0, 'VEC4', "FragColor")
 shader_info.fragment_source(
     """
-    void main() 
+    void main()
     {
-      float dash_size = 2;
-      float gap_size = 2;
+      float dash_size = 4;
+      float gap_size = 4;
       vec4 col = ub.u_SegmentColor;
-      if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
-        col = ub.u_GapColor;
-      FragColor = col;
+      if (ub.u_Dashed)
+        if (fract(v_Len/(dash_size + gap_size)) > dash_size/(dash_size + gap_size))
+          col = ub.u_GapColor;
+        FragColor = col;
     }
     """
 )
@@ -114,11 +162,11 @@ del shader_info
 
 
 # noinspection PyTypeChecker
-class MESH_OT_select_circle_xray(bpy.types.Operator):
-    """Select items using circle selection with x-ray"""
+class MESH_OT_select_box_xray(bpy.types.Operator):
+    """Select items using box selection with x-ray"""
 
-    bl_idname = "mesh.select_circle_xray"
-    bl_label = "Circle Select X-Ray"
+    bl_idname = "mesh.select_box_xray"
+    bl_label = "Box Select X-Ray"
     bl_options = {'REGISTER', 'GRAB_CURSOR'}
 
     mode: bpy.props.EnumProperty(
@@ -128,6 +176,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             ('SET', "Set", "Set a new selection", 'SELECT_SET', 1),
             ('ADD', "Extend", "Extend existing selection", 'SELECT_EXTEND', 2),
             ('SUB', "Subtract", "Subtract existing selection", 'SELECT_SUBTRACT', 3),
+            ('XOR', "Difference", "Inverts existing selection", 'SELECT_DIFFERENCE', 4),
+            ('AND', "Intersect", "Intersect existing selection", 'SELECT_INTERSECT', 5),
         ],
         default='SET',
         options={'SKIP_SAVE'},
@@ -154,16 +204,10 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         default='SHIFT',
         options={'SKIP_SAVE'},
     )
-    radius: bpy.props.IntProperty(
-        name="Radius",
-        description="Radius",
-        default=25,
-        min=1,
-    )
     wait_for_input: bpy.props.BoolProperty(
         name="Wait for Input",
         description=(
-            "Wait for mouse input or initialize circle selection immediately (usually you "
+            "Wait for mouse input or initialize box selection immediately (usually you "
             "should enable it when you assign the operator to a keyboard key)"
         ),
         default=False,
@@ -232,8 +276,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
     select_all_edges: bpy.props.BoolProperty(
         name="Select All Edges",
         description=(
-            "Additionally select edges that are partially inside the selection circle, "
-            "not just the ones completely inside the selection circle. Works only in "
+            "Additionally select edges that are partially inside the selection box, "
+            "not just the ones completely inside the selection box. Works only in "
             "select through mode"
         ),
         default=False,
@@ -242,8 +286,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
     select_all_faces: bpy.props.BoolProperty(
         name="Select All Faces",
         description=(
-            "Additionally select faces that are partially inside the selection circle, "
-            "not just the ones with centers inside the selection circle. Works only in "
+            "Additionally select faces that are partially inside the selection box, "
+            "not just the ones with centers inside the selection box. Works only in "
             "select through mode"
         ),
         default=False,
@@ -273,6 +317,12 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         default=False,
         options={'SKIP_SAVE'},
     )
+    show_crosshair: bpy.props.BoolProperty(
+        name="Show Crosshair",
+        description="Show crosshair when wait_for_input is enabled",
+        default=True,
+        options={'SKIP_SAVE'},
+    )
 
     @classmethod
     def poll(cls, context):
@@ -284,25 +334,28 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
         self.stage = None
         self.curr_mode = self.mode
-        self.directional = False
+        self.directional = get_preferences().me_directional_box and not self.override_global_props
         self.direction = None
 
+        self.start_mouse_region_x = 0
+        self.start_mouse_region_y = 0
         self.last_mouse_region_x = 0
         self.last_mouse_region_y = 0
 
         self.init_mods = None
         self.init_overlays = None
 
-        self.override_modal = False
+        self.override_wait_for_input = False
+        self.override_selection = False
         self.override_intersect_tests = False
 
         self.invert_select_through = False
         self.select_through_toggle_key_list = get_select_through_toggle_key_list()
 
         self.handler = None
+        self.crosshair_batch = None
         self.border_batch = None
         self.fill_batch = None
-        self.circle_verts_orig = None
         self.UBO_data = _UBO_struct()
         self.UBO = gpu.types.GPUUniformBuf(
             gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # noqa
@@ -310,7 +363,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
     def invoke(self, context, event):
         # Set operator properties from addon preferences.
-        set_properties_from_preferences(self, tool='CIRCLE')
+        set_properties_from_preferences(self, tool='BOX')
 
         self.override_intersect_tests = (
             self.select_all_faces
@@ -323,7 +376,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             and not self.show_xray
         )
 
-        self.override_modal = (
+        self.override_selection = (
             self.select_through_toggle_key != 'DISABLED'
             or self.alt_mode_toggle_key != 'SHIFT'
             or self.alt_mode != 'SUB'
@@ -331,8 +384,11 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             and self.default_color[:] != (1.0, 1.0, 1.0)
             or self.select_through
             and self.select_through_color[:] != (1.0, 1.0, 1.0)
+            or self.directional
             or self.override_intersect_tests
         )
+
+        self.override_wait_for_input = not self.show_crosshair or self.override_selection
 
         self.init_mods = gather_modifiers(self, context)  # save initial modifier states
         self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
@@ -344,14 +400,13 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         context.window_manager.modal_handler_add(self)
 
         # Jump to.
-        if self.override_modal:
-            self.show_custom_ui(context, event)
-            if self.wait_for_input:
-                self.stage = 'CUSTOM_WAIT_FOR_INPUT'
-            else:
-                self.stage = 'CUSTOM_SELECTION'
+        if self.wait_for_input and self.override_wait_for_input:
+            self.begin_custom_wait_for_input_stage(context, event)
+        elif self.override_selection:
+            self.begin_custom_selection_stage(context, event)
         else:
-            self.invoke_inbuilt_circle_select()
+            self.invoke_inbuilt_box_select()
+
         return {'RUNNING_MODAL'}
 
     def modal(self, context, event):
@@ -372,32 +427,20 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                     set_shading_from_properties(self, context)
                     update_shader_color(self, context)
 
-            # Change radius.
-            if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
-                self.update_radius(context, event)
-
             # Finish stage.
             if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
-                self.stage = 'CUSTOM_SELECTION'
+                self.finish_custom_wait_for_input_stage(context)
                 toggle_alt_mode(self, event)
-                if self.override_intersect_tests and (
-                    self.select_through
-                    and not self.invert_select_through
-                    or not self.select_through
-                    and self.invert_select_through
-                ):
-                    self.begin_custom_intersect_tests(context)
+                if self.override_selection:
+                    self.begin_custom_selection_stage(context, event)
                 else:
-                    self.exec_inbuilt_circle_select()
+                    self.invoke_inbuilt_box_select()
 
         if self.stage == 'CUSTOM_SELECTION':
             # Update shader.
             if event.type == 'MOUSEMOVE':
+                self.update_direction_and_properties(context)
                 self.update_shader_position(context, event)
-                if self.override_intersect_tests and self.select_through:
-                    self.begin_custom_intersect_tests(context)
-                else:
-                    self.exec_inbuilt_circle_select()
 
             # Toggle modifiers and overlays.
             if event.type in self.select_through_toggle_key_list:
@@ -411,115 +454,142 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                     set_shading_from_properties(self, context)
                     update_shader_color(self, context)
 
-            # Change radius.
-            if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
-                self.update_radius(context, event)
-
             # Finish stage.
-            if event.value == 'RELEASE' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
-                if self.wait_for_input:
-                    self.stage = 'CUSTOM_WAIT_FOR_INPUT'
-                else:
-                    self.remove_custom_ui(context)
+            if event.value == 'RELEASE' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
+                self.finish_custom_selection_stage(context)
+                if self.override_intersect_tests and (
+                    self.select_through
+                    and not self.invert_select_through
+                    or not self.select_through
+                    and self.invert_select_through
+                ):
+                    self.begin_custom_intersect_tests(context)
                     self.finish_modal(context)
-                    bpy.ops.ed.undo_push(message="Circle Select")
+                    bpy.ops.ed.undo_push(message="Box Select")
                     return {'FINISHED'}
 
-        # Finish modal.
-        if event.value == 'PRESS' and event.type == 'ENTER':
-            if self.stage in {'CUSTOM_WAIT_FOR_INPUT', 'CUSTOM_SELECTION'}:
-                self.remove_custom_ui(context)
-            self.finish_modal(context)
-            return {'FINISHED'}
+                self.exec_inbuilt_box_select()
+                self.finish_modal(context)
+                bpy.ops.ed.undo_push(message="Box Select")
+                return {'FINISHED'}
 
         if self.stage == 'INBUILT_OP':
             # Inbuilt op was finished, now finish modal.
             if event.type == 'MOUSEMOVE':
-                self.radius = context.window_manager.operator_properties_last("view3d.select_circle").radius
                 self.finish_modal(context)
                 return {'FINISHED'}
 
         # Cancel modal.
         if event.type in {'ESC', 'RIGHTMOUSE'}:
-            if self.stage in {'CUSTOM_WAIT_FOR_INPUT', 'CUSTOM_SELECTION'}:
-                self.remove_custom_ui(context)
-                bpy.ops.ed.undo_push(message="Circle Select")
+            if self.stage == 'CUSTOM_WAIT_FOR_INPUT':
+                self.finish_custom_wait_for_input_stage(context)
+            elif self.stage == 'CUSTOM_SELECTION':
+                self.finish_custom_selection_stage(context)
             self.finish_modal(context)
             return {'CANCELLED'}
 
         return {'RUNNING_MODAL'}
 
-    def show_custom_ui(self, context, event):
-        """Set status text, draw shader."""
+    def begin_custom_wait_for_input_stage(self, context, event):
+        """Set status text, draw wait_for_input shader."""
+        self.stage = 'CUSTOM_WAIT_FOR_INPUT'
         enum_items = self.properties.bl_rna.properties["mode"].enum_items
         curr_mode_name = enum_items[self.curr_mode].name
         enum_items = self.properties.bl_rna.properties["alt_mode"].enum_items
         alt_mode_name = enum_items[self.alt_mode].name
 
-        if self.wait_for_input:
-            status_text = (
-                "RMB, ESC: Cancel  |  ENTER: Confirm  |  WhDown/Pad+: Add  |  WhUp/Pad-: Subtract  |  "
-                f"LMB: {curr_mode_name}  |  {self.alt_mode_toggle_key}+LMB: {alt_mode_name}"
-            )
-        else:
-            status_text = "RMB, ESC: Cancel  |  WhDown/Pad+: Add  |  WhUp/Pad-: Subtract"
+        status_text = f"RMB, ESC: Cancel  |  LMB: {curr_mode_name}  |  {self.alt_mode_toggle_key}+LMB: {alt_mode_name}"
+        if self.select_through_toggle_key != 'DISABLED' and not self.directional:
+            status_text += f"  |  {self.select_through_toggle_key}: Toggle Select Through"
+        context.workspace.status_text_set(text=status_text)
+
+        if self.show_crosshair:
+            self.build_crosshair_shader(context)
+            self.handler = context.space_data.draw_handler_add(self.draw_crosshair_shader, (), 'WINDOW', 'POST_PIXEL')
+            self.update_shader_position(context, event)
+
+    def finish_custom_wait_for_input_stage(self, context):
+        """Restore status text, remove wait_for_input shader."""
+        self.wait_for_input = False
+        context.workspace.status_text_set(text=None)
+        if self.show_crosshair:
+            context.space_data.draw_handler_remove(self.handler, 'WINDOW')
+            context.region.tag_redraw()
+
+    def begin_custom_selection_stage(self, context, event):
+        self.stage = 'CUSTOM_SELECTION'
+
+        status_text = "RMB, ESC: Cancel"
         if self.select_through_toggle_key != 'DISABLED':
             status_text += f"  |  {self.select_through_toggle_key}: Toggle Select Through"
         context.workspace.status_text_set(text=status_text)
 
-        self.build_circle_shader()
-        self.handler = context.space_data.draw_handler_add(self.draw_circle_shader, (), 'WINDOW', 'POST_PIXEL')
+        self.start_mouse_region_x = event.mouse_region_x
+        self.start_mouse_region_y = event.mouse_region_y
+        self.build_box_shader()
+        self.handler = context.space_data.draw_handler_add(self.draw_box_shader, (), 'WINDOW', 'POST_PIXEL')
         self.update_shader_position(context, event)
 
-    def update_radius(self, context, event):
-        if event.type in {'WHEELUPMOUSE', 'NUMPAD_MINUS'}:
-            self.radius -= 10
-        elif event.type in {'WHEELDOWNMOUSE', 'NUMPAD_PLUS'}:
-            self.radius += 10
-        self.build_circle_shader()
-        context.region.tag_redraw()
-
-    def remove_custom_ui(self, context):
-        """Restore cursor and status text, remove shader."""
+    def finish_custom_selection_stage(self, context):
         context.workspace.status_text_set(text=None)
         context.space_data.draw_handler_remove(self.handler, 'WINDOW')
         context.region.tag_redraw()
 
-    def invoke_inbuilt_circle_select(self):
+    def invoke_inbuilt_box_select(self):
         self.stage = 'INBUILT_OP'
-        bpy.ops.view3d.select_circle(
-            'INVOKE_DEFAULT', mode=self.curr_mode, wait_for_input=self.wait_for_input, radius=self.radius
-        )
+        bpy.ops.view3d.select_box('INVOKE_DEFAULT', mode=self.curr_mode, wait_for_input=self.wait_for_input)
 
-    def exec_inbuilt_circle_select(self):
-        bpy.ops.view3d.select_circle(
-            x=self.last_mouse_region_x,
-            y=self.last_mouse_region_y,
-            mode=self.curr_mode,
-            wait_for_input=False,
-            radius=self.radius,
-        )
-        if self.curr_mode == 'SET':
-            self.curr_mode = 'ADD'
+    def exec_inbuilt_box_select(self):
+        # Get selection rectangle coordinates.
+        xmin = min(self.start_mouse_region_x, self.last_mouse_region_x)
+        xmax = max(self.start_mouse_region_x, self.last_mouse_region_x)
+        ymin = min(self.start_mouse_region_y, self.last_mouse_region_y)
+        ymax = max(self.start_mouse_region_y, self.last_mouse_region_y)
+        bpy.ops.view3d.select_box(mode=self.curr_mode, wait_for_input=False, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
 
     def begin_custom_intersect_tests(self, context):
-        center = (self.last_mouse_region_x, self.last_mouse_region_y)
+        # Get selection rectangle coordinates.
+        xmin = min(self.start_mouse_region_x, self.last_mouse_region_x)
+        xmax = max(self.start_mouse_region_x, self.last_mouse_region_x)
+        ymin = min(self.start_mouse_region_y, self.last_mouse_region_y)
+        ymax = max(self.start_mouse_region_y, self.last_mouse_region_y)
+
+        # Do selection.
         select_mesh_elements(
             context,
             mode=self.curr_mode,
-            tool='CIRCLE',
-            tool_co_kwargs={"circle_center": center, "circle_radius": self.radius},
+            tool='BOX',
+            tool_co_kwargs={"box_xmin": xmin, "box_xmax": xmax, "box_ymin": ymin, "box_ymax": ymax},
             select_all_edges=self.select_all_edges,
             select_all_faces=self.select_all_faces,
             select_backfacing=self.select_backfacing,
         )
-        if self.curr_mode == 'SET':
-            self.curr_mode = 'ADD'
 
     def finish_modal(self, context):
         restore_overlays(self, context)
         restore_modifiers(self)
-        context.window_manager.operator_properties_last("mesh.select_circle_xray").radius = self.radius
+
+    def update_direction_and_properties(self, context):
+        if self.directional and self.last_mouse_region_x != self.start_mouse_region_x:
+            if self.last_mouse_region_x - self.start_mouse_region_x > 0:
+                direction = "LEFT_TO_RIGHT"
+            else:
+                direction = "RIGHT_TO_LEFT"
+
+            if direction != self.direction:
+                self.direction = direction
+                set_properties_from_direction(self, self.direction)
+                self.override_intersect_tests = (
+                    self.select_all_faces
+                    and context.tool_settings.mesh_select_mode[2]
+                    or self.select_all_edges
+                    and context.tool_settings.mesh_select_mode[1]
+                    or not self.select_backfacing
+                    or bpy.app.version >= (4, 1, 0)
+                    and self.select_through
+                    and not self.show_xray
+                )
+                set_shading_from_properties(self, context)
 
     def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
@@ -529,31 +599,48 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.last_mouse_region_y = event.mouse_region_y
         context.region.tag_redraw()
 
-    @staticmethod
-    def get_circle_verts_orig(radius):
-        sides = 31
-        # https://stackoverflow.com/questions/17258546/opengl-creating-a-circle-change-radius
-        counts = np.arange(1, sides + 1, dtype="f")
-        angles = np.multiply(counts, 2 * np.pi / sides)
-        vert_x = np.multiply(np.sin(angles), radius)
-        vert_y = np.multiply(np.cos(angles), radius)
-        vert_co = np.vstack((vert_x, vert_y)).T
-        vert_co.shape = (sides, 2)
-        vertices = vert_co.tolist()
-        vertices.append(vertices[0])
-        return vertices
+    def build_crosshair_shader(self, context):
+        width = context.region.width
+        height = context.region.height
+        vertices = ((0, -height), (0, height), (-width, 0), (width, 0))
+        lengths = (0, 2 * height, 0, 2 * width)
+        self.crosshair_batch = batch_for_shader(CROSSHAIR_SHADER, 'LINES', {"pos": vertices, "len": lengths})
 
-    def build_circle_shader(self):
-        vertices = self.get_circle_verts_orig(self.radius)
-        segment = (Vector(vertices[0]) - Vector(vertices[1])).length
-        lengths = [segment * i for i in range(32)]
+    def draw_crosshair_shader(self):
+        matrix = gpu.matrix.get_projection_matrix()
+        if (
+            self.select_through
+            and not self.invert_select_through
+            or not self.select_through
+            and self.invert_select_through
+        ):
+            segment_color = (*self.select_through_color, 1)
+        else:
+            segment_color = (*self.default_color, 1)
+        gap_color = (0.0, 0.0, 0.0, 1.0)
+
+        # UBO.
+        self.UBO_data.u_X = self.last_mouse_region_x
+        self.UBO_data.u_Y = self.last_mouse_region_y
+        self.UBO_data.u_SegmentColor = segment_color
+        self.UBO_data.u_GapColor = gap_color
+        self.update_ubo()
+
+        # Crosshair.
+        CROSSHAIR_SHADER.bind()
+        BORDER_SHADER.uniform_block("ub", self.UBO)
+        CROSSHAIR_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.crosshair_batch.draw(CROSSHAIR_SHADER)
+
+    def build_box_shader(self):
+        vertices = ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0))
+        lengths = ((0, 0), (1, 0), (1, 1), (2, 1), (2, 2))
         self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
-        vertices.append(vertices[0])  # ending triangle
-        vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
+        vertices = ((0, 0), (1, 0), (0, 1), (1, 1))
+        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_STRIP', {"pos": vertices})
 
-    def draw_circle_shader(self):
+    def draw_box_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
         if (
             self.select_through
@@ -567,10 +654,17 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             segment_color = (*self.default_color, 1)
             fill_color = (*self.default_color, 0.04)
         gap_color = (0.0, 0.0, 0.0, 1.0)
+        shadow_color = (0.3, 0.3, 0.3, 1.0)
+        width = self.last_mouse_region_x - self.start_mouse_region_x
+        height = self.last_mouse_region_y - self.start_mouse_region_y
+        dashed = False if self.direction == "RIGHT_TO_LEFT" else True
 
         # UBO.
-        self.UBO_data.u_X = self.last_mouse_region_x
-        self.UBO_data.u_Y = self.last_mouse_region_y
+        self.UBO_data.u_X = self.start_mouse_region_x
+        self.UBO_data.u_Y = self.start_mouse_region_y
+        self.UBO_data.u_Height = height
+        self.UBO_data.u_Width = width
+        self.UBO_data.u_Dashed = dashed
         self.UBO_data.u_SegmentColor = segment_color
         self.UBO_data.u_GapColor = gap_color
         self.UBO_data.u_FillColor = fill_color
@@ -590,8 +684,18 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
         self.border_batch.draw(BORDER_SHADER)
 
+        # Solid border shadow.
+        if not dashed:
+            self.UBO_data.u_X = self.start_mouse_region_x + 1
+            self.UBO_data.u_Y = self.start_mouse_region_y - 1
+            self.UBO_data.u_SegmentColor = shadow_color
+            self.update_ubo()
 
-classes = (MESH_OT_select_circle_xray,)
+            BORDER_SHADER.uniform_block("ub", self.UBO)
+            self.border_batch.draw(BORDER_SHADER)
+
+
+classes = (MESH_OT_select_box_xray,)
 
 
 def register():

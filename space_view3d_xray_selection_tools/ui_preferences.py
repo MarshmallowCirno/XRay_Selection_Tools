@@ -1,7 +1,7 @@
 import bpy
 import rna_keymap_ui
 
-from .ot_keymap import (
+from .operators.ot_keymap import (
     me_keyboard_keymap,
     me_mouse_keymap,
     ob_keyboard_keymap,
