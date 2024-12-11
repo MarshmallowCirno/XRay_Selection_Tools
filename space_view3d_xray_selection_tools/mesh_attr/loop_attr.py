@@ -16,7 +16,7 @@ def vertex_indices(me: bpy.types.Mesh) -> Int1DArray:
         data = me.attributes[".corner_vert"].data
         data.foreach_get("value", loop_vert_indices)
     else:
-        me.polygons.foreach_get("vertices", loop_vert_indices)
+        me.loops.foreach_get("vertex_index", loop_vert_indices)
     return loop_vert_indices
 
 
