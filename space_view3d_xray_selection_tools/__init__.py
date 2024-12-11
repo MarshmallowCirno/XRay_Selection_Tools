@@ -79,7 +79,7 @@ else:
     import bpy
 
     if not bpy.app.background:  # Prevent imports when run in background
-        from .mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
+        from .functions.mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
         from .functions import (
             geometry_tests,
             timer,

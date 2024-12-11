@@ -21,9 +21,9 @@ from ...geometry_tests import (
     segments_intersect_rectangle,
     segments_on_same_rectangle_side,
 )
+from ...mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from ...view3d import transform_local_to_world_co, transform_world_to_2d_co
 from ....functions.timer import time_section
-from ....mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from ....types import Bool1DArray, Int1DArray
 
 

@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 
-from ..types import Int1DArray
+from ...types import Int1DArray
 
 
 def vertex_indices(me: bpy.types.Mesh) -> Int1DArray:

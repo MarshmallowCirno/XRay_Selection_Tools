@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 
-from ..types import Bool1DArray, Float3DArray
+from ...types import Bool1DArray, Float3DArray
 
 
 def coordinates(me: bpy.types.Mesh) -> Float3DArray:

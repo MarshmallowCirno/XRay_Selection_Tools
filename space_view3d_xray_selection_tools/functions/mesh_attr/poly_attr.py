@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 
-from ..types import Bool1DArray, Float3DArray, Int1DArray
+from ...types import Bool1DArray, Float3DArray, Int1DArray
 
 
 def center_coordinates(me: bpy.types.Mesh) -> Float3DArray:

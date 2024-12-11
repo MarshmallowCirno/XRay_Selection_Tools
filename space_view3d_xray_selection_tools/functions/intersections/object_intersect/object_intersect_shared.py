@@ -4,8 +4,8 @@ from operator import attrgetter, methodcaller
 import numpy as np
 
 from ..selection_utils import calculate_selection_mask
+from ...mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from ...view3d import batch_transform_local_to_world_co, transform_local_to_world_co, transform_world_to_2d_co
-from ....mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 
 
 def partition(items, predicate=bool):
