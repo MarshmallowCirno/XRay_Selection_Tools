@@ -4,6 +4,7 @@ import bpy
 import gpu
 from gpu_extras.batch import batch_for_shader
 
+from ...addon_info import get_preferences
 from ...functions.intersections.mesh_intersect import select_mesh_elements
 from ...functions.modals.mesh_modal import (
     gather_modifiers,
@@ -19,7 +20,6 @@ from ...functions.modals.mesh_modal import (
     toggle_alt_mode,
     update_shader_color,
 )
-from ...preferences import get_preferences
 
 
 # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line

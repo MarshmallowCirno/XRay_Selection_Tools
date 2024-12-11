@@ -1,7 +1,7 @@
 import bpy
 from bpy.app.handlers import persistent
 
-from .preferences import get_preferences
+from .addon_info import get_preferences
 from .tools.tools_utils import set_tool_in_mode
 
 

@@ -1,6 +1,6 @@
 import bpy
 
-from ..preferences import get_preferences
+from ..addon_info import get_preferences
 
 FALLBACK_KEYMAP_DICT = {  # keymap_name, (keymap_item_idname, tool_type)
     "3D View Tool: Object, Select Box X-Ray (fallback)": ("object.select_box_xray", "BOX"),

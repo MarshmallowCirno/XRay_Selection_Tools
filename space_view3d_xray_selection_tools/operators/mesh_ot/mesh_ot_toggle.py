@@ -1,7 +1,7 @@
 import blf
 import bpy
 
-from ...preferences import get_preferences
+from ...addon_info import get_preferences
 
 
 def draw_text(text, pos_x, pos_y, align="LEFT", font=0, font_size=12, color=(1, 1, 1, 1)):

@@ -1,6 +1,6 @@
 import bpy
 
-from ...preferences import get_preferences
+from ...addon_info import get_preferences
 
 
 def gather_overlays(context):

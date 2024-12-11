@@ -1,6 +1,7 @@
 import bpy
 import rna_keymap_ui
 
+from .addon_info import get_preferences
 from .operators.ot_keymap import (
     me_keyboard_keymap,
     me_mouse_keymap,
@@ -13,7 +14,6 @@ from .operators.ot_keymap import (
     toggle_toggles_keymap,
     toggles_keymap,
 )
-from .preferences import get_preferences
 from .tools import reload_tools, update_keymaps_of_tools
 from .tools.tools_keymap import populate_preferences_keymaps_of_tools
 

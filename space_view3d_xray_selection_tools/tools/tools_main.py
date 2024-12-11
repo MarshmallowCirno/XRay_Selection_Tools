@@ -10,7 +10,7 @@ from .tools_keymap import (
     remove_fallback_keymap_items,
 )
 from .tools_utils import fix_ordering, ICON_PATH
-from ..preferences import get_preferences
+from ..addon_info import get_preferences
 
 
 # Box Tools
