@@ -23,7 +23,7 @@ from ...geometry_tests import (
 )
 from ...view3d import transform_local_to_world_co, transform_world_to_2d_co
 from ....functions.timer import time_section
-from ....mesh_attr import edge_attr, face_attr, vert_attr
+from ....mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from ....types import Bool1DArray, Int1DArray
 
 
@@ -316,14 +316,14 @@ def select_mesh_elements(
 
                 with time_section("Get face attributes", prefix=">> FACE PASS\n"):
                     # Get mask of visible faces.
-                    faces_mask_vis = face_attr.visibility_mask(me)
+                    faces_mask_vis = poly_attr.visibility_mask(me)
 
                 # Filter out backfacing.
                 if not select_backfacing:
                     with time_section("Filter out face backfacing"):
-                        face_normal = face_attr.normal_vector(me)
+                        face_normal = poly_attr.normal_vector(me)
 
-                        face_center_co_local = face_attr.center_coordinates(me)
+                        face_center_co_local = poly_attr.center_coordinates(me)
 
                         if (
                             rv3d.view_perspective == 'ORTHO'
@@ -341,7 +341,7 @@ def select_mesh_elements(
                 if not select_all_faces:
                     with time_section("Calculate faces centers intersection"):
                         # Local coordinates of face centers.
-                        face_center_co_local = face_attr.center_coordinates(me)
+                        face_center_co_local = poly_attr.center_coordinates(me)
 
                         # Local coordinates of visible face centers.
                         vis_face_center_co_local = face_center_co_local[faces_mask_vis]
@@ -377,7 +377,7 @@ def select_mesh_elements(
                 else:
                     with time_section("Calculate faces by edges"):
                         # Number of vertices for each face.
-                        face_loop_totals = face_attr.vertex_count(me)
+                        face_loop_totals = poly_attr.vertex_count(me)
 
                         # Skip calculating faces from edges if there is no edges inside selection region.
                         in_edge_count = np.count_nonzero(edges_mask_visin)
@@ -417,7 +417,7 @@ def select_mesh_elements(
                             else:
                                 # Numpy pass.
                                 # Indices of face edges.
-                                loop_edge_indices = face_attr.edge_indices(me)
+                                loop_edge_indices = loop_attr.edge_indices(me)
 
                                 # Index of face for each edge in mesh loop.
                                 face_indices = np.arange(face_count)
@@ -460,7 +460,7 @@ def select_mesh_elements(
                                     raise ValueError("Tool is invalid")
 
                             # Indices of vertices of all faces.
-                            face_vert_indices = face_attr.vertex_indices(me)
+                            face_vert_indices = loop_attr.vertex_indices(me)
 
                             # Mask of vertices not in the selection region from face vertices.
                             face_verts_mask_visnoin = np.repeat(faces_mask_visnoin, face_loop_totals)
@@ -489,7 +489,7 @@ def select_mesh_elements(
 
                 with time_section("Select faces"):
                     # Do selection.
-                    cur_selection_mask = face_attr.selection_mask(me)
+                    cur_selection_mask = poly_attr.selection_mask(me)
                     new_selection_mask = calculate_selection_mask(cur_selection_mask, faces_mask_visin, mode)
                     update_mask = cur_selection_mask ^ new_selection_mask
 

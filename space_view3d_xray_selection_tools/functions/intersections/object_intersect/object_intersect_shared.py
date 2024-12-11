@@ -5,7 +5,7 @@ import numpy as np
 
 from ..selection_utils import calculate_selection_mask
 from ...view3d import batch_transform_local_to_world_co, transform_local_to_world_co, transform_world_to_2d_co
-from ....mesh_attr import edge_attr, face_attr, vert_attr
+from ....mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 
 
 def partition(items, predicate=bool):
@@ -121,10 +121,10 @@ def get_face_vert_co_2d(me, vert_co_2d):
     """Look for faces."""
 
     # Number of vertices for each face.
-    face_loop_totals = face_attr.vertex_count(me)
+    face_loop_totals = poly_attr.vertex_count(me)
 
     # Sequence of vertices of all faces.
-    face_vert_indices = face_attr.vertex_indices(me)
+    face_vert_indices = loop_attr.vertex_indices(me)
 
     # Coordinates of vertices of faces.
     face_vert_co_2d = vert_co_2d[face_vert_indices]
