@@ -1,8 +1,8 @@
 import bpy
 import rna_keymap_ui
 
-from .addon_info import get_preferences
-from .operators.ot_keymap import (
+from ..addon_info import get_addon_package
+from ..operators.ot_keymap import (
     me_keyboard_keymap,
     me_mouse_keymap,
     ob_keyboard_keymap,
@@ -14,8 +14,7 @@ from .operators.ot_keymap import (
     toggle_toggles_keymap,
     toggles_keymap,
 )
-from .tools import reload_tools, update_keymaps_of_tools
-from .tools.tools_keymap import populate_preferences_keymaps_of_tools
+from ..tools import reload_tools, update_keymaps_of_tools
 
 
 class XRAYSELToolKmiPG(bpy.types.PropertyGroup):
@@ -110,7 +109,7 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
 class XRAYSELPreferences(bpy.types.AddonPreferences):
     # this must match the add-on name, use '__package__'
     # when defining this in a submodule of a python package.
-    bl_idname = __package__
+    bl_idname = get_addon_package()
 
     tabs: bpy.props.EnumProperty(
         name="Tabs",
@@ -911,33 +910,3 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
 
         for kmi in kmis:
             rna_keymap_ui.draw_kmi(['ADDON', 'USER', 'DEFAULT'], kc, km, kmi, col, 0)
-
-
-def populate_preferences_direction_properties():
-    left = get_preferences().me_direction_properties.add()
-    left.name = "RIGHT_TO_LEFT"
-    left = get_preferences().me_direction_properties.add()
-    left.name = "LEFT_TO_RIGHT"
-
-
-classes = (XRAYSELToolMeDirectionProps, XRAYSELToolKmiPG, XRAYSELToolKeymapPG, XRAYSELPreferences)
-
-
-def register():
-    from bpy.utils import register_class
-
-    for cls in classes:
-        register_class(cls)
-
-    populate_preferences_keymaps_of_tools()
-    populate_preferences_direction_properties()
-
-
-def unregister():
-    get_preferences().me_direction_properties.clear()
-    get_preferences().keymaps_of_tools.clear()
-
-    from bpy.utils import unregister_class
-
-    for cls in classes:
-        unregister_class(cls)

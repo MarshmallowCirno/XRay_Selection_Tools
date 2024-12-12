@@ -4,7 +4,12 @@ import bpy
 
 if TYPE_CHECKING:
     # Only imported for type-checking
-    from .ui_preferences import XRAYSELPreferences
+    from .preferences.properties import XRAYSELPreferences
+
+
+def get_addon_package() -> str:
+    """Return the name of the addon package."""
+    return __package__
 
 
 def get_preferences() -> "XRAYSELPreferences":
