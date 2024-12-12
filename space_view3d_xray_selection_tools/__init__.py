@@ -64,7 +64,8 @@ RELOADABLE_MODULES = (
     "tools_keymap",
     "tools_utils",
     "preferences",
-    "startup",
+    "properties",
+    "startup_handlers",
 )
 
 # when bpy is already in local, we know this is not the initial import...
@@ -97,7 +98,8 @@ else:
         from .operators.mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
         from .operators.object_ot import object_ot_box, object_ot_circle, object_ot_lasso
         from .operators import help_ot, ot_keymap
-        from . import types, tools, startup, preferences
+        from .preferences import properties
+        from . import types, tools, startup_handlers, preferences
         from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
 
 
@@ -119,7 +121,7 @@ def register():
     ot_keymap.register()
     tools_main.register()
     tools_dummy.register()
-    startup.register()
+    startup_handlers.register()
 
 
 def unregister():
@@ -138,4 +140,4 @@ def unregister():
     tools_utils.reset_active_tool()
     tools_main.unregister()
     tools_dummy.unregister()
-    startup.unregister()
+    startup_handlers.unregister()
