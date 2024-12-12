@@ -823,20 +823,3 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             BORDER_SHADER.uniform_block("ub", self.UBO)
             BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
             border_batch.draw(BORDER_SHADER)
-
-
-classes = (MESH_OT_select_lasso_xray,)
-
-
-def register():
-    from bpy.utils import register_class
-
-    for cls in classes:
-        register_class(cls)
-
-
-def unregister():
-    from bpy.utils import unregister_class
-
-    for cls in classes:
-        unregister_class(cls)

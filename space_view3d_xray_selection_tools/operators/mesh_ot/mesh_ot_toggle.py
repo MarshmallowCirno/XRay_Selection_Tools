@@ -124,24 +124,3 @@ class MESH_OT_select_tools_xray_toggle_select_backfacing(bpy.types.Operator, Tog
     def execute(self, context):
         get_preferences().me_select_backfacing = not get_preferences().me_select_backfacing
         return {'FINISHED'}
-
-
-classes = (
-    MESH_OT_select_tools_xray_toggle_select_through,
-    MESH_OT_select_tools_xray_toggle_mesh_behavior,
-    MESH_OT_select_tools_xray_toggle_select_backfacing,
-)
-
-
-def register():
-    from bpy.utils import register_class
-
-    for cls in classes:
-        register_class(cls)
-
-
-def unregister():
-    from bpy.utils import unregister_class
-
-    for cls in classes:
-        unregister_class(cls)

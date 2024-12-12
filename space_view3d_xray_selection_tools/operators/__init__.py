@@ -1,0 +1,34 @@
+from . import help_ot, ot_keymap
+from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
+from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
+
+_CLASSES = (
+    mesh_ot_box.MESH_OT_select_box_xray,
+    mesh_ot_circle.MESH_OT_select_circle_xray,
+    mesh_ot_lasso.MESH_OT_select_lasso_xray,
+    object_ot_box.OBJECT_OT_select_box_xray,
+    object_ot_circle.OBJECT_OT_select_circle_xray,
+    object_ot_lasso.OBJECT_OT_select_lasso_xray,
+    mesh_ot_toggle.MESH_OT_select_tools_xray_toggle_select_through,
+    mesh_ot_toggle.MESH_OT_select_tools_xray_toggle_mesh_behavior,
+    mesh_ot_toggle.MESH_OT_select_tools_xray_toggle_select_backfacing,
+    help_ot.XRAYSEL_OT_show_info_popup,
+)
+
+
+def register() -> None:
+    from bpy.utils import register_class
+
+    for cls in _CLASSES:
+        register_class(cls)
+
+    ot_keymap.register()
+
+
+def unregister() -> None:
+    ot_keymap.unregister()
+
+    from bpy.utils import unregister_class
+
+    for cls in _CLASSES:
+        unregister_class(cls)

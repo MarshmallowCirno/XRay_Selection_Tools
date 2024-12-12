@@ -26,3 +26,14 @@ def update_keymaps_of_tools(self, context) -> None:
 
     register_main_tools()
     register_dummy_tools()
+
+
+def register() -> None:
+    tools_main.register()
+    tools_dummy.register()
+
+
+def unregister() -> None:
+    tools_utils.reset_active_tool()
+    tools_main.unregister()
+    tools_dummy.unregister()

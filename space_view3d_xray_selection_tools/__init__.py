@@ -107,37 +107,22 @@ import bpy  # noqa
 
 
 def register():
+
     if bpy.app.background:
         return
-    mesh_ot_box.register()
-    mesh_ot_circle.register()
-    mesh_ot_lasso.register()
-    mesh_ot_toggle.register()
-    object_ot_box.register()
-    object_ot_circle.register()
-    object_ot_lasso.register()
-    help_ot.register()
+
     preferences.register()
-    ot_keymap.register()
-    tools_main.register()
-    tools_dummy.register()
+    operators.register()
+    tools.register()
     startup_handlers.register()
 
 
 def unregister():
+
     if bpy.app.background:
         return
-    mesh_ot_box.unregister()
-    mesh_ot_circle.unregister()
-    mesh_ot_lasso.unregister()
-    mesh_ot_toggle.unregister()
-    object_ot_box.unregister()
-    object_ot_circle.unregister()
-    object_ot_lasso.unregister()
-    help_ot.unregister()
+
     preferences.unregister()
-    ot_keymap.unregister()
-    tools_utils.reset_active_tool()
-    tools_main.unregister()
-    tools_dummy.unregister()
+    operators.unregister()
+    tools.unregister()
     startup_handlers.unregister()

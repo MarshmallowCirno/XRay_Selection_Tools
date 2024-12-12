@@ -203,20 +203,3 @@ class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
                     draw_tool_selection_mode_keymaps_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
         return {'FINISHED'}
-
-
-classes = (XRAYSEL_OT_show_info_popup,)
-
-
-def register():
-    from bpy.utils import register_class
-
-    for cls in classes:
-        register_class(cls)
-
-
-def unregister():
-    from bpy.utils import unregister_class
-
-    for cls in classes:
-        unregister_class(cls)
