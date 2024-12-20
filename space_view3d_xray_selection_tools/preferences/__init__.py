@@ -1,16 +1,21 @@
-from .properties import XRAYSELPreferences, XRAYSELToolKeymapPG, XRAYSELToolKmiPG, XRAYSELToolMeDirectionProps
-from ..addon_info import get_preferences
-from ..tools.tools_keymap import populate_preferences_keymaps_of_tools
+from . import addon_preferences, properties
+from .. import addon_info
+from ..tools import tools_keymap
 
 
 def populate_preferences_direction_properties():
-    left = get_preferences().me_direction_properties.add()
+    left = addon_info.get_preferences().me_direction_properties.add()
     left.name = "RIGHT_TO_LEFT"
-    left = get_preferences().me_direction_properties.add()
+    left = addon_info.get_preferences().me_direction_properties.add()
     left.name = "LEFT_TO_RIGHT"
 
 
-CLASSES = (XRAYSELToolMeDirectionProps, XRAYSELToolKmiPG, XRAYSELToolKeymapPG, XRAYSELPreferences)
+CLASSES = (
+    properties.XRAYSELToolKmiPG,
+    properties.XRAYSELToolKeymapPG,
+    properties.XRAYSELToolMeDirectionProps,
+    addon_preferences.XRAYSELPreferences,
+)
 
 
 def register():
@@ -19,13 +24,13 @@ def register():
     for cls in CLASSES:
         register_class(cls)
 
-    populate_preferences_keymaps_of_tools()
+    tools_keymap.populate_preferences_keymaps_of_tools()
     populate_preferences_direction_properties()
 
 
 def unregister():
-    get_preferences().me_direction_properties.clear()
-    get_preferences().keymaps_of_tools.clear()
+    addon_info.get_preferences().me_direction_properties.clear()
+    addon_info.get_preferences().keymaps_of_tools.clear()
 
     from bpy.utils import unregister_class
 

@@ -63,8 +63,15 @@ RELOADABLE_MODULES = (
     "tools_dummy",
     "tools_keymap",
     "tools_utils",
-    "preferences",
+    "keymaps_props",
+    "keymap_ui",
+    "mesh_tools_ui",
+    "object_tools_ui",
+    "draw",
+    "keymaps_props",
+    "tools_props",
     "properties",
+    "addon_preferences",
     "startup_handlers",
 )
 
@@ -98,7 +105,9 @@ else:
         from .operators.mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
         from .operators.object_ot import object_ot_box, object_ot_circle, object_ot_lasso
         from .operators import help_ot, ot_keymap
-        from .preferences import properties
+        from .preferences.draw import keymap_ui, mesh_tools_ui, object_tools_ui
+        from .preferences.properties import keymaps_props, tools_props
+        from .preferences import draw, properties, addon_preferences
         from . import types, tools, startup_handlers, preferences
         from .tools import tools_main, tools_dummy, tools_keymap, tools_utils
 

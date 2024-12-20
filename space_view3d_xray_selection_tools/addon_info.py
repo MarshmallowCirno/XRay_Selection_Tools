@@ -4,7 +4,7 @@ import bpy
 
 if TYPE_CHECKING:
     # Only imported for type-checking
-    from .preferences.properties import XRAYSELPreferences
+    from .preferences.addon_preferences import XRAYSELPreferences
 
 
 def get_addon_package() -> str:
