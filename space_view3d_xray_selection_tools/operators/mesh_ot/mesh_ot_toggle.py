@@ -85,10 +85,10 @@ class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, Toggle
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.text = "OFF" if get_preferences().me_select_through else "Select Through"
+        self.text = "OFF" if get_preferences().mesh_tools.select_through else "Select Through"
 
     def execute(self, context):
-        get_preferences().me_select_through = not get_preferences().me_select_through
+        get_preferences().mesh_tools.select_through = not get_preferences().mesh_tools.select_through
         return {'FINISHED'}
 
 
@@ -101,12 +101,12 @@ class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.text = "Default" if get_preferences().me_select_all_edges else "Select All"
+        self.text = "Default" if get_preferences().mesh_tools.select_all_edges else "Select All"
 
     def execute(self, context):
-        _ = get_preferences().me_select_all_edges
-        get_preferences().me_select_all_edges = not _
-        get_preferences().me_select_all_faces = not _
+        _ = get_preferences().mesh_tools.select_all_edges
+        get_preferences().mesh_tools.select_all_edges = not _
+        get_preferences().mesh_tools.select_all_faces = not _
         return {'FINISHED'}
 
 
@@ -119,8 +119,8 @@ class MESH_OT_select_tools_xray_toggle_select_backfacing(bpy.types.Operator, Tog
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.text = "Default" if not get_preferences().me_select_backfacing else "Exclude Backfacing"
+        self.text = "Default" if not get_preferences().mesh_tools.select_backfacing else "Exclude Backfacing"
 
     def execute(self, context):
-        get_preferences().me_select_backfacing = not get_preferences().me_select_backfacing
+        get_preferences().me_select_backfacing = not get_preferences().mesh_tools.select_backfacing
         return {'FINISHED'}

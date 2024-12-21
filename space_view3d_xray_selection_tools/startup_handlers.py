@@ -12,8 +12,8 @@ def activate_tool():
         'CIRCLE': "select_circle_xray",
         'LASSO': "select_lasso_xray",
     }
-    me_tool_to_activate = get_preferences().me_tool_to_activate
-    ob_tool_to_activate = get_preferences().ob_tool_to_activate
+    me_tool_to_activate = get_preferences().mesh_tools.tool_to_activate
+    ob_tool_to_activate = get_preferences().object_tools.tool_to_activate
 
     if me_tool_to_activate != 'NONE':
         set_tool_in_mode('EDIT_MESH', f"mesh_tool.{idname_by_enum[me_tool_to_activate]}")

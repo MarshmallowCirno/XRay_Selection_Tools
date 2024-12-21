@@ -54,7 +54,7 @@ def add_fallback_keymap_items(keymap_dict: dict) -> None:
         rmb_action = get_preferences().rmb_action
 
     kc = bpy.context.window_manager.keyconfigs.addon
-    addon_prefs_keymaps = get_preferences().keymaps_of_tools
+    addon_prefs_keymaps = get_preferences().keymaps.tools_keymaps
 
     if select_mouse == 'RIGHT' and rmb_action == 'FALLBACK_TOOL':
         event_type = 'RIGHTMOUSE'
@@ -103,7 +103,7 @@ def populate_preferences_keymaps_of_tools() -> None:
     """
     Fill preferences keymaps collection property from template.
     """
-    addon_prefs_tool_keymaps = get_preferences().keymaps_of_tools
+    addon_prefs_tool_keymaps = get_preferences().keymaps.tools_keymaps
     default_addon_prefs_keymap_dict = {
         "DEF": {
             "description": "Active Mode",
@@ -184,7 +184,7 @@ def get_tool_keymap_from_preferences(bl_operator: str) -> tuple:
     """
     Get tool keymap items from addon preferences keymap collection property.
     """
-    addon_prefs_tool_keymaps = get_preferences().keymaps_of_tools
+    addon_prefs_tool_keymaps = get_preferences().keymaps.tools_keymaps
     tool = {
         "mesh.select_box_xray": "BOX",
         "object.select_box_xray": "BOX",

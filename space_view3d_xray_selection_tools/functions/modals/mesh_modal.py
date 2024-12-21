@@ -38,31 +38,32 @@ def gather_modifiers(self, context):
 
 
 def set_properties_from_preferences(self, tool):
-    dirs_props = get_preferences().me_direction_properties
+    mesh_tools_props = get_preferences().mesh_tools
+    directions_props = mesh_tools_props.directions_properties
 
     if not self.override_global_props:
         if self.directional:  # for initial shading before direction is determined
-            self.select_through = dirs_props[0].select_through and dirs_props[1].select_through
-            self.show_xray = dirs_props[0].show_xray and dirs_props[1].show_xray and self.select_through
+            self.select_through = directions_props[0].select_through and directions_props[1].select_through
+            self.show_xray = directions_props[0].show_xray and directions_props[1].show_xray and self.select_through
         else:
-            self.select_through = get_preferences().me_select_through
-            self.default_color = get_preferences().me_default_color
-            self.select_through_color = get_preferences().me_select_through_color
-            self.show_xray = get_preferences().me_show_xray
-            self.select_all_edges = get_preferences().me_select_all_edges
-            self.select_all_faces = get_preferences().me_select_all_faces
-            self.select_backfacing = get_preferences().me_select_backfacing
+            self.select_through = mesh_tools_props.select_through
+            self.default_color = mesh_tools_props.default_color
+            self.select_through_color = mesh_tools_props.select_through_color
+            self.show_xray = mesh_tools_props.show_xray
+            self.select_all_edges = mesh_tools_props.select_all_edges
+            self.select_all_faces = mesh_tools_props.select_all_faces
+            self.select_backfacing = mesh_tools_props.select_backfacing
 
-        self.select_through_toggle_key = get_preferences().me_select_through_toggle_key
-        self.select_through_toggle_type = get_preferences().me_select_through_toggle_type
-        self.hide_mirror = get_preferences().me_hide_mirror
-        self.hide_solidify = get_preferences().me_hide_solidify
-        self.hide_gizmo = get_preferences().me_hide_gizmo
+        self.select_through_toggle_key = mesh_tools_props.select_through_toggle_key
+        self.select_through_toggle_type = mesh_tools_props.select_through_toggle_type
+        self.hide_mirror = mesh_tools_props.hide_mirror
+        self.hide_solidify = mesh_tools_props.hide_solidify
+        self.hide_gizmo = mesh_tools_props.hide_gizmo
         match tool:
             case 'BOX':
-                self.show_crosshair = get_preferences().me_show_crosshair
+                self.show_crosshair = mesh_tools_props.show_crosshair
             case 'LASSO':
-                self.show_lasso_icon = get_preferences().me_show_lasso_icon
+                self.show_lasso_icon = mesh_tools_props.show_lasso_icon
 
 
 def initialize_shading_from_properties(self, context):
@@ -72,12 +73,12 @@ def initialize_shading_from_properties(self, context):
     if self.directional:
         # If both directions have prop to show xray turned on
         # enable xray shading for wait for input stage.
-        dir_props = get_preferences().me_direction_properties
+        directions_props = get_preferences().mesh_tools.directions_properties
         if (
-            dir_props[0].select_through
-            and dir_props[1].select_through
-            and dir_props[0].show_xray
-            and dir_props[1].show_xray
+            directions_props[0].select_through
+            and directions_props[1].select_through
+            and directions_props[0].show_xray
+            and directions_props[1].show_xray
         ):
             shading.show_xray = True
             shading.show_xray_wireframe = True
@@ -113,14 +114,14 @@ def initialize_shading_from_properties(self, context):
 
 
 def set_properties_from_direction(self, direction):
-    dir_props = get_preferences().me_direction_properties[direction]
-    self.select_through = dir_props.select_through
-    self.default_color = dir_props.default_color
-    self.select_through_color = dir_props.select_through_color
-    self.show_xray = dir_props.show_xray
-    self.select_all_edges = dir_props.select_all_edges
-    self.select_all_faces = dir_props.select_all_faces
-    self.select_backfacing = dir_props.select_backfacing
+    direction_props = get_preferences().mesh_tools.directions_properties[direction]
+    self.select_through = direction_props.select_through
+    self.default_color = direction_props.default_color
+    self.select_through_color = direction_props.select_through_color
+    self.show_xray = direction_props.show_xray
+    self.select_all_edges = direction_props.select_all_edges
+    self.select_all_faces = direction_props.select_all_faces
+    self.select_backfacing = direction_props.select_backfacing
 
 
 def set_shading_from_properties(self, context):
@@ -229,7 +230,7 @@ def restore_modifiers(self):
 
 
 def get_select_through_toggle_key_list():
-    match get_preferences().me_select_through_toggle_key:
+    match get_preferences().mesh_tools.select_through_toggle_key:
         case 'CTRL':
             return {'LEFT_CTRL', 'RIGHT_CTRL'}
         case 'ALT':

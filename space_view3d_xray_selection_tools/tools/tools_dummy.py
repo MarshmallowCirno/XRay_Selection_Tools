@@ -223,7 +223,7 @@ def register() -> None:
         tool.bl_keymap = lasso_tool_keymap
 
     # Add to the builtin selection tool group
-    if get_preferences().me_group_with_builtins:
+    if get_preferences().mesh_tools.group_with_builtins:
         for tool in box_tools:
             bpy.utils.register_tool(tool, after={"builtin.select_box"})
         for tool in circle_tools:

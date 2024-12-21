@@ -3,7 +3,7 @@ import textwrap
 import bpy
 
 
-def draw_me_select_all_edges_info_popup(self, _):
+def draw_select_all_edges_info_popup(self, _):
     layout = self.layout
     text = (
         "By default, in selection through mode tools select only edges, both vertices of which are inside a "
@@ -16,7 +16,7 @@ def draw_me_select_all_edges_info_popup(self, _):
         col.label(text=n)
 
 
-def draw_me_select_all_faces_info_popup(self, _):
+def draw_select_all_faces_info_popup(self, _):
     layout = self.layout
     text = (
         "By default, in selection through mode tools select only faces whose center dots are inside a selection "
@@ -29,7 +29,7 @@ def draw_me_select_all_faces_info_popup(self, _):
         col.label(text=n)
 
 
-def draw_me_select_backfacing_info_popup(self, _):
+def draw_select_backfacing_info_popup(self, _):
     layout = self.layout
     text = (
         "By default, in selection through mode tools select elements regardless of their normal directions. "
@@ -42,7 +42,7 @@ def draw_me_select_backfacing_info_popup(self, _):
         col.label(text=n)
 
 
-def draw_me_drag_direction_info_popup(self, _):
+def draw_drag_direction_info_popup(self, _):
     layout = self.layout
     text = (
         "For example you can set up selection through for right-to-left drag direction and disable it for "
@@ -54,7 +54,7 @@ def draw_me_drag_direction_info_popup(self, _):
         col.label(text=n)
 
 
-def draw_me_hide_modifiers_info_popup(self, _):
+def draw_hide_modifiers_info_popup(self, _):
     layout = self.layout
     text = (
         "Hide mirror modifier or solidify modifier during selection through and re-enable them after finishing "
@@ -98,7 +98,7 @@ def draw_group_with_builtins_info_popup(self, _):
         col.label(text=n)
 
 
-def draw_ob_select_behavior_info_popup(self, _):
+def draw_select_behavior_info_popup(self, _):
     layout = self.layout
     texts = (
         "• In Origin mode you select only objects with origins within the selection region.",
@@ -118,7 +118,7 @@ def draw_ob_select_behavior_info_popup(self, _):
             col.label(text=n)
 
 
-def draw_tool_keymaps_info_popup(self, _):
+def draw_tools_keymaps_info_popup(self, _):
     layout = self.layout
     texts = (
         "Change, disable or enable shortcuts here. To edit shortcut properties independently of global addon "
@@ -158,29 +158,29 @@ class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
 
     def invoke(self, context, _):
         match self.button:
-            case "me_select_all_edges":
+            case "select_all_edges":
                 context.window_manager.popover(
-                    draw_me_select_all_edges_info_popup, ui_units_x=31, keymap=None, from_active_button=True
+                    draw_select_all_edges_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
-            case "me_select_all_faces":
+            case "select_all_faces":
                 context.window_manager.popover(
-                    draw_me_select_all_faces_info_popup, ui_units_x=31, keymap=None, from_active_button=True
+                    draw_select_all_faces_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
-            case "me_select_backfacing":
+            case "select_backfacing":
                 context.window_manager.popover(
-                    draw_me_select_backfacing_info_popup, ui_units_x=31, keymap=None, from_active_button=True
+                    draw_select_backfacing_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
-            case "me_drag_direction":
+            case "drag_direction":
                 context.window_manager.popover(
-                    draw_me_drag_direction_info_popup, ui_units_x=31, keymap=None, from_active_button=True
+                    draw_drag_direction_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
-            case "me_hide_modifiers":
+            case "hide_modifiers":
                 context.window_manager.popover(
-                    draw_me_hide_modifiers_info_popup, ui_units_x=31, keymap=None, from_active_button=True
+                    draw_hide_modifiers_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
-            case "ob_selection_behavior":
+            case "selection_behavior":
                 context.window_manager.popover(
-                    draw_ob_select_behavior_info_popup, ui_units_x=31, keymap=None, from_active_button=True
+                    draw_select_behavior_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
             case "wait_for_input_cursor":
                 context.window_manager.popover(
@@ -194,9 +194,9 @@ class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
                 context.window_manager.popover(
                     draw_group_with_builtins_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
-            case "tool_keymaps":
+            case "tools_keymaps":
                 context.window_manager.popover(
-                    draw_tool_keymaps_info_popup, ui_units_x=31, keymap=None, from_active_button=True
+                    draw_tools_keymaps_info_popup, ui_units_x=31, keymap=None, from_active_button=True
                 )
             case "tool_selection_mode_keymaps":
                 context.window_manager.popover(

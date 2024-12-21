@@ -334,7 +334,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
         self.stage = None
         self.curr_mode = self.mode
-        self.directional = get_preferences().me_directional_box and not self.override_global_props
+        self.directional = get_preferences().mesh_tools.directional_box_tool and not self.override_global_props
         self.direction = None
 
         self.start_mouse_region_x = 0

@@ -11,20 +11,22 @@ def gather_overlays(context):
 
 
 def set_properties(self, tool):
+    object_tools_props = get_preferences().object_tools
+
     if not self.override_global_props:
-        self.show_xray = get_preferences().ob_show_xray
-        self.xray_toggle_key = get_preferences().ob_xray_toggle_key
-        self.xray_toggle_type = get_preferences().ob_xray_toggle_type
-        self.hide_gizmo = get_preferences().ob_hide_gizmo
+        self.show_xray = object_tools_props.show_xray
+        self.xray_toggle_key = object_tools_props.xray_toggle_key
+        self.xray_toggle_type = object_tools_props.xray_toggle_type
+        self.hide_gizmo = object_tools_props.hide_gizmo
         match tool:
             case 'BOX':
-                self.show_crosshair = get_preferences().ob_show_crosshair
-                self.behavior = self.curr_behavior = get_preferences().ob_box_select_behavior
+                self.show_crosshair = object_tools_props.show_crosshair
+                self.behavior = self.curr_behavior = object_tools_props.box_select_behavior
             case 'CIRCLE':
-                self.behavior = self.curr_behavior = get_preferences().ob_circle_select_behavior
+                self.behavior = self.curr_behavior = object_tools_props.circle_select_behavior
             case 'LASSO':
-                self.show_lasso_icon = get_preferences().ob_show_lasso_icon
-                self.behavior = self.curr_behavior = get_preferences().ob_lasso_select_behavior
+                self.show_lasso_icon = object_tools_props.show_lasso_icon
+                self.behavior = self.curr_behavior = object_tools_props.lasso_select_behavior
 
 
 def sync_properties(self, context):
@@ -57,7 +59,7 @@ def restore_overlays(self, context):
 
 
 def get_xray_toggle_key_list():
-    match get_preferences().ob_xray_toggle_key:
+    match get_preferences().object_tools.xray_toggle_key:
         case 'CTRL':
             return {'LEFT_CTRL', 'RIGHT_CTRL'}
         case 'ALT':

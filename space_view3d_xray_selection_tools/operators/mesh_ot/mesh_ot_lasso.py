@@ -342,7 +342,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         self.path = None
         self.stage = None
         self.curr_mode = self.mode
-        self.directional = get_preferences().me_directional_lasso and not self.override_global_props
+        self.directional = get_preferences().mesh_tools.directional_lasso_tool and not self.override_global_props
         self.direction = None
 
         self.lasso_poly = []

@@ -30,18 +30,18 @@ class ToolSelectBoxXrayMesh(bpy.types.WorkSpaceTool):
 
     # noinspection PyMethodMayBeStatic, PyMethodParameters
     def draw_settings(context, layout, tool):
-        tool_props = tool.operator_properties("mesh.select_box_xray")
-        global_props = get_preferences()
+        cur_tool_props = tool.operator_properties("mesh.select_box_xray")
+        global_tools_props = get_preferences().mesh_tools
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
 
         sub = row.row(align=True)
-        sub.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+        sub.prop(global_tools_props, "select_through", icon='XRAY', toggle=True)
         sub = sub.row(align=True)
-        sub.active = global_props.me_select_through
-        sub.prop(global_props, "me_select_backfacing", icon='NORMALS_FACE', toggle=True)
+        sub.active = global_tools_props.select_through
+        sub.prop(global_tools_props, "select_backfacing", icon='NORMALS_FACE', toggle=True)
 
 
 class ToolSelectBoxXrayObject(bpy.types.WorkSpaceTool):
@@ -58,11 +58,11 @@ class ToolSelectBoxXrayObject(bpy.types.WorkSpaceTool):
 
     # noinspection PyMethodMayBeStatic, PyMethodParameters
     def draw_settings(context, layout, tool):
-        tool_props = tool.operator_properties("object.select_box_xray")
+        cur_tool_props = tool.operator_properties("object.select_box_xray")
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
 
 
 # Circle Tools
@@ -90,20 +90,20 @@ class ToolSelectCircleXrayMesh(bpy.types.WorkSpaceTool):
 
     # noinspection PyMethodMayBeStatic, PyMethodParameters
     def draw_settings(context, layout, tool):
-        tool_props = tool.operator_properties("mesh.select_circle_xray")
-        global_props = get_preferences()
+        cur_tool_props = tool.operator_properties("mesh.select_circle_xray")
+        global_tools_props = get_preferences().mesh_tools
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(global_tools_props, "mode", text="", expand=True, icon_only=True)
 
         sub = row.row(align=True)
-        sub.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+        sub.prop(global_tools_props, "select_through", icon='XRAY', toggle=True)
         sub = sub.row(align=True)
-        sub.active = global_props.me_select_through
-        sub.prop(global_props, "me_select_backfacing", icon='NORMALS_FACE', toggle=True)
+        sub.active = global_tools_props.select_through
+        sub.prop(global_tools_props, "select_backfacing", icon='NORMALS_FACE', toggle=True)
 
-        layout.prop(tool_props, "radius")
+        layout.prop(cur_tool_props, "radius")
 
 
 class ToolSelectCircleXrayObject(bpy.types.WorkSpaceTool):
@@ -128,13 +128,13 @@ class ToolSelectCircleXrayObject(bpy.types.WorkSpaceTool):
 
     # noinspection PyMethodMayBeStatic, PyMethodParameters
     def draw_settings(context, layout, tool):
-        tool_props = tool.operator_properties("object.select_circle_xray")
+        cur_tool_props = tool.operator_properties("object.select_circle_xray")
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
 
-        layout.prop(tool_props, "radius")
+        layout.prop(cur_tool_props, "radius")
 
 
 # Lasso Tools
@@ -154,18 +154,18 @@ class ToolSelectLassoXrayMesh(bpy.types.WorkSpaceTool):
 
     # noinspection PyMethodMayBeStatic, PyMethodParameters
     def draw_settings(context, layout, tool):
-        tool_props = tool.operator_properties("mesh.select_lasso_xray")
-        global_props = get_preferences()
+        cur_tool_props = tool.operator_properties("mesh.select_lasso_xray")
+        global_tools_props = get_preferences().mesh_tools
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
 
         sub = row.row(align=True)
-        sub.prop(global_props, "me_select_through", icon='XRAY', toggle=True)
+        sub.prop(global_tools_props, "select_through", icon='XRAY', toggle=True)
         sub = sub.row(align=True)
-        sub.active = global_props.me_select_through
-        sub.prop(global_props, "me_select_backfacing", icon='NORMALS_FACE', toggle=True)
+        sub.active = global_tools_props.select_through
+        sub.prop(global_tools_props, "select_backfacing", icon='NORMALS_FACE', toggle=True)
 
 
 class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
@@ -182,11 +182,11 @@ class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
 
     # noinspection PyMethodMayBeStatic, PyMethodParameters
     def draw_settings(context, layout, tool):
-        tool_props = tool.operator_properties("object.select_lasso_xray")
+        cur_tool_props = tool.operator_properties("object.select_lasso_xray")
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
 
 
 BOX_TOOLS = (ToolSelectBoxXrayMesh, ToolSelectBoxXrayObject)
@@ -209,7 +209,7 @@ def register() -> None:
         BOX_TOOLS,
         CIRCLE_TOOLS,
         LASSO_TOOLS,
-        (get_preferences().me_group_with_builtins, get_preferences().ob_group_with_builtins),
+        (get_preferences().mesh_tools.group_with_builtins, get_preferences().object_tools.group_with_builtins),
     ):
         # Add to the builtin selection tool group
         if use_builtins:
