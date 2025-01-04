@@ -1,49 +1,19 @@
 import ctypes
+import itertools
+import math
 import time
-from itertools import chain
-from math import hypot
 
+import bgl
 import bpy
 import gpu
-from bgl import (
-    GL_ALWAYS,
-    GL_BLEND,
-    GL_EQUAL,
-    GL_FALSE,
-    GL_INVERT,
-    GL_KEEP,
-    GL_STENCIL_BUFFER_BIT,
-    GL_STENCIL_TEST,
-    GL_TRUE,
-    glClear,
-    glColorMask,
-    glDisable,
-    glEnable,
-    glStencilFunc,
-    glStencilMask,
-    glStencilOp,
-)
-from gpu_extras.batch import batch_for_shader
-from mathutils import geometry, Vector
+import mathutils
+from gpu_extras import batch
 
-from ...addon_info import get_preferences
-from ...functions.geometry_tests import polygon_bbox
-from ...functions.intersections.mesh_intersect import select_mesh_elements
-from ...functions.modals.mesh_modal import (
-    gather_modifiers,
-    gather_overlays,
-    get_select_through_toggle_key_list,
-    initialize_shading_from_properties,
-    restore_modifiers,
-    restore_overlays,
-    set_modifiers_from_properties,
-    set_properties_from_direction,
-    set_properties_from_preferences,
-    set_shading_from_properties,
-    toggle_alt_mode,
-    update_shader_color,
-)
-from ...icon.lasso_cursor import lasso_cursor
+from ... import addon_info
+from ...functions import geometry_tests
+from ...functions.intersections import mesh_intersect
+from ...functions.modals import mesh_modal
+from ...icon import lasso_cursor
 
 
 # noinspection PyTypeChecker
@@ -342,7 +312,9 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         self.path = None
         self.stage = None
         self.curr_mode = self.mode
-        self.directional = get_preferences().mesh_tools.directional_lasso_tool and not self.override_global_props
+        self.directional = (
+            addon_info.get_preferences().mesh_tools.directional_lasso_tool and not self.override_global_props
+        )
         self.direction = None
 
         self.lasso_poly = []
@@ -362,7 +334,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         self.override_intersect_tests = False
 
         self.invert_select_through = False
-        self.select_through_toggle_key_list = get_select_through_toggle_key_list()
+        self.select_through_toggle_key_list = mesh_modal.get_select_through_toggle_key_list()
 
         self.handler = None
         self.icon_batch = None
@@ -373,7 +345,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
     def invoke(self, context, event):
         # Set operator properties from addon preferences.
-        set_properties_from_preferences(self, tool='LASSO')
+        mesh_modal.set_properties_from_preferences(self, tool='LASSO')
 
         self.override_intersect_tests = (
             self.select_all_faces
@@ -398,12 +370,12 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             or self.override_intersect_tests
         )
 
-        self.init_mods = gather_modifiers(self, context)  # save initial modifier states
-        self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
+        self.init_mods = mesh_modal.gather_modifiers(self, context)  # save initial modifier states
+        self.init_overlays = mesh_modal.gather_overlays(context)  # save initial x-ray overlay states
 
         # Set x-ray overlays and modifiers.
-        initialize_shading_from_properties(self, context)
-        set_modifiers_from_properties(self)
+        mesh_modal.initialize_shading_from_properties(self, context)
+        mesh_modal.set_modifiers_from_properties(self)
 
         context.window_manager.modal_handler_add(self)
 
@@ -431,13 +403,13 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                     and self.select_through_toggle_type == 'PRESS'
                 ):
                     self.invert_select_through = not self.invert_select_through
-                    set_shading_from_properties(self, context)
-                    update_shader_color(self, context)
+                    mesh_modal.set_shading_from_properties(self, context)
+                    mesh_modal.update_shader_color(self, context)
 
             # Finish stage.
             if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
                 self.finish_custom_wait_for_input_stage(context)
-                toggle_alt_mode(self, event)
+                mesh_modal.toggle_alt_mode(self, event)
                 if self.override_selection:
                     self.begin_custom_selection_stage(context, event)
                 else:
@@ -448,7 +420,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                 # To simplify path and improve performance
                 # only append points with enough distance between them.
                 if (
-                    hypot(
+                    math.hypot(
                         event.mouse_region_x - self.last_mouse_region_x, event.mouse_region_y - self.last_mouse_region_y
                     )
                     > 10
@@ -458,7 +430,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                         {"name": "", "loc": (event.mouse_region_x, event.mouse_region_y), "time": time.time()}
                     )
                     self.lasso_poly.append((event.mouse_region_x, event.mouse_region_y))
-                    self.lasso_xmin, self.lasso_xmax, self.lasso_ymin, self.lasso_ymax = polygon_bbox(
+                    self.lasso_xmin, self.lasso_xmax, self.lasso_ymin, self.lasso_ymax = geometry_tests.polygon_bbox(
                         tuple(self.lasso_poly)
                     )
                     self.update_direction_and_properties(context)
@@ -473,8 +445,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                     and self.select_through_toggle_type == 'PRESS'
                 ):
                     self.invert_select_through = not self.invert_select_through
-                    set_shading_from_properties(self, context)
-                    update_shader_color(self, context)
+                    mesh_modal.set_shading_from_properties(self, context)
+                    mesh_modal.update_shader_color(self, context)
 
             # Finish stage.
             if event.value == 'RELEASE' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
@@ -574,7 +546,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         bpy.ops.view3d.select_lasso(path=self.path, mode=self.curr_mode)
 
     def begin_custom_intersect_tests(self, context):
-        select_mesh_elements(
+        mesh_intersect.select_mesh_elements(
             context,
             mode=self.curr_mode,
             tool='LASSO',
@@ -585,8 +557,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         )
 
     def finish_modal(self, context):
-        restore_overlays(self, context)
-        restore_modifiers(self)
+        mesh_modal.restore_overlays(self, context)
+        mesh_modal.restore_modifiers(self)
 
     def update_direction_and_properties(self, context):
         start_x = self.lasso_poly[0][0]
@@ -598,7 +570,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
             if direction != self.direction:
                 self.direction = direction
-                set_properties_from_direction(self, self.direction)
+                mesh_modal.set_properties_from_direction(self, self.direction)
                 self.override_intersect_tests = (
                     self.select_all_faces
                     and context.tool_settings.mesh_select_mode[2]
@@ -609,7 +581,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
                     and self.select_through
                     and not self.show_xray
                 )
-                set_shading_from_properties(self, context)
+                mesh_modal.set_shading_from_properties(self, context)
 
     def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
@@ -620,13 +592,13 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         context.region.tag_redraw()
 
     def build_icon_shader(self):
-        vertices = lasso_cursor
+        vertices = lasso_cursor.lasso_cursor
 
         lengths = [0]
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        self.icon_batch = batch_for_shader(ICON_SHADER, 'LINES', {"pos": vertices})
+        self.icon_batch = batch.batch_for_shader(ICON_SHADER, 'LINES', {"pos": vertices})
 
     def draw_icon_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -655,8 +627,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
     def draw_lasso_shader_bgl(self, context):
         # Create batches.
-        vertices = [Vector(v) for v in self.lasso_poly]
-        vertices.append(Vector(self.lasso_poly[0]))
+        vertices = [mathutils.Vector(v) for v in self.lasso_poly]
+        vertices.append(mathutils.Vector(self.lasso_poly[0]))
 
         lengths = [0]
         for a, b in zip(vertices[:-1], vertices[1:]):
@@ -669,9 +641,9 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             (self.lasso_xmax, self.lasso_ymax),
         )
 
-        border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
-        fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
-        stencil_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": bbox_vertices})
+        border_batch = batch.batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        fill_batch = batch.batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
+        stencil_batch = batch.batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": bbox_vertices})
 
         matrix = gpu.matrix.get_projection_matrix()
         if (
@@ -698,12 +670,12 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
         # Stencil mask.
         # https://stackoverflow.com/a/25468363/5106051
-        glClear(GL_STENCIL_BUFFER_BIT)
-        glEnable(GL_STENCIL_TEST)
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE)
-        glStencilFunc(GL_ALWAYS, 0, 1)
-        glStencilOp(GL_KEEP, GL_KEEP, GL_INVERT)
-        glStencilMask(1)
+        bgl.glClear(bgl.GL_STENCIL_BUFFER_BIT)
+        bgl.glEnable(bgl.GL_STENCIL_TEST)
+        bgl.glColorMask(bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE)
+        bgl.glStencilFunc(bgl.GL_ALWAYS, 0, 1)
+        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_INVERT)
+        bgl.glStencilMask(1)
 
         FILL_SHADER.bind()
         FILL_SHADER.uniform_block("ub", self.UBO)
@@ -711,16 +683,16 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         fill_batch.draw(FILL_SHADER)
 
         if context.space_data.shading.type in {'MATERIAL', 'RENDERED'}:
-            glStencilFunc(GL_EQUAL, 0, 1)
+            bgl.glStencilFunc(bgl.GL_EQUAL, 0, 1)
         else:
-            glStencilFunc(GL_EQUAL, 1, 1)
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP)
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE)
+            bgl.glStencilFunc(bgl.GL_EQUAL, 1, 1)
+        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_KEEP)
+        bgl.glColorMask(bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE)
 
         # Fill.
-        glEnable(GL_BLEND)
+        bgl.glEnable(bgl.GL_BLEND)
         stencil_batch.draw(FILL_SHADER)
-        glDisable(GL_BLEND)
+        bgl.glDisable(bgl.GL_BLEND)
 
         # Border.
         if not dashed:
@@ -739,13 +711,13 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             self.UBO_data.u_SegmentColor = segment_color
             self.update_ubo()
 
-            glDisable(GL_STENCIL_TEST)
+            bgl.glDisable(bgl.GL_STENCIL_TEST)
             BORDER_SHADER.uniform_block("ub", self.UBO)
             border_batch.draw(BORDER_SHADER)
 
         else:
             # Dashed border.
-            glDisable(GL_STENCIL_TEST)
+            bgl.glDisable(bgl.GL_STENCIL_TEST)
             BORDER_SHADER.bind()
             BORDER_SHADER.uniform_block("ub", self.UBO)
             BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
@@ -753,18 +725,18 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
     def draw_lasso_shader(self):
         # Create batches.
-        vertices = [Vector(v) for v in self.lasso_poly]
-        vertices.append(Vector(self.lasso_poly[0]))
+        vertices = [mathutils.Vector(v) for v in self.lasso_poly]
+        vertices.append(mathutils.Vector(self.lasso_poly[0]))
 
-        indices = geometry.tessellate_polygon((self.lasso_poly,))
-        triangles = [self.lasso_poly[i] for i in chain.from_iterable(indices)]
+        indices = mathutils.geometry.tessellate_polygon((self.lasso_poly,))
+        triangles = [self.lasso_poly[i] for i in itertools.chain.from_iterable(indices)]
 
         lengths = [0]
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        fill_batch = batch_for_shader(FILL_SHADER, 'TRIS', {"pos": triangles})
-        border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        fill_batch = batch.batch_for_shader(FILL_SHADER, 'TRIS', {"pos": triangles})
+        border_batch = batch.batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         matrix = gpu.matrix.get_projection_matrix()
         if (

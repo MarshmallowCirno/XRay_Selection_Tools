@@ -2,22 +2,8 @@ from itertools import compress
 
 import numpy as np
 
-from .object_intersect_shared import (
-    do_selection,
-    get_edge_vert_co_2d,
-    get_face_vert_co_2d,
-    get_ob_2dbboxes,
-    get_ob_loc_co_2d,
-    get_vert_co_2d,
-    partition,
-)
-from ...geometry_tests import (
-    point_inside_polygons_prefiltered,
-    point_inside_rectangles,
-    points_inside_circle,
-    segments_intersect_circle,
-    segments_intersect_circle_prefiltered,
-)
+from ... import geometry_tests
+from . import object_intersect_shared
 
 
 def get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, center, radius, check_faces=False):
@@ -27,22 +13,24 @@ def get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d,
     for ob in list_of_obs_to_check:
         ob_eval = ob.evaluated_get(depsgraph)
         me = ob_eval.to_mesh(preserve_all_data_layers=False, depsgraph=None)
-        vert_co_2d = get_vert_co_2d(me, ob_eval, region, rv3d)
-        verts_mask_in_selcircle = points_inside_circle(vert_co_2d, center, radius)
+        vert_co_2d = object_intersect_shared.get_vert_co_2d(me, ob_eval, region, rv3d)
+        verts_mask_in_selcircle = geometry_tests.points_inside_circle(vert_co_2d, center, radius)
         if np.any(verts_mask_in_selcircle):
             bool_list.append(True)
         else:
-            edge_vert_co_2d = get_edge_vert_co_2d(me, vert_co_2d)
-            edges_mask_isect_selcircle = segments_intersect_circle_prefiltered(edge_vert_co_2d, center, radius)
+            edge_vert_co_2d = object_intersect_shared.get_edge_vert_co_2d(me, vert_co_2d)
+            edges_mask_isect_selcircle = geometry_tests.segments_intersect_circle_prefiltered(
+                edge_vert_co_2d, center, radius
+            )
             if np.any(edges_mask_isect_selcircle):
                 bool_list.append(True)
             else:
                 if check_faces:
-                    face_vert_co_2d, face_cell_starts, face_cell_ends, face_loop_totals = get_face_vert_co_2d(
-                        me, vert_co_2d
+                    face_vert_co_2d, face_cell_starts, face_cell_ends, face_loop_totals = (
+                        object_intersect_shared.get_face_vert_co_2d(me, vert_co_2d)
                     )
                     if face_loop_totals.size > 0:
-                        faces_mask_cursor_in = point_inside_polygons_prefiltered(
+                        faces_mask_cursor_in = geometry_tests.point_inside_polygons_prefiltered(
                             center, face_vert_co_2d, face_cell_starts, face_loop_totals
                         )
                         bool_list.append(np.any(faces_mask_cursor_in))
@@ -63,8 +51,8 @@ def get_obs_mask_in_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, cent
     for ob in list_of_obs_to_check:
         ob_eval = ob.evaluated_get(depsgraph)
         me = ob_eval.to_mesh(preserve_all_data_layers=False, depsgraph=None)
-        vert_co_2d = get_vert_co_2d(me, ob_eval, region, rv3d)
-        verts_mask_in_selcircle = points_inside_circle(vert_co_2d, center, radius)
+        vert_co_2d = object_intersect_shared.get_vert_co_2d(me, ob_eval, region, rv3d)
+        verts_mask_in_selcircle = geometry_tests.points_inside_circle(vert_co_2d, center, radius)
         if np.all(verts_mask_in_selcircle):
             bool_list.append(True)
         else:
@@ -81,7 +69,9 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
     depsgraph = context.evaluated_depsgraph_get()
 
     selectable_obs = context.selectable_objects
-    mesh_obs, nonmesh_obs = partition(selectable_obs, lambda o: o.type in {'MESH', 'CURVE', 'FONT'})
+    mesh_obs, nonmesh_obs = object_intersect_shared.partition(
+        selectable_obs, lambda o: o.type in {'MESH', 'CURVE', 'FONT'}
+    )
     mesh_ob_count = len(mesh_obs)
 
     # Get coordinates of 2d bounding boxes of objects.
@@ -93,21 +83,23 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
         ob_2dbbox_points,
         ob_2dbbox_segments,
         obs_mask_2dbbox_entire_clip,
-    ) = get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d)
+    ) = object_intersect_shared.get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d)
 
     # Check for bounding boxes intersections with selection circle.
     # Speed up finding overlaps or intersections by doing polygon tests on bounding boxes.
 
     # Ob bbox intersects selection circle.
-    segment_bools = segments_intersect_circle(ob_2dbbox_segments, center, radius).reshape((mesh_ob_count, 4))
+    segment_bools = geometry_tests.segments_intersect_circle(ob_2dbbox_segments, center, radius).reshape(
+        (mesh_ob_count, 4)
+    )
     obs_mask_2dbbox_isect_selcircle = np.any(segment_bools, axis=1)
 
     # Ob bbox entirely inside selection circle.
-    point_bools = points_inside_circle(ob_2dbbox_points, center, radius).reshape((mesh_ob_count, 4))
+    point_bools = geometry_tests.points_inside_circle(ob_2dbbox_points, center, radius).reshape((mesh_ob_count, 4))
     obs_mask_2dbbox_entire_in_selcircle = np.all(point_bools, axis=1)
 
     # Cursor is inside ob bbox.
-    obs_mask_cursor_in_2dbbox = point_inside_rectangles(
+    obs_mask_cursor_in_2dbbox = geometry_tests.point_inside_rectangles(
         center, ob_2dbbox_xmin, ob_2dbbox_xmax, ob_2dbbox_ymin, ob_2dbbox_ymax
     )
 
@@ -124,7 +116,7 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
         mesh_obs_mask_in_selcircle[obs_mask_check_faces] = get_obs_mask_overlap_selcircle(
             mesh_obs, obs_mask_check_faces, depsgraph, region, rv3d, center, radius, check_faces=True
         )
-        do_selection(mesh_obs_mask_in_selcircle, mesh_obs, mode)
+        object_intersect_shared.do_selection(mesh_obs_mask_in_selcircle, mesh_obs, mode)
 
     else:
         obs_mask_check = (
@@ -135,8 +127,8 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
         mesh_obs_mask_in_selcircle[obs_mask_check] = get_obs_mask_in_selcircle(
             mesh_obs, obs_mask_check, depsgraph, region, rv3d, center, radius
         )
-        do_selection(mesh_obs_mask_in_selcircle, mesh_obs, mode)
+        object_intersect_shared.do_selection(mesh_obs_mask_in_selcircle, mesh_obs, mode)
 
-    nonmesh_obs_co_2d = get_ob_loc_co_2d(nonmesh_obs, region, rv3d)
-    nonmesh_obs_mask_in_selcircle = points_inside_circle(nonmesh_obs_co_2d, center, radius)
-    do_selection(nonmesh_obs_mask_in_selcircle, nonmesh_obs, mode)
+    nonmesh_obs_co_2d = object_intersect_shared.get_ob_loc_co_2d(nonmesh_obs, region, rv3d)
+    nonmesh_obs_mask_in_selcircle = geometry_tests.points_inside_circle(nonmesh_obs_co_2d, center, radius)
+    object_intersect_shared.do_selection(nonmesh_obs_mask_in_selcircle, nonmesh_obs, mode)

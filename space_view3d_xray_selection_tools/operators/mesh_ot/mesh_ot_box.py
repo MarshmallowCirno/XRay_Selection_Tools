@@ -2,24 +2,11 @@ import ctypes
 
 import bpy
 import gpu
-from gpu_extras.batch import batch_for_shader
+from gpu_extras import batch
 
-from ...addon_info import get_preferences
-from ...functions.intersections.mesh_intersect import select_mesh_elements
-from ...functions.modals.mesh_modal import (
-    gather_modifiers,
-    gather_overlays,
-    get_select_through_toggle_key_list,
-    initialize_shading_from_properties,
-    restore_modifiers,
-    restore_overlays,
-    set_modifiers_from_properties,
-    set_properties_from_direction,
-    set_properties_from_preferences,
-    set_shading_from_properties,
-    toggle_alt_mode,
-    update_shader_color,
-)
+from ... import addon_info
+from ...functions.intersections import mesh_intersect
+from ...functions.modals import mesh_modal
 
 
 # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
@@ -334,7 +321,9 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
         self.stage = None
         self.curr_mode = self.mode
-        self.directional = get_preferences().mesh_tools.directional_box_tool and not self.override_global_props
+        self.directional = (
+            addon_info.get_preferences().mesh_tools.directional_box_tool and not self.override_global_props
+        )
         self.direction = None
 
         self.start_mouse_region_x = 0
@@ -350,7 +339,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.override_intersect_tests = False
 
         self.invert_select_through = False
-        self.select_through_toggle_key_list = get_select_through_toggle_key_list()
+        self.select_through_toggle_key_list = mesh_modal.get_select_through_toggle_key_list()
 
         self.handler = None
         self.crosshair_batch = None
@@ -363,7 +352,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
     def invoke(self, context, event):
         # Set operator properties from addon preferences.
-        set_properties_from_preferences(self, tool='BOX')
+        mesh_modal.set_properties_from_preferences(self, tool='BOX')
 
         self.override_intersect_tests = (
             self.select_all_faces
@@ -390,12 +379,12 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
         self.override_wait_for_input = not self.show_crosshair or self.override_selection
 
-        self.init_mods = gather_modifiers(self, context)  # save initial modifier states
-        self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
+        self.init_mods = mesh_modal.gather_modifiers(self, context)  # save initial modifier states
+        self.init_overlays = mesh_modal.gather_overlays(context)  # save initial x-ray overlay states
 
         # Set x-ray overlays and modifiers.
-        initialize_shading_from_properties(self, context)
-        set_modifiers_from_properties(self)
+        mesh_modal.initialize_shading_from_properties(self, context)
+        mesh_modal.set_modifiers_from_properties(self)
 
         context.window_manager.modal_handler_add(self)
 
@@ -424,13 +413,13 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                     and self.select_through_toggle_type == 'PRESS'
                 ):
                     self.invert_select_through = not self.invert_select_through
-                    set_shading_from_properties(self, context)
-                    update_shader_color(self, context)
+                    mesh_modal.set_shading_from_properties(self, context)
+                    mesh_modal.update_shader_color(self, context)
 
             # Finish stage.
             if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
                 self.finish_custom_wait_for_input_stage(context)
-                toggle_alt_mode(self, event)
+                mesh_modal.toggle_alt_mode(self, event)
                 if self.override_selection:
                     self.begin_custom_selection_stage(context, event)
                 else:
@@ -451,8 +440,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                     and self.select_through_toggle_type == 'PRESS'
                 ):
                     self.invert_select_through = not self.invert_select_through
-                    set_shading_from_properties(self, context)
-                    update_shader_color(self, context)
+                    mesh_modal.set_shading_from_properties(self, context)
+                    mesh_modal.update_shader_color(self, context)
 
             # Finish stage.
             if event.value == 'RELEASE' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
@@ -555,7 +544,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         ymax = max(self.start_mouse_region_y, self.last_mouse_region_y)
 
         # Do selection.
-        select_mesh_elements(
+        mesh_intersect.select_mesh_elements(
             context,
             mode=self.curr_mode,
             tool='BOX',
@@ -566,8 +555,8 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         )
 
     def finish_modal(self, context):
-        restore_overlays(self, context)
-        restore_modifiers(self)
+        mesh_modal.restore_overlays(self, context)
+        mesh_modal.restore_modifiers(self)
 
     def update_direction_and_properties(self, context):
         if self.directional and self.last_mouse_region_x != self.start_mouse_region_x:
@@ -578,7 +567,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
             if direction != self.direction:
                 self.direction = direction
-                set_properties_from_direction(self, self.direction)
+                mesh_modal.set_properties_from_direction(self, self.direction)
                 self.override_intersect_tests = (
                     self.select_all_faces
                     and context.tool_settings.mesh_select_mode[2]
@@ -589,7 +578,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                     and self.select_through
                     and not self.show_xray
                 )
-                set_shading_from_properties(self, context)
+                mesh_modal.set_shading_from_properties(self, context)
 
     def update_ubo(self):
         self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
@@ -604,7 +593,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         height = context.region.height
         vertices = ((0, -height), (0, height), (-width, 0), (width, 0))
         lengths = (0, 2 * height, 0, 2 * width)
-        self.crosshair_batch = batch_for_shader(CROSSHAIR_SHADER, 'LINES', {"pos": vertices, "len": lengths})
+        self.crosshair_batch = batch.batch_for_shader(CROSSHAIR_SHADER, 'LINES', {"pos": vertices, "len": lengths})
 
     def draw_crosshair_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -635,10 +624,10 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def build_box_shader(self):
         vertices = ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0))
         lengths = ((0, 0), (1, 0), (1, 1), (2, 1), (2, 2))
-        self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch.batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         vertices = ((0, 0), (1, 0), (0, 1), (1, 1))
-        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_STRIP', {"pos": vertices})
+        self.fill_batch = batch.batch_for_shader(FILL_SHADER, 'TRI_STRIP', {"pos": vertices})
 
     def draw_box_shader(self):
         matrix = gpu.matrix.get_projection_matrix()

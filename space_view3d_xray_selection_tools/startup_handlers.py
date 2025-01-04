@@ -1,8 +1,7 @@
 import bpy
-from bpy.app.handlers import persistent
 
-from .addon_info import get_preferences
-from .tools.tools_utils import set_tool_in_mode
+from . import addon_info
+from .tools import tools_utils
 
 
 def activate_tool():
@@ -12,13 +11,13 @@ def activate_tool():
         'CIRCLE': "select_circle_xray",
         'LASSO': "select_lasso_xray",
     }
-    me_tool_to_activate = get_preferences().mesh_tools.tool_to_activate
-    ob_tool_to_activate = get_preferences().object_tools.tool_to_activate
+    me_tool_to_activate = addon_info.get_preferences().mesh_tools.tool_to_activate
+    ob_tool_to_activate = addon_info.get_preferences().object_tools.tool_to_activate
 
     if me_tool_to_activate != 'NONE':
-        set_tool_in_mode('EDIT_MESH', f"mesh_tool.{idname_by_enum[me_tool_to_activate]}")
+        tools_utils.set_tool_in_mode('EDIT_MESH', f"mesh_tool.{idname_by_enum[me_tool_to_activate]}")
     if ob_tool_to_activate != 'NONE':
-        set_tool_in_mode('OBJECT', f"object_tool.{idname_by_enum[ob_tool_to_activate]}")
+        tools_utils.set_tool_in_mode('OBJECT', f"object_tool.{idname_by_enum[ob_tool_to_activate]}")
 
     if me_tool_to_activate != 'NONE' or ob_tool_to_activate != 'NONE':
         for workspace in bpy.data.workspaces:
@@ -35,7 +34,7 @@ def activate_tool_on_startup(_):
     activate_tool()
 
 
-@persistent
+@bpy.app.handlers.persistent
 def activate_tool_on_file_load(_):
     activate_tool()
 

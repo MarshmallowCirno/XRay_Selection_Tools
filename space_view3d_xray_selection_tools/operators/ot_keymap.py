@@ -1,6 +1,6 @@
 import bpy
 
-from ..addon_info import get_preferences
+from .. import addon_info
 
 me_keyboard_keymap = []
 me_mouse_keymap = []
@@ -151,50 +151,50 @@ def unregister_toggles_keymap():
 
 
 def toggle_me_keyboard_keymap(self, context):
-    if get_preferences().keymaps.is_mesh_keyboard_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_mesh_keyboard_keymap_enabled:
         register_me_keyboard_keymap()
     else:
         unregister_me_keyboard_keymap()
 
 
 def toggle_me_mouse_keymap(self, context):
-    if get_preferences().keymaps.is_mesh_mouse_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_mesh_mouse_keymap_enabled:
         register_me_mouse_keymap()
     else:
         unregister_me_mouse_keymap()
 
 
 def toggle_ob_keyboard_keymap(self, context):
-    if get_preferences().keymaps.is_object_keyboard_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_object_keyboard_keymap_enabled:
         register_ob_keyboard_keymap()
     else:
         unregister_ob_keyboard_keymap()
 
 
 def toggle_ob_mouse_keymap(self, context):
-    if get_preferences().keymaps.is_object_mouse_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_object_mouse_keymap_enabled:
         register_ob_mouse_keymap()
     else:
         unregister_ob_mouse_keymap()
 
 
 def toggle_toggles_keymap(self, context):
-    if get_preferences().keymaps.is_toggles_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_toggles_keymap_enabled:
         register_toggles_keymap()
     else:
         unregister_toggles_keymap()
 
 
 def register():
-    if get_preferences().keymaps.is_mesh_mouse_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_mesh_mouse_keymap_enabled:
         register_me_mouse_keymap()
-    if get_preferences().keymaps.is_mesh_keyboard_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_mesh_keyboard_keymap_enabled:
         register_me_keyboard_keymap()
-    if get_preferences().keymaps.is_object_mouse_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_object_mouse_keymap_enabled:
         register_ob_mouse_keymap()
-    if get_preferences().keymaps.is_object_keyboard_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_object_keyboard_keymap_enabled:
         register_ob_keyboard_keymap()
-    if get_preferences().keymaps.is_toggles_keymap_enabled:
+    if addon_info.get_preferences().keymaps.is_toggles_keymap_enabled:
         register_toggles_keymap()
 
 

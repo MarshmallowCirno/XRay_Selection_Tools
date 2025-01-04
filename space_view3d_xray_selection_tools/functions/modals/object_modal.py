@@ -1,4 +1,4 @@
-from ...addon_info import get_preferences
+from ... import addon_info
 
 
 def gather_overlays(context):
@@ -11,7 +11,7 @@ def gather_overlays(context):
 
 
 def set_properties(self, tool):
-    object_tools_props = get_preferences().object_tools
+    object_tools_props = addon_info.get_preferences().object_tools
 
     if not self.override_global_props:
         self.show_xray = object_tools_props.show_xray
@@ -59,7 +59,7 @@ def restore_overlays(self, context):
 
 
 def get_xray_toggle_key_list():
-    match get_preferences().object_tools.xray_toggle_key:
+    match addon_info.get_preferences().object_tools.xray_toggle_key:
         case 'CTRL':
             return {'LEFT_CTRL', 'RIGHT_CTRL'}
         case 'ALT':

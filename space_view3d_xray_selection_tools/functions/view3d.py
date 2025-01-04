@@ -1,11 +1,11 @@
 import bpy
+import mathutils
 import numpy as np
-from mathutils import Matrix
 
 from ..types import Bool1DArray, Float2DArray, Float3DArray, Float4x4DArray, FloatNx3DArray
 
 
-def transform_local_to_world_co(mat_world: Matrix, co_local: Float3DArray) -> Float3DArray:
+def transform_local_to_world_co(mat_world: mathutils.Matrix, co_local: Float3DArray) -> Float3DArray:
     """
     Transform local coordinates to global/world coordinates using the world space transformation matrix.
 

@@ -1,6 +1,6 @@
 import bpy
 
-from ...addon_info import get_preferences
+from ... import addon_info
 
 
 def gather_overlays(context):
@@ -38,7 +38,7 @@ def gather_modifiers(self, context):
 
 
 def set_properties_from_preferences(self, tool):
-    mesh_tools_props = get_preferences().mesh_tools
+    mesh_tools_props = addon_info.get_preferences().mesh_tools
     directions_props = mesh_tools_props.directions_properties
 
     if not self.override_global_props:
@@ -73,7 +73,7 @@ def initialize_shading_from_properties(self, context):
     if self.directional:
         # If both directions have prop to show xray turned on
         # enable xray shading for wait for input stage.
-        directions_props = get_preferences().mesh_tools.directions_properties
+        directions_props = addon_info.get_preferences().mesh_tools.directions_properties
         if (
             directions_props[0].select_through
             and directions_props[1].select_through
@@ -114,7 +114,7 @@ def initialize_shading_from_properties(self, context):
 
 
 def set_properties_from_direction(self, direction):
-    direction_props = get_preferences().mesh_tools.directions_properties[direction]
+    direction_props = addon_info.get_preferences().mesh_tools.directions_properties[direction]
     self.select_through = direction_props.select_through
     self.default_color = direction_props.default_color
     self.select_through_color = direction_props.select_through_color
@@ -230,7 +230,7 @@ def restore_modifiers(self):
 
 
 def get_select_through_toggle_key_list():
-    match get_preferences().mesh_tools.select_through_toggle_key:
+    match addon_info.get_preferences().mesh_tools.select_through_toggle_key:
         case 'CTRL':
             return {'LEFT_CTRL', 'RIGHT_CTRL'}
         case 'ALT':

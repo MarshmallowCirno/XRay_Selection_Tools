@@ -1,10 +1,10 @@
-from pathlib import Path
+import pathlib
 
 import bpy
-from bl_ui.space_toolsystem_common import activate_by_id, ToolDef, ToolSelectPanelHelper
+from bl_ui import space_toolsystem_common
 
 # Constants
-ICON_PATH = Path(__file__).parent.parent / "icon"
+ICON_PATH = pathlib.Path(__file__).parent.parent / "icon"
 EDIT_GPENCIL = 'EDIT_GREASE_PENCIL' if bpy.app.version >= (4, 3, 0) else 'EDIT_GPENCIL'
 EDIT_MODES = [
     'EDIT_MESH',
@@ -23,13 +23,15 @@ def fix_ordering(bl_context_mode: str) -> None:
     For some reason addon tool group is placed after cursor tool. So swap them.
     """
     # noinspection PyProtectedMember, PyUnresolvedReferences
-    cls = ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
+    cls = space_toolsystem_common.ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
     tools = cls._tools[bl_context_mode]
 
     has_enough_tools = len(tools) >= 2
-    item1_is_tool = isinstance(tools[1], ToolDef) and tools[1].idname == "builtin.cursor"
+    item1_is_tool = isinstance(tools[1], space_toolsystem_common.ToolDef) and tools[1].idname == "builtin.cursor"
     item2_is_group = hasattr(tools[2], '__len__') and len(tools[2]) >= 1
-    item2_subitem_is_tool = isinstance(tools[2][0], ToolDef) and tools[2][0].idname.endswith("_box_xray")
+    item2_subitem_is_tool = isinstance(tools[2][0], space_toolsystem_common.ToolDef) and tools[2][0].idname.endswith(
+        "_box_xray"
+    )
 
     if has_enough_tools and item1_is_tool and item2_is_group and item2_subitem_is_tool:
         tools[1], tools[2] = tools[2], tools[1]
@@ -44,12 +46,11 @@ def reset_active_tool() -> None:
 
     # Fallback.
     # noinspection PyProtectedMember, PyUnresolvedReferences
-    cls = ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
+    cls = space_toolsystem_common.ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
     cls._tool_group_active = {"bultin.select": 1}
 
 
 def set_tool_in_mode(mode, idname) -> None:
-
     def _make_func_dict(d=None, **kwargs):
         if d is None:
             d = {}
@@ -71,4 +72,4 @@ def set_tool_in_mode(mode, idname) -> None:
 
         context_override = {"workspace": workspace, "mode": mode}
         context_override = _make_func_dict(context_override)
-        activate_by_id(context_override, space_type='VIEW_3D', idname=idname, as_fallback=False)
+        space_toolsystem_common.activate_by_id(context_override, space_type='VIEW_3D', idname=idname, as_fallback=False)

@@ -2,24 +2,12 @@ import ctypes
 
 import bpy
 import gpu
+import mathutils
 import numpy as np
-from gpu_extras.batch import batch_for_shader
-from mathutils import Vector
+from gpu_extras import batch
 
-from ...functions.intersections.mesh_intersect import select_mesh_elements
-from ...functions.modals.mesh_modal import (
-    gather_modifiers,
-    gather_overlays,
-    get_select_through_toggle_key_list,
-    initialize_shading_from_properties,
-    restore_modifiers,
-    restore_overlays,
-    set_modifiers_from_properties,
-    set_properties_from_preferences,
-    set_shading_from_properties,
-    toggle_alt_mode,
-    update_shader_color,
-)
+from ...functions.intersections import mesh_intersect
+from ...functions.modals import mesh_modal
 
 
 # noinspection PyTypeChecker
@@ -297,7 +285,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.override_intersect_tests = False
 
         self.invert_select_through = False
-        self.select_through_toggle_key_list = get_select_through_toggle_key_list()
+        self.select_through_toggle_key_list = mesh_modal.get_select_through_toggle_key_list()
 
         self.handler = None
         self.border_batch = None
@@ -310,7 +298,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
     def invoke(self, context, event):
         # Set operator properties from addon preferences.
-        set_properties_from_preferences(self, tool='CIRCLE')
+        mesh_modal.set_properties_from_preferences(self, tool='CIRCLE')
 
         self.override_intersect_tests = (
             self.select_all_faces
@@ -334,12 +322,12 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             or self.override_intersect_tests
         )
 
-        self.init_mods = gather_modifiers(self, context)  # save initial modifier states
-        self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
+        self.init_mods = mesh_modal.gather_modifiers(self, context)  # save initial modifier states
+        self.init_overlays = mesh_modal.gather_overlays(context)  # save initial x-ray overlay states
 
         # Set x-ray overlays and modifiers.
-        initialize_shading_from_properties(self, context)
-        set_modifiers_from_properties(self)
+        mesh_modal.initialize_shading_from_properties(self, context)
+        mesh_modal.set_modifiers_from_properties(self)
 
         context.window_manager.modal_handler_add(self)
 
@@ -369,8 +357,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                     and self.select_through_toggle_type == 'PRESS'
                 ):
                     self.invert_select_through = not self.invert_select_through
-                    set_shading_from_properties(self, context)
-                    update_shader_color(self, context)
+                    mesh_modal.set_shading_from_properties(self, context)
+                    mesh_modal.update_shader_color(self, context)
 
             # Change radius.
             if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
@@ -379,7 +367,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             # Finish stage.
             if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
                 self.stage = 'CUSTOM_SELECTION'
-                toggle_alt_mode(self, event)
+                mesh_modal.toggle_alt_mode(self, event)
                 if self.override_intersect_tests and (
                     self.select_through
                     and not self.invert_select_through
@@ -408,8 +396,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                     and self.select_through_toggle_type == 'PRESS'
                 ):
                     self.invert_select_through = not self.invert_select_through
-                    set_shading_from_properties(self, context)
-                    update_shader_color(self, context)
+                    mesh_modal.set_shading_from_properties(self, context)
+                    mesh_modal.update_shader_color(self, context)
 
             # Change radius.
             if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
@@ -504,7 +492,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
     def begin_custom_intersect_tests(self, context):
         center = (self.last_mouse_region_x, self.last_mouse_region_y)
-        select_mesh_elements(
+        mesh_intersect.select_mesh_elements(
             context,
             mode=self.curr_mode,
             tool='CIRCLE',
@@ -517,8 +505,8 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
             self.curr_mode = 'ADD'
 
     def finish_modal(self, context):
-        restore_overlays(self, context)
-        restore_modifiers(self)
+        mesh_modal.restore_overlays(self, context)
+        mesh_modal.restore_modifiers(self)
         context.window_manager.operator_properties_last("mesh.select_circle_xray").radius = self.radius
 
     def update_ubo(self):
@@ -545,13 +533,13 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
     def build_circle_shader(self):
         vertices = self.get_circle_verts_orig(self.radius)
-        segment = (Vector(vertices[0]) - Vector(vertices[1])).length
+        segment = (mathutils.Vector(vertices[0]) - mathutils.Vector(vertices[1])).length
         lengths = [segment * i for i in range(32)]
-        self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch.batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
+        self.fill_batch = batch.batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()

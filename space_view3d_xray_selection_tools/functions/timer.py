@@ -1,15 +1,15 @@
-from contextlib import contextmanager
-from time import perf_counter
+import contextlib
+import time
 
 
-@contextmanager
+@contextlib.contextmanager
 def time_section(label, prefix="", suffix="", debug=False):
     """Context manager to measure elapsed time for a code block."""
     if not debug:
         yield
         return
 
-    start = perf_counter()
+    start = time.perf_counter()
     yield
-    end = perf_counter()
+    end = time.perf_counter()
     print(f"{prefix}[{label}] elapsed time: {end - start:.3f} seconds{suffix}")

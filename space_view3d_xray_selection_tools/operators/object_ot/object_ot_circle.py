@@ -2,20 +2,12 @@ import ctypes
 
 import bpy
 import gpu
+import mathutils
 import numpy as np
-from gpu_extras.batch import batch_for_shader
-from mathutils import Vector
+from gpu_extras import batch
 
-from ...functions.intersections.object_intersect import select_obs_in_circle
-from ...functions.modals.object_modal import (
-    gather_overlays,
-    get_xray_toggle_key_list,
-    restore_overlays,
-    set_properties,
-    sync_properties,
-    toggle_alt_mode,
-    toggle_overlays,
-)
+from ...functions.intersections import object_intersect
+from ...functions.modals import object_modal
 
 
 # noinspection PyTypeChecker
@@ -236,7 +228,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         self.override_modal = False
         self.override_intersect_tests = False
 
-        self.xray_toggle_key_list = get_xray_toggle_key_list()
+        self.xray_toggle_key_list = object_modal.get_xray_toggle_key_list()
 
         self.handler = None
         self.border_batch = None
@@ -248,7 +240,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         )
 
     def invoke(self, context, event):
-        set_properties(self, tool='CIRCLE')
+        object_modal.set_properties(self, tool='CIRCLE')
 
         self.override_intersect_tests = self.behavior != 'ORIGIN'
 
@@ -259,13 +251,13 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
             or self.override_intersect_tests
         )
 
-        self.init_overlays = gather_overlays(context)  # save initial x-ray overlay states
+        self.init_overlays = object_modal.gather_overlays(context)  # save initial x-ray overlay states
 
         # Sync operator properties with current shading.
-        sync_properties(self, context)
+        object_modal.sync_properties(self, context)
 
         # Enable x-ray overlays.
-        toggle_overlays(self, context)
+        object_modal.toggle_overlays(self, context)
 
         context.window_manager.modal_handler_add(self)
 
@@ -295,7 +287,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
                     and self.xray_toggle_type == 'PRESS'
                 ):
                     self.show_xray = not self.show_xray
-                    toggle_overlays(self, context)
+                    object_modal.toggle_overlays(self, context)
 
             # Change radius.
             if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
@@ -304,7 +296,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
             # Finish stage.
             if event.value == 'PRESS' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
                 self.stage = 'CUSTOM_SELECTION'
-                toggle_alt_mode(self, event)
+                object_modal.toggle_alt_mode(self, event)
                 if self.override_intersect_tests:
                     self.begin_custom_intersect_tests(context)
                 else:
@@ -328,7 +320,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
                     and self.xray_toggle_type == 'PRESS'
                 ):
                     self.show_xray = not self.show_xray
-                    toggle_overlays(self, context)
+                    object_modal.toggle_overlays(self, context)
 
             # Change radius.
             if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'NUMPAD_MINUS', 'NUMPAD_PLUS'}:
@@ -425,12 +417,14 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
 
     def begin_custom_intersect_tests(self, context):
         center = (self.last_mouse_region_x, self.last_mouse_region_y)
-        select_obs_in_circle(context, mode=self.curr_mode, center=center, radius=self.radius, behavior=self.behavior)
+        object_intersect.select_obs_in_circle(
+            context, mode=self.curr_mode, center=center, radius=self.radius, behavior=self.behavior
+        )
         if self.curr_mode == 'SET':
             self.curr_mode = 'ADD'
 
     def finish_modal(self, context):
-        restore_overlays(self, context)
+        object_modal.restore_overlays(self, context)
         context.window_manager.operator_properties_last("object.select_circle_xray").radius = self.radius
 
     def update_ubo(self):
@@ -457,16 +451,18 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
 
     def build_circle_shader(self):
         vertices = self.get_circle_verts_orig(self.radius)
-        segment = (Vector(vertices[0]) - Vector(vertices[1])).length
+        segment = (mathutils.Vector(vertices[0]) - mathutils.Vector(vertices[1])).length
         lengths = [segment * i for i in range(32)]
-        self.border_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch.batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         shadow_vertices = self.get_circle_verts_orig(self.radius - 1)
-        self.shadow_batch = batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": shadow_vertices, "len": lengths})
+        self.shadow_batch = batch.batch_for_shader(
+            BORDER_SHADER, 'LINE_STRIP', {"pos": shadow_vertices, "len": lengths}
+        )
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
+        self.fill_batch = batch.batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()

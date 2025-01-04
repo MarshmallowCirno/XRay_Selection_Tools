@@ -1,6 +1,6 @@
-import gpu
 import bpy
-from gpu_extras.batch import batch_for_shader
+import gpu
+from gpu_extras import batch
 
 
 def redraw_point_shader(context, points):
@@ -14,10 +14,17 @@ def redraw_point_shader(context, points):
         point_shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     else:
         point_shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
-    point_batch = batch_for_shader(point_shader, 'POINTS', {"pos": points})
+    point_batch = batch.batch_for_shader(point_shader, 'POINTS', {"pos": points})
 
-    handler = context.space_data.draw_handler_add(draw_point_shader, (point_shader, point_batch,), 'WINDOW',
-                                                  'POST_PIXEL')
+    handler = context.space_data.draw_handler_add(
+        draw_point_shader,
+        (
+            point_shader,
+            point_batch,
+        ),
+        'WINDOW',
+        'POST_PIXEL',
+    )
     dns['draw_xray_points_debug'] = handler
     context.area.tag_redraw()
 
@@ -40,10 +47,17 @@ def redraw_segment_shader(context, points, indices):
     else:
         segment_shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
 
-    segment_batch = batch_for_shader(segment_shader, 'LINES', {"pos": points}, indices=indices)
+    segment_batch = batch.batch_for_shader(segment_shader, 'LINES', {"pos": points}, indices=indices)
 
-    handler = context.space_data.draw_handler_add(draw_segment_shader, (segment_shader, segment_batch,), 'WINDOW',
-                                                  'POST_PIXEL')
+    handler = context.space_data.draw_handler_add(
+        draw_segment_shader,
+        (
+            segment_shader,
+            segment_batch,
+        ),
+        'WINDOW',
+        'POST_PIXEL',
+    )
     dns['draw_xray_segment_debug'] = handler
     context.area.tag_redraw()
 

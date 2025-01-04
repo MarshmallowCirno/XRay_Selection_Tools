@@ -2,8 +2,8 @@ from itertools import compress
 
 import numpy as np
 
-from .object_intersect_shared import do_selection, get_ob_2dbboxes, get_ob_loc_co_2d, get_vert_co_2d, partition
-from ...geometry_tests import point_inside_rectangles, points_inside_rectangle, segments_intersect_rectangle
+from ... import geometry_tests
+from . import object_intersect_shared
 
 
 def get_obs_mask_in_selbox(obs, obs_mask_check, depsgraph, region, rv3d, xmin, xmax, ymin, ymax):
@@ -13,8 +13,8 @@ def get_obs_mask_in_selbox(obs, obs_mask_check, depsgraph, region, rv3d, xmin, x
     for ob in list_of_obs_to_check:
         ob_eval = ob.evaluated_get(depsgraph)
         me = ob_eval.to_mesh(preserve_all_data_layers=False, depsgraph=None)
-        vert_co_2d = get_vert_co_2d(me, ob_eval, region, rv3d)
-        verts_mask_in_selbox = points_inside_rectangle(vert_co_2d, xmin, xmax, ymin, ymax)
+        vert_co_2d = object_intersect_shared.get_vert_co_2d(me, ob_eval, region, rv3d)
+        verts_mask_in_selbox = geometry_tests.points_inside_rectangle(vert_co_2d, xmin, xmax, ymin, ymax)
         if np.all(verts_mask_in_selbox):
             bool_list.append(True)
         else:
@@ -33,7 +33,9 @@ def select_obs_in_box(context, mode, xmin, xmax, ymin, ymax, behavior):
     selectable_obs = context.selectable_objects
 
     if behavior == 'CONTAIN':
-        mesh_obs, nonmesh_obs = partition(selectable_obs, lambda o: o.type in {'MESH', 'CURVE', 'FONT'})
+        mesh_obs, nonmesh_obs = object_intersect_shared.partition(
+            selectable_obs, lambda o: o.type in {'MESH', 'CURVE', 'FONT'}
+        )
         mesh_ob_count = len(mesh_obs)
 
         # Get coordinates of 2d bounding boxes of objects.
@@ -45,23 +47,23 @@ def select_obs_in_box(context, mode, xmin, xmax, ymin, ymax, behavior):
             ob_2dbbox_points,
             ob_2dbbox_segments,
             obs_mask_2dbbox_entire_clip,
-        ) = get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d)
+        ) = object_intersect_shared.get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d)
 
         # Check for bounding boxes intersections with selection box.
         # Speed up finding overlaps or intersections by doing polygon tests on bounding boxes.
 
         # Ob bbox intersects selection box.
-        segment_bools = segments_intersect_rectangle(ob_2dbbox_segments, xmin, xmax, ymin, ymax)
+        segment_bools = geometry_tests.segments_intersect_rectangle(ob_2dbbox_segments, xmin, xmax, ymin, ymax)
         segment_bools.shape = (mesh_ob_count, 4)
         obs_mask_2dbbox_isect_selbox = np.any(segment_bools, axis=1)
 
         # Ob bbox bbox entirely inside selection box.
-        point_bools = points_inside_rectangle(ob_2dbbox_points, xmin, xmax, ymin, ymax)
+        point_bools = geometry_tests.points_inside_rectangle(ob_2dbbox_points, xmin, xmax, ymin, ymax)
         point_bools.shape = (mesh_ob_count, 4)
         obs_mask_2dbbox_entire_in_selbox = np.all(point_bools, axis=1)
 
         # Cursor is inside ob bbox.
-        obs_mask_cursor_in_2dbbox = point_inside_rectangles(
+        obs_mask_cursor_in_2dbbox = geometry_tests.point_inside_rectangles(
             (xmin, ymin), ob_2dbbox_xmin, ob_2dbbox_xmax, ob_2dbbox_ymin, ob_2dbbox_ymax
         )
 
@@ -74,13 +76,13 @@ def select_obs_in_box(context, mode, xmin, xmax, ymin, ymax, behavior):
         mesh_obs_mask_in_selbox[obs_mask_check] = get_obs_mask_in_selbox(
             mesh_obs, obs_mask_check, depsgraph, region, rv3d, xmin, xmax, ymin, ymax
         )
-        do_selection(mesh_obs_mask_in_selbox, mesh_obs, mode)
+        object_intersect_shared.do_selection(mesh_obs_mask_in_selbox, mesh_obs, mode)
 
-        nonmesh_ob_co_2d = get_ob_loc_co_2d(nonmesh_obs, region, rv3d)
-        nonmesh_obs_mask_in_selbox = points_inside_rectangle(nonmesh_ob_co_2d, xmin, xmax, ymin, ymax)
-        do_selection(nonmesh_obs_mask_in_selbox, nonmesh_obs, mode)
+        nonmesh_ob_co_2d = object_intersect_shared.get_ob_loc_co_2d(nonmesh_obs, region, rv3d)
+        nonmesh_obs_mask_in_selbox = geometry_tests.points_inside_rectangle(nonmesh_ob_co_2d, xmin, xmax, ymin, ymax)
+        object_intersect_shared.do_selection(nonmesh_obs_mask_in_selbox, nonmesh_obs, mode)
 
     if behavior == 'ORIGIN':
-        ob_co_2d = get_ob_loc_co_2d(selectable_obs, region, rv3d)
-        obs_mask_in_selbox = points_inside_rectangle(ob_co_2d, xmin, xmax, ymin, ymax)
-        do_selection(obs_mask_in_selbox, selectable_obs, mode)
+        ob_co_2d = object_intersect_shared.get_ob_loc_co_2d(selectable_obs, region, rv3d)
+        obs_mask_in_selbox = geometry_tests.points_inside_rectangle(ob_co_2d, xmin, xmax, ymin, ymax)
+        object_intersect_shared.do_selection(obs_mask_in_selbox, selectable_obs, mode)
