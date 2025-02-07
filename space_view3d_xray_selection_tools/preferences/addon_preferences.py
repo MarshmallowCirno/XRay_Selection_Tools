@@ -1,7 +1,7 @@
 import bpy
 
-from . import draw, properties
 from .. import addon_info
+from . import draw, properties
 
 
 # noinspection PyTypeChecker

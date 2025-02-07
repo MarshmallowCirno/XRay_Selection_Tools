@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING
 
 import bpy
 
-from . import keymap_ui
 from ...operators import ot_keymap
+from . import keymap_ui
 
 if TYPE_CHECKING:
     # Only imported for type-checking

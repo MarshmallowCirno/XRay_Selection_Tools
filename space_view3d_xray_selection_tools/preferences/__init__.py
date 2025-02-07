@@ -1,6 +1,6 @@
-from . import addon_preferences, properties
 from .. import addon_info
 from ..tools import tools_keymap
+from . import addon_preferences, properties
 
 
 def populate_preferences_direction_properties():
