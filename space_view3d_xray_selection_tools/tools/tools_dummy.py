@@ -174,7 +174,7 @@ class ToolSelectLassoXrayGrease(ToolSelectLassoXrayTemplate):
     bl_idname = "grease_tool.select_lasso_xray"
 
 
-box_tools = (
+_box_tools = (
     ToolSelectBoxXrayCurve,
     ToolSelectBoxXrayArmature,
     ToolSelectBoxXrayMetaball,
@@ -182,7 +182,7 @@ box_tools = (
     ToolSelectBoxXrayPose,
     ToolSelectBoxXrayGrease,
 )
-circle_tools = (
+_circle_tools = (
     ToolSelectCircleXrayCurve,
     ToolSelectCircleXrayArmature,
     ToolSelectCircleXrayMetaball,
@@ -190,7 +190,7 @@ circle_tools = (
     ToolSelectCircleXrayPose,
     ToolSelectCircleXrayGrease,
 )
-lasso_tools = (
+_lasso_tools = (
     ToolSelectLassoXrayCurve,
     ToolSelectLassoXrayArmature,
     ToolSelectLassoXrayMetaball,
@@ -203,28 +203,28 @@ lasso_tools = (
 def register() -> None:
     # Set tool keymap to match the add-on preferences adv. keymap tab
     box_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_box")
-    for tool in box_tools:
+    for tool in _box_tools:
         tool.bl_keymap = box_tool_keymap
 
     circle_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_box")
-    for tool in circle_tools:
+    for tool in _circle_tools:
         tool.bl_keymap = circle_tool_keymap
 
     lasso_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_lasso")
-    for tool in lasso_tools:
+    for tool in _lasso_tools:
         tool.bl_keymap = lasso_tool_keymap
 
     # Add to the builtin selection tool group
     if addon_info.get_preferences().mesh_tools.group_with_builtins:
-        for tool in box_tools:
+        for tool in _box_tools:
             bpy.utils.register_tool(tool, after={"builtin.select_box"})
-        for tool in circle_tools:
+        for tool in _circle_tools:
             bpy.utils.register_tool(tool, after={"builtin.select_circle"})
-        for tool in lasso_tools:
+        for tool in _lasso_tools:
             bpy.utils.register_tool(tool, after={"builtin.select_lasso"})
     # Create a new selection tool group
     else:
-        for box_tool, circle_tool, lasso_tool in zip(box_tools, circle_tools, lasso_tools):
+        for box_tool, circle_tool, lasso_tool in zip(_box_tools, _circle_tools, _lasso_tools):
             bpy.utils.register_tool(box_tool, after={"builtin.select"}, group=True)
             bpy.utils.register_tool(circle_tool, after={box_tool.bl_idname})
             bpy.utils.register_tool(lasso_tool, after={circle_tool.bl_idname})
@@ -240,5 +240,5 @@ def register() -> None:
 def unregister() -> None:
     tools_keymap.remove_fallback_keymap_items(tools_keymap.DUMMY_FALLBACK_KEYMAP_DICT)
 
-    for tool in itertools.chain(box_tools, circle_tools, lasso_tools):
+    for tool in itertools.chain(_box_tools, _circle_tools, _lasso_tools):
         bpy.utils.unregister_tool(tool)

@@ -181,9 +181,9 @@ class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
         row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
 
 
-BOX_TOOLS = (ToolSelectBoxXrayMesh, ToolSelectBoxXrayObject)
-CIRCLE_TOOLS = (ToolSelectCircleXrayMesh, ToolSelectCircleXrayObject)
-LASSO_TOOLS = (ToolSelectLassoXrayMesh, ToolSelectLassoXrayObject)
+_BOX_TOOLS = (ToolSelectBoxXrayMesh, ToolSelectBoxXrayObject)
+_CIRCLE_TOOLS = (ToolSelectCircleXrayMesh, ToolSelectCircleXrayObject)
+_LASSO_TOOLS = (ToolSelectLassoXrayMesh, ToolSelectLassoXrayObject)
 
 
 def register() -> None:
@@ -198,9 +198,9 @@ def register() -> None:
     ToolSelectLassoXrayObject.bl_keymap = tools_keymap.get_tool_keymap_from_preferences("object.select_lasso_xray")
 
     for box_tool, circle_tool, lasso_tool, use_builtins in zip(
-        BOX_TOOLS,
-        CIRCLE_TOOLS,
-        LASSO_TOOLS,
+        _BOX_TOOLS,
+        _CIRCLE_TOOLS,
+        _LASSO_TOOLS,
         (
             addon_info.get_preferences().mesh_tools.group_with_builtins,
             addon_info.get_preferences().object_tools.group_with_builtins,
@@ -228,5 +228,5 @@ def register() -> None:
 def unregister() -> None:
     tools_keymap.remove_fallback_keymap_items(tools_keymap.FALLBACK_KEYMAP_DICT)
 
-    for tool in itertools.chain(BOX_TOOLS, CIRCLE_TOOLS, LASSO_TOOLS):
+    for tool in itertools.chain(_BOX_TOOLS, _CIRCLE_TOOLS, _LASSO_TOOLS):
         bpy.utils.unregister_tool(tool)

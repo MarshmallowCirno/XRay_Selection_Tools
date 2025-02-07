@@ -9,7 +9,7 @@ ob_mouse_keymap = []
 toggles_keymap = []
 
 
-def register_me_keyboard_keymap():
+def _register_me_keyboard_keymap():
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
         km = kc.keymaps.new(name="Mesh", space_type='EMPTY')
@@ -30,7 +30,7 @@ def register_me_keyboard_keymap():
         me_keyboard_keymap.append((km, kmi))
 
 
-def register_me_mouse_keymap():
+def _register_me_mouse_keymap():
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
         km = kc.keymaps.new(name="Mesh", space_type='EMPTY')
@@ -56,7 +56,7 @@ def register_me_mouse_keymap():
         me_mouse_keymap.append((km, kmi))
 
 
-def register_ob_keyboard_keymap():
+def _register_ob_keyboard_keymap():
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
         km = kc.keymaps.new(name="Object Mode", space_type='EMPTY')
@@ -77,7 +77,7 @@ def register_ob_keyboard_keymap():
         ob_keyboard_keymap.append((km, kmi))
 
 
-def register_ob_mouse_keymap():
+def _register_ob_mouse_keymap():
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
         km = kc.keymaps.new(name="Object Mode", space_type='EMPTY')
@@ -103,7 +103,7 @@ def register_ob_mouse_keymap():
         ob_mouse_keymap.append((km, kmi))
 
 
-def register_toggles_keymap():
+def _register_toggles_keymap():
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
         km = kc.keymaps.new(name="Mesh", space_type='EMPTY')
@@ -120,31 +120,31 @@ def register_toggles_keymap():
         toggles_keymap.append((km, kmi))
 
 
-def unregister_me_keyboard_keymap():
+def _unregister_me_keyboard_keymap():
     for km, kmi in me_keyboard_keymap:
         km.keymap_items.remove(kmi)
     me_keyboard_keymap.clear()
 
 
-def unregister_me_mouse_keymap():
+def _unregister_me_mouse_keymap():
     for km, kmi in me_mouse_keymap:
         km.keymap_items.remove(kmi)
     me_mouse_keymap.clear()
 
 
-def unregister_ob_keyboard_keymap():
+def _unregister_ob_keyboard_keymap():
     for km, kmi in ob_keyboard_keymap:
         km.keymap_items.remove(kmi)
     ob_keyboard_keymap.clear()
 
 
-def unregister_ob_mouse_keymap():
+def _unregister_ob_mouse_keymap():
     for km, kmi in ob_mouse_keymap:
         km.keymap_items.remove(kmi)
     ob_mouse_keymap.clear()
 
 
-def unregister_toggles_keymap():
+def _unregister_toggles_keymap():
     for km, kmi in toggles_keymap:
         km.keymap_items.remove(kmi)
     toggles_keymap.clear()
@@ -152,55 +152,55 @@ def unregister_toggles_keymap():
 
 def toggle_me_keyboard_keymap(self, context):
     if addon_info.get_preferences().keymaps.is_mesh_keyboard_keymap_enabled:
-        register_me_keyboard_keymap()
+        _register_me_keyboard_keymap()
     else:
-        unregister_me_keyboard_keymap()
+        _unregister_me_keyboard_keymap()
 
 
 def toggle_me_mouse_keymap(self, context):
     if addon_info.get_preferences().keymaps.is_mesh_mouse_keymap_enabled:
-        register_me_mouse_keymap()
+        _register_me_mouse_keymap()
     else:
-        unregister_me_mouse_keymap()
+        _unregister_me_mouse_keymap()
 
 
 def toggle_ob_keyboard_keymap(self, context):
     if addon_info.get_preferences().keymaps.is_object_keyboard_keymap_enabled:
-        register_ob_keyboard_keymap()
+        _register_ob_keyboard_keymap()
     else:
-        unregister_ob_keyboard_keymap()
+        _unregister_ob_keyboard_keymap()
 
 
 def toggle_ob_mouse_keymap(self, context):
     if addon_info.get_preferences().keymaps.is_object_mouse_keymap_enabled:
-        register_ob_mouse_keymap()
+        _register_ob_mouse_keymap()
     else:
-        unregister_ob_mouse_keymap()
+        _unregister_ob_mouse_keymap()
 
 
 def toggle_toggles_keymap(self, context):
     if addon_info.get_preferences().keymaps.is_toggles_keymap_enabled:
-        register_toggles_keymap()
+        _register_toggles_keymap()
     else:
-        unregister_toggles_keymap()
+        _unregister_toggles_keymap()
 
 
 def register():
     if addon_info.get_preferences().keymaps.is_mesh_mouse_keymap_enabled:
-        register_me_mouse_keymap()
+        _register_me_mouse_keymap()
     if addon_info.get_preferences().keymaps.is_mesh_keyboard_keymap_enabled:
-        register_me_keyboard_keymap()
+        _register_me_keyboard_keymap()
     if addon_info.get_preferences().keymaps.is_object_mouse_keymap_enabled:
-        register_ob_mouse_keymap()
+        _register_ob_mouse_keymap()
     if addon_info.get_preferences().keymaps.is_object_keyboard_keymap_enabled:
-        register_ob_keyboard_keymap()
+        _register_ob_keyboard_keymap()
     if addon_info.get_preferences().keymaps.is_toggles_keymap_enabled:
-        register_toggles_keymap()
+        _register_toggles_keymap()
 
 
 def unregister():
-    unregister_me_mouse_keymap()
-    unregister_me_keyboard_keymap()
-    unregister_ob_mouse_keymap()
-    unregister_ob_keyboard_keymap()
-    unregister_toggles_keymap()
+    _unregister_me_mouse_keymap()
+    _unregister_me_keyboard_keymap()
+    _unregister_ob_mouse_keymap()
+    _unregister_ob_keyboard_keymap()
+    _unregister_toggles_keymap()

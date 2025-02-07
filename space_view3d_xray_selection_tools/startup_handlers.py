@@ -4,8 +4,7 @@ from . import addon_info
 from .tools import tools_utils
 
 
-def activate_tool():
-
+def _activate_tool():
     idname_by_enum = {
         'BOX': "select_box_xray",
         'CIRCLE': "select_circle_xray",
@@ -27,29 +26,29 @@ def activate_tool():
                         area.tag_redraw()
 
 
-def activate_tool_on_startup(_):
-    if activate_tool_on_startup in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.remove(activate_tool_on_startup)
+def _activate_tool_on_startup(_):
+    if _activate_tool_on_startup in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.remove(_activate_tool_on_startup)
 
-    activate_tool()
+    _activate_tool()
 
 
 @bpy.app.handlers.persistent
-def activate_tool_on_file_load(_):
-    activate_tool()
+def _activate_tool_on_file_load(_) -> None:
+    _activate_tool()
 
 
 def register():
-    if not activate_tool_on_startup in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.append(activate_tool_on_startup)
+    if not _activate_tool_on_startup in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.append(_activate_tool_on_startup)
 
-    if not activate_tool_on_file_load in bpy.app.handlers.load_post:
-        bpy.app.handlers.load_post.append(activate_tool_on_file_load)
+    if not _activate_tool_on_file_load in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.append(_activate_tool_on_file_load)
 
 
 def unregister():
-    if activate_tool_on_startup in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.remove(activate_tool_on_startup)
+    if _activate_tool_on_startup in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.remove(_activate_tool_on_startup)
 
-    if activate_tool_on_file_load in bpy.app.handlers.load_post:
-        bpy.app.handlers.load_post.remove(activate_tool_on_file_load)
+    if _activate_tool_on_file_load in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.remove(_activate_tool_on_file_load)

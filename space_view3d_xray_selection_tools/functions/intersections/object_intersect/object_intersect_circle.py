@@ -6,7 +6,7 @@ from ... import geometry_tests
 from . import object_intersect_shared
 
 
-def get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, center, radius, check_faces=False):
+def _get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, center, radius, check_faces=False):
     list_of_obs_to_check = compress(obs, obs_mask_check)
     bool_list = []
 
@@ -44,7 +44,7 @@ def get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d,
     return bools
 
 
-def get_obs_mask_in_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, center, radius):
+def _get_obs_mask_in_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, center, radius):
     list_of_obs_to_check = compress(obs, obs_mask_check)
     bool_list = []
 
@@ -110,10 +110,10 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
         obs_mask_check_faces = obs_mask_cursor_in_2dbbox & ~obs_mask_2dbbox_isect_selcircle & ~obs_mask_dont_check
 
         mesh_obs_mask_in_selcircle = obs_mask_2dbbox_entire_in_selcircle
-        mesh_obs_mask_in_selcircle[obs_mask_check_verts_edges] = get_obs_mask_overlap_selcircle(
+        mesh_obs_mask_in_selcircle[obs_mask_check_verts_edges] = _get_obs_mask_overlap_selcircle(
             mesh_obs, obs_mask_check_verts_edges, depsgraph, region, rv3d, center, radius
         )
-        mesh_obs_mask_in_selcircle[obs_mask_check_faces] = get_obs_mask_overlap_selcircle(
+        mesh_obs_mask_in_selcircle[obs_mask_check_faces] = _get_obs_mask_overlap_selcircle(
             mesh_obs, obs_mask_check_faces, depsgraph, region, rv3d, center, radius, check_faces=True
         )
         object_intersect_shared.do_selection(mesh_obs_mask_in_selcircle, mesh_obs, mode)
@@ -124,7 +124,7 @@ def select_obs_in_circle(context, mode, center, radius, behavior):
         ) & ~obs_mask_dont_check
 
         mesh_obs_mask_in_selcircle = obs_mask_2dbbox_entire_in_selcircle
-        mesh_obs_mask_in_selcircle[obs_mask_check] = get_obs_mask_in_selcircle(
+        mesh_obs_mask_in_selcircle[obs_mask_check] = _get_obs_mask_in_selcircle(
             mesh_obs, obs_mask_check, depsgraph, region, rv3d, center, radius
         )
         object_intersect_shared.do_selection(mesh_obs_mask_in_selcircle, mesh_obs, mode)

@@ -10,7 +10,7 @@ def populate_preferences_direction_properties():
     left.name = "LEFT_TO_RIGHT"
 
 
-CLASSES = (
+_CLASSES = (
     properties.XRAYSELToolKmiPG,
     properties.XRAYSELToolKeymapPG,
     properties.XRAYSELToolMeDirectionProps,
@@ -24,7 +24,7 @@ CLASSES = (
 def register():
     from bpy.utils import register_class
 
-    for cls in CLASSES:
+    for cls in _CLASSES:
         register_class(cls)
 
     tools_keymap.populate_preferences_keymaps_of_tools()
@@ -37,5 +37,5 @@ def unregister():
 
     from bpy.utils import unregister_class
 
-    for cls in CLASSES:
+    for cls in _CLASSES:
         unregister_class(cls)

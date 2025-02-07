@@ -24,7 +24,7 @@ class _UBO_struct(ctypes.Structure):
     ]
 
 
-UBO_source = """
+_UBO_source = """
 struct Data
 {
   int u_X;
@@ -37,12 +37,12 @@ struct Data
 """
 
 # Fill shader.
-shader_info = gpu.types.GPUShaderCreateInfo()
-shader_info.typedef_source(UBO_source)
-shader_info.uniform_buf(0, "Data", "ub")
-shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
-shader_info.vertex_in(0, 'VEC2', "pos")
-shader_info.vertex_source(
+_shader_info = gpu.types.GPUShaderCreateInfo()
+_shader_info.typedef_source(_UBO_source)
+_shader_info.uniform_buf(0, "Data", "ub")
+_shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
+_shader_info.vertex_in(0, 'VEC2', "pos")
+_shader_info.vertex_source(
     """
     void main()
     {
@@ -50,8 +50,8 @@ shader_info.vertex_source(
     }
     """
 )
-shader_info.fragment_out(0, 'VEC4', "FragColor")
-shader_info.fragment_source(
+_shader_info.fragment_out(0, 'VEC4', "FragColor")
+_shader_info.fragment_source(
     """
     void main()
     {
@@ -59,21 +59,21 @@ shader_info.fragment_source(
     }
     """
 )
-FILL_SHADER = gpu.shader.create_from_info(shader_info)
-del shader_info
+_FILL_SHADER = gpu.shader.create_from_info(_shader_info)
+del _shader_info
 
 # Border shader.
-vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # noqa
-vert_out.smooth('FLOAT', "v_Len")
+_vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # noqa
+_vert_out.smooth('FLOAT', "v_Len")
 
-shader_info = gpu.types.GPUShaderCreateInfo()
-shader_info.typedef_source(UBO_source)
-shader_info.uniform_buf(0, "Data", "ub")
-shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
-shader_info.vertex_in(0, 'VEC2', "pos")
-shader_info.vertex_in(1, 'FLOAT', "len")
-shader_info.vertex_out(vert_out)
-shader_info.vertex_source(
+_shader_info = gpu.types.GPUShaderCreateInfo()
+_shader_info.typedef_source(_UBO_source)
+_shader_info.uniform_buf(0, "Data", "ub")
+_shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
+_shader_info.vertex_in(0, 'VEC2', "pos")
+_shader_info.vertex_in(1, 'FLOAT', "len")
+_shader_info.vertex_out(_vert_out)
+_shader_info.vertex_source(
     """
     void main()
     {
@@ -82,8 +82,8 @@ shader_info.vertex_source(
     }
     """
 )
-shader_info.fragment_out(0, 'VEC4', "FragColor")
-shader_info.fragment_source(
+_shader_info.fragment_out(0, 'VEC4', "FragColor")
+_shader_info.fragment_source(
     """
     void main() 
     {
@@ -96,9 +96,9 @@ shader_info.fragment_source(
     }
     """
 )
-BORDER_SHADER = gpu.shader.create_from_info(shader_info)
-del vert_out
-del shader_info
+_BORDER_SHADER = gpu.shader.create_from_info(_shader_info)
+del _vert_out
+del _shader_info
 
 
 # noinspection PyTypeChecker
@@ -535,11 +535,11 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         vertices = self.get_circle_verts_orig(self.radius)
         segment = (mathutils.Vector(vertices[0]) - mathutils.Vector(vertices[1])).length
         lengths = [segment * i for i in range(32)]
-        self.border_batch = batch.batch_for_shader(BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch.batch_for_shader(FILL_SHADER, 'TRI_FAN', {"pos": vertices})
+        self.fill_batch = batch.batch_for_shader(_FILL_SHADER, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self):
         matrix = gpu.matrix.get_projection_matrix()
@@ -566,14 +566,14 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
         # Fill.
         gpu.state.blend_set("ALPHA")
-        FILL_SHADER.bind()
-        FILL_SHADER.uniform_block("ub", self.UBO)
-        FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.fill_batch.draw(FILL_SHADER)
+        _FILL_SHADER.bind()
+        _FILL_SHADER.uniform_block("ub", self.UBO)
+        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.fill_batch.draw(_FILL_SHADER)
         gpu.state.blend_set("NONE")
 
         # Border.
-        BORDER_SHADER.bind()
-        BORDER_SHADER.uniform_block("ub", self.UBO)
-        BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
-        self.border_batch.draw(BORDER_SHADER)
+        _BORDER_SHADER.bind()
+        _BORDER_SHADER.uniform_block("ub", self.UBO)
+        _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        self.border_batch.draw(_BORDER_SHADER)

@@ -4,7 +4,7 @@ import bpy
 from ... import addon_info
 
 
-def draw_text(text, pos_x, pos_y, align="LEFT", font=0, font_size=12, color=(1, 1, 1, 1)):
+def _draw_text(text, pos_x, pos_y, align="LEFT", font=0, font_size=12, color=(1, 1, 1, 1)):
     if bpy.app.version >= (4, 0, 0):
         blf.size(font, font_size)
     else:
@@ -23,11 +23,11 @@ def draw_text(text, pos_x, pos_y, align="LEFT", font=0, font_size=12, color=(1, 
     blf.draw(font, text)
 
 
-def get_text_dimensions(text, font=0):
+def _get_text_dimensions(text, font=0):
     return blf.dimensions(font, text)
 
 
-def get_safe_draw_x(context, ui_width):
+def _get_safe_draw_x(context, ui_width):
     """Maximum x position of ui left side that doesn't cause overlap width sidebar."""
     region_overlap = context.preferences.system.use_region_overlap
     offset_width = 0
@@ -41,7 +41,7 @@ def get_safe_draw_x(context, ui_width):
     return safe_x
 
 
-class Toggle_Base:
+class _Toggle_Base:
     def __init__(self, *args, **kwargs):
         self.handler = None
         self.timer = None
@@ -72,11 +72,11 @@ class Toggle_Base:
         align = "RIGHT"
         width_offset, height_offset = 20, 40
         ui_offset = 40 * ui_scale
-        safe_x, safe_y = get_safe_draw_x(context, width_offset + ui_offset), height_offset + ui_offset
-        draw_text(self.text, safe_x, safe_y, align, font, font_size, main_color)
+        safe_x, safe_y = _get_safe_draw_x(context, width_offset + ui_offset), height_offset + ui_offset
+        _draw_text(self.text, safe_x, safe_y, align, font, font_size, main_color)
 
 
-class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, Toggle_Base):
+class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, _Toggle_Base):
     """Toggle selection through for mesh xray selection tools."""
 
     bl_idname = "mesh.select_tools_xray_toggle_select_through"
@@ -94,7 +94,7 @@ class MESH_OT_select_tools_xray_toggle_select_through(bpy.types.Operator, Toggle
         return {'FINISHED'}
 
 
-class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_Base):
+class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, _Toggle_Base):
     """Toggle mesh selection behavior for mesh xray selection tools."""
 
     bl_idname = "mesh.select_tools_xray_toggle_mesh_behavior"
@@ -112,7 +112,7 @@ class MESH_OT_select_tools_xray_toggle_mesh_behavior(bpy.types.Operator, Toggle_
         return {'FINISHED'}
 
 
-class MESH_OT_select_tools_xray_toggle_select_backfacing(bpy.types.Operator, Toggle_Base):
+class MESH_OT_select_tools_xray_toggle_select_backfacing(bpy.types.Operator, _Toggle_Base):
     """Toggle backfacing selection for mesh xray selection tools."""
 
     bl_idname = "mesh.select_tools_xray_toggle_select_backfacing"
