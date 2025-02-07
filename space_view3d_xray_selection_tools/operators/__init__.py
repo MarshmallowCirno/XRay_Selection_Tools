@@ -1,4 +1,4 @@
-from . import help_ot, ot_keymap
+from . import ot_keymap, xraysel_ot_info
 from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
 from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
 
@@ -12,7 +12,7 @@ _CLASSES = (
     mesh_ot_toggle.MESH_OT_select_tools_xray_toggle_select_through,
     mesh_ot_toggle.MESH_OT_select_tools_xray_toggle_mesh_behavior,
     mesh_ot_toggle.MESH_OT_select_tools_xray_toggle_select_backfacing,
-    help_ot.XRAYSEL_OT_show_info_popup,
+    xraysel_ot_info.XRAYSEL_OT_show_info_popup,
 )
 
 
