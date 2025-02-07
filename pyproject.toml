@@ -9,33 +9,29 @@ readme = "README.md"
 python = "^3.10"
 numpy = "^2.1.3"
 
-
 [tool.poetry.group.dev.dependencies]
-black = "^24.10.0"
+fake-bpy-module = "^20250104"
 pylint = "^3.3.1"
-fake-bpy-module = "^20241122"
+ruff = "^0.8.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 
-[tool.black]
-line-length = 120
-skip-string-normalization = true
+[tool.pylint.basic]
+good-names = ["v", "e", "f", "c", "ob", "me", "bm"]
+
+[tool.pylint.format]
+max-line-length = 120
 
 [tool.pylint.messages_control]
 disable = [
     "C0103"  # Disable class name convention warning
 ]
 
-[tool.pylint.format]
-max-line-length = 120
+[tool.ruff]
+line-length = 120
 
-[tool.flake8]
-ignore = [
-    "N801"  # Disable class name convention warning
-]
-
-[tool.pylint.basic]
-good-names = ["v", "e", "f", "c", "ob", "me", "bm"]
+[tool.ruff.format]
+quote-style = "preserve"
