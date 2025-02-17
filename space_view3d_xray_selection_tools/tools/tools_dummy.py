@@ -210,7 +210,7 @@ def register() -> None:
     for tool in _box_tools:
         tool.bl_keymap = box_tool_keymap
 
-    circle_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_box")
+    circle_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_circle")
     for tool in _circle_tools:
         tool.bl_keymap = circle_tool_keymap
 
