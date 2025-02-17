@@ -1,22 +1,28 @@
 import itertools
 import operator
+from typing import Any, Callable, Iterable, Literal
 
+import bpy
 import numpy as np
 
+from ....types import Bool1DArray, Float1DArray, Float2DArray, Float2x2DArray, Int1DArray
 from ... import view3d
 from ...mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from .. import selection_utils
 
 
-def partition(items, predicate=bool):
+def partition(items: Iterable[Any], predicate: Callable[[Any], bool] = bool) -> tuple[list[Any], list[Any]]:
     # https://nedbatchelder.com/blog/201306/filter_a_list_into_two_parts.html
-    a, b = [], []
+    a: list[Any] = []
+    b: list[Any] = []
     for item in items:
         (a if predicate(item) else b).append(item)
     return a, b
 
 
-def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
+def get_ob_2dbboxes(
+    mesh_obs: list[bpy.types.Object], mesh_ob_count: int, region: bpy.types.Region, rv3d: bpy.types.RegionView3D
+) -> tuple[Float1DArray, Float1DArray, Float1DArray, Float1DArray, Float2DArray, Float2x2DArray, Bool1DArray]:
     ob_3dbbox_list = map(operator.attrgetter("bound_box"), mesh_obs)
     ob_3dbbox_flat_list = itertools.chain.from_iterable(itertools.chain.from_iterable(ob_3dbbox_list))
     ob_3dbbox_co_local = np.fromiter(ob_3dbbox_flat_list, "f", mesh_ob_count * 24).reshape((mesh_ob_count, 8, 3))
@@ -94,7 +100,9 @@ def get_ob_2dbboxes(mesh_obs, mesh_ob_count, region, rv3d):
     )
 
 
-def get_vert_co_2d(me, ob, region, rv3d):
+def get_vert_co_2d(
+    me: bpy.types.Mesh, ob: bpy.types.Object, region: bpy.types.Region, rv3d: bpy.types.RegionView3D
+) -> Float2DArray:
     """Look for verts inside the selection polygon path."""
 
     # Get local coordinates of vertices.
@@ -102,11 +110,11 @@ def get_vert_co_2d(me, ob, region, rv3d):
 
     # Get 2d coordinates of vertices.
     vert_co_world = view3d.transform_local_to_world_co(ob.matrix_world, vert_co_local)
-    vert_co_2d = view3d.transform_world_to_2d_co(region, rv3d, vert_co_world)
+    vert_co_2d = view3d.transform_world_to_2d_co(region, rv3d, vert_co_world)[0]
     return vert_co_2d
 
 
-def get_edge_vert_co_2d(me, vert_co_2d):
+def get_edge_vert_co_2d(me: bpy.types.Mesh, vert_co_2d: Float2DArray) -> Float2x2DArray:
     """Look for edges that intersect the selection polygon path."""
 
     # For each edge get 2 indices of its vertices.
@@ -117,7 +125,9 @@ def get_edge_vert_co_2d(me, vert_co_2d):
     return edge_vert_co_2d
 
 
-def get_face_vert_co_2d(me, vert_co_2d):
+def get_face_vert_co_2d(
+    me: bpy.types.Mesh, vert_co_2d: Float2DArray
+) -> tuple[Float2DArray, Int1DArray, Int1DArray, Int1DArray]:
     """Look for faces."""
 
     # Number of vertices for each face.
@@ -129,24 +139,30 @@ def get_face_vert_co_2d(me, vert_co_2d):
     # Coordinates of vertices of faces.
     face_vert_co_2d = vert_co_2d[face_vert_indices]
     # Index of first face vert in face verts sequence.
-    cumsum = face_loop_totals.cumsum()
+    cumsum: Int1DArray = face_loop_totals.cumsum()
     face_cell_starts = np.insert(cumsum[:-1], 0, 0)
     # Index of last face vert in face verts sequence.
     face_cell_ends = np.subtract(cumsum, 1)
     return face_vert_co_2d, face_cell_starts, face_cell_ends, face_loop_totals
 
 
-def get_ob_loc_co_2d(obs, region, rv3d):
+def get_ob_loc_co_2d(
+    obs: list[bpy.types.Object], region: bpy.types.Region, rv3d: bpy.types.RegionView3D
+) -> Float2DArray:
     """Get 2D coordinates of object location."""
     ob_co_world = map(operator.attrgetter("location"), obs)
     ob_co_world = itertools.chain.from_iterable(ob_co_world)
     c = len(obs)
     ob_co_world = np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3))
-    ob_co_2d = view3d.transform_world_to_2d_co(region, rv3d, ob_co_world)
+    ob_co_2d = view3d.transform_world_to_2d_co(region, rv3d, ob_co_world)[0]
     return ob_co_2d
 
 
-def do_selection(mask_of_obs_to_select, obs_to_select, mode):
+def do_selection(
+    mask_of_obs_to_select: Bool1DArray,
+    obs_to_select: list[bpy.types.Object],
+    mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND'],
+) -> None:
     obs_mask_selected = map(operator.methodcaller("select_get"), obs_to_select)
     obs_mask_selected = np.fromiter(obs_mask_selected, "?")
     select = selection_utils.calculate_selection_mask(obs_mask_selected, mask_of_obs_to_select, mode).tolist()

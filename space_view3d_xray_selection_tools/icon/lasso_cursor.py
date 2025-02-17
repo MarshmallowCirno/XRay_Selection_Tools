@@ -1,6 +1,6 @@
 import mathutils
 
-lasso_cursor = [
+lasso_cursor: tuple[mathutils.Vector, ...] = (
     mathutils.Vector((-0.063653, 0.632217)),
     mathutils.Vector((0.119577, 0.627342)),
     mathutils.Vector((0.222285, 0.616188)),
@@ -33,4 +33,4 @@ lasso_cursor = [
     mathutils.Vector((-0.422673, 0.580894)),
     mathutils.Vector((-0.335357, 0.602268)),
     mathutils.Vector((-0.154469, 0.62816)),
-]
+)

@@ -1,14 +1,27 @@
 from itertools import compress
+from typing import Literal
 
+import bpy
 import numpy as np
 
 from ... import geometry_tests
+from ....types import Bool1DArray
 from . import object_intersect_shared
 
 
-def _get_obs_mask_in_selbox(obs, obs_mask_check, depsgraph, region, rv3d, xmin, xmax, ymin, ymax):
+def _get_obs_mask_in_selbox(
+    obs: list[bpy.types.Object],
+    obs_mask_check: Bool1DArray,
+    depsgraph: bpy.types.Depsgraph,
+    region: bpy.types.Region,
+    rv3d: bpy.types.RegionView3D,
+    xmin: int,
+    xmax: int,
+    ymin: int,
+    ymax: int,
+):
     list_of_obs_to_check = compress(obs, obs_mask_check)
-    bool_list = []
+    bool_list: list[bool] = []
 
     for ob in list_of_obs_to_check:
         ob_eval = ob.evaluated_get(depsgraph)
@@ -25,7 +38,15 @@ def _get_obs_mask_in_selbox(obs, obs_mask_check, depsgraph, region, rv3d, xmin, 
     return bools
 
 
-def select_obs_in_box(context, mode, xmin, xmax, ymin, ymax, behavior):
+def select_obs_in_box(
+    context: bpy.types.Context,
+    mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND'],
+    xmin: int,
+    xmax: int,
+    ymin: int,
+    ymax: int,
+    behavior: Literal['ORIGIN', 'CONTAIN', 'OVERLAP', 'DIRECTIONAL', 'DIRECTIONAL_REVERSED'],
+):
     region = context.region
     rv3d = context.region_data
     depsgraph = context.evaluated_depsgraph_get()

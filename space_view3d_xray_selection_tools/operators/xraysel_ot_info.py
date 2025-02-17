@@ -1,7 +1,12 @@
 import textwrap
 from functools import partial
+from typing import TYPE_CHECKING
 
 import bpy
+
+if TYPE_CHECKING:
+    from bpy._typing.rna_enums import OperatorReturnItems
+
 
 _INFO_TEXTS: dict[str, tuple[str, ...]] = {
     "select_all_edges": (
@@ -63,7 +68,7 @@ _INFO_TEXTS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _draw_func(self, _context, description):
+def _draw_func(self: bpy.types.Operator, _context: bpy.types.Context, description: tuple[str, ...]):
     for paragraph in description:
         lines = textwrap.wrap(paragraph, 115)
         col = self.layout.column(align=True)
@@ -77,9 +82,12 @@ class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
     bl_idname = "xraysel.show_info_popup"
     bl_label = "Show Info"
 
-    button: bpy.props.StringProperty()
+    if TYPE_CHECKING:
+        button: str
+    else:
+        button: bpy.props.StringProperty()
 
-    def invoke(self, context, event):
+    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
         description = _INFO_TEXTS.get(self.button, ("Description not found",))
         draw_func = partial(_draw_func, description=description)
         context.window_manager.popover(draw_func, ui_units_x=31, keymap=None, from_active_button=True)

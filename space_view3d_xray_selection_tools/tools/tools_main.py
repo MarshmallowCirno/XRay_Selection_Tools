@@ -1,8 +1,10 @@
-import itertools
+from collections.abc import Sequence
+from typing import cast
 
 import bpy
 
 from .. import addon_info
+from ..types import WorkSpaceToolKeymapItem
 from . import tools_keymap, tools_utils
 
 # Box Tools
@@ -18,16 +20,16 @@ class ToolSelectBoxXrayMesh(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_box_xray_icon")
     bl_widget = None
     bl_operator = "mesh.select_box_xray"
-    bl_keymap: tuple
+    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_settings(context, layout, tool):
-        cur_tool_props = tool.operator_properties("mesh.select_box_xray")
+    @staticmethod
+    def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
+        op_props = tool.operator_properties("mesh.select_box_xray")
         global_tools_props = addon_info.get_preferences().mesh_tools
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
         sub = row.row(align=True)
         sub.prop(global_tools_props, "select_through", icon='XRAY', toggle=True)
@@ -46,15 +48,15 @@ class ToolSelectBoxXrayObject(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_box_xray_icon")
     bl_widget = None
     bl_operator = "object.select_box_xray"
-    bl_keymap: tuple
+    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_settings(context, layout, tool):
-        cur_tool_props = tool.operator_properties("object.select_box_xray")
+    @staticmethod
+    def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
+        op_props = tool.operator_properties("object.select_box_xray")
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
 
 # Circle Tools
@@ -70,24 +72,24 @@ class ToolSelectCircleXrayMesh(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_circle_xray_icon")
     bl_widget = None
     bl_operator = "mesh.select_lasso_xray"
-    bl_keymap: tuple
+    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_cursor(context, tool, xy):
-        from gpu_extras.presets import draw_circle_2d
+    @staticmethod
+    def draw_cursor(_context: bpy.types.Context, tool: bpy.types.WorkSpaceTool, xy: Sequence[float]) -> None:
+        from gpu_extras.presets import draw_circle_2d  # pyright: ignore[reportUnknownVariableType]
 
-        props = tool.operator_properties("mesh.select_circle_xray")
-        radius = props.radius
+        op_props = tool.operator_properties("mesh.select_circle_xray")
+        radius = cast(int, op_props.radius)  # pyright: ignore[reportAttributeAccessIssue]
         draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_settings(context, layout, tool):
-        cur_tool_props = tool.operator_properties("mesh.select_circle_xray")
+    @staticmethod
+    def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
+        op_props = tool.operator_properties("mesh.select_circle_xray")
         global_tools_props = addon_info.get_preferences().mesh_tools
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(global_tools_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
         sub = row.row(align=True)
         sub.prop(global_tools_props, "select_through", icon='XRAY', toggle=True)
@@ -95,7 +97,7 @@ class ToolSelectCircleXrayMesh(bpy.types.WorkSpaceTool):
         sub.active = global_tools_props.select_through
         sub.prop(global_tools_props, "select_backfacing", icon='NORMALS_FACE', toggle=True)
 
-        layout.prop(cur_tool_props, "radius")
+        layout.prop(op_props, "radius")
 
 
 class ToolSelectCircleXrayObject(bpy.types.WorkSpaceTool):
@@ -108,25 +110,25 @@ class ToolSelectCircleXrayObject(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_circle_xray_icon")
     bl_widget = None
     bl_operator = "object.select_circle_xray"
-    bl_keymap: tuple
+    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_cursor(context, tool, xy):
-        from gpu_extras.presets import draw_circle_2d
+    @staticmethod
+    def draw_cursor(_context: bpy.types.Context, tool: bpy.types.WorkSpaceTool, xy: Sequence[float]) -> None:
+        from gpu_extras.presets import draw_circle_2d  # pyright: ignore[reportUnknownVariableType]
 
-        props = tool.operator_properties("object.select_circle_xray")
-        radius = props.radius
+        op_props = tool.operator_properties("object.select_circle_xray")
+        radius = cast(int, op_props.radius)  # pyright: ignore[reportAttributeAccessIssue]
         draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_settings(context, layout, tool):
-        cur_tool_props = tool.operator_properties("object.select_circle_xray")
+    @staticmethod
+    def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
+        op_props = tool.operator_properties("object.select_circle_xray")
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
-        layout.prop(cur_tool_props, "radius")
+        layout.prop(op_props, "radius")
 
 
 # Lasso Tools
@@ -142,16 +144,16 @@ class ToolSelectLassoXrayMesh(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_lasso_xray_icon")
     bl_widget = None
     bl_operator = "mesh.select_lasso_xray"
-    bl_keymap: tuple
+    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_settings(context, layout, tool):
-        cur_tool_props = tool.operator_properties("mesh.select_lasso_xray")
+    @staticmethod
+    def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
+        op_props = tool.operator_properties("mesh.select_lasso_xray")
         global_tools_props = addon_info.get_preferences().mesh_tools
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
         sub = row.row(align=True)
         sub.prop(global_tools_props, "select_through", icon='XRAY', toggle=True)
@@ -170,15 +172,15 @@ class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_lasso_xray_icon")
     bl_widget = None
     bl_operator = "object.select_lasso_xray"
-    bl_keymap: tuple
+    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
 
-    # noinspection PyMethodMayBeStatic, PyMethodParameters
-    def draw_settings(context, layout, tool):
-        cur_tool_props = tool.operator_properties("object.select_lasso_xray")
+    @staticmethod
+    def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
+        op_props = tool.operator_properties("object.select_lasso_xray")
 
         row = layout.row()
         row.use_property_split = False
-        row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
+        row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
 
 _BOX_TOOLS = (ToolSelectBoxXrayMesh, ToolSelectBoxXrayObject)
@@ -208,14 +210,14 @@ def register() -> None:
     ):
         # Add to the builtin selection tool group
         if use_builtins:
-            bpy.utils.register_tool(box_tool, after={"builtin.select_box"})
-            bpy.utils.register_tool(circle_tool, after={"builtin.select_circle"})
-            bpy.utils.register_tool(lasso_tool, after={"builtin.select_lasso"})
+            bpy.utils.register_tool(box_tool, after=("builtin.select_box",))
+            bpy.utils.register_tool(circle_tool, after=("builtin.select_circle",))
+            bpy.utils.register_tool(lasso_tool, after=("builtin.select_lasso",))
         # Create a new selection tool group
         else:
-            bpy.utils.register_tool(box_tool, after={"builtin.select"}, group=True)
-            bpy.utils.register_tool(circle_tool, after={box_tool.bl_idname})
-            bpy.utils.register_tool(lasso_tool, after={circle_tool.bl_idname})
+            bpy.utils.register_tool(box_tool, after=("builtin.select",), group=True)
+            bpy.utils.register_tool(circle_tool, after=(box_tool.bl_idname,))
+            bpy.utils.register_tool(lasso_tool, after=(circle_tool.bl_idname,))
 
             # Fixing order
             tools_utils.fix_ordering(box_tool.bl_context_mode)
@@ -228,5 +230,5 @@ def register() -> None:
 def unregister() -> None:
     tools_keymap.remove_fallback_keymap_items(tools_keymap.FALLBACK_KEYMAP_DICT)
 
-    for tool in itertools.chain(_BOX_TOOLS, _CIRCLE_TOOLS, _LASSO_TOOLS):
+    for tool in (*_BOX_TOOLS, *_CIRCLE_TOOLS, *_LASSO_TOOLS):
         bpy.utils.unregister_tool(tool)

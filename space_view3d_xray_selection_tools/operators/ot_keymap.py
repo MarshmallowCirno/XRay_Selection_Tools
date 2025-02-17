@@ -1,12 +1,13 @@
+# pyright: reportAttributeAccessIssue = false
 import bpy
 
 from .. import addon_info
 
-me_keyboard_keymap = []
-me_mouse_keymap = []
-ob_keyboard_keymap = []
-ob_mouse_keymap = []
-toggles_keymap = []
+me_keyboard_keymap: list[tuple[bpy.types.KeyMap, bpy.types.KeyMapItem]] = []
+me_mouse_keymap: list[tuple[bpy.types.KeyMap, bpy.types.KeyMapItem]] = []
+ob_keyboard_keymap: list[tuple[bpy.types.KeyMap, bpy.types.KeyMapItem]] = []
+ob_mouse_keymap: list[tuple[bpy.types.KeyMap, bpy.types.KeyMapItem]] = []
+toggles_keymap: list[tuple[bpy.types.KeyMap, bpy.types.KeyMapItem]] = []
 
 
 def _register_me_keyboard_keymap():
@@ -150,35 +151,35 @@ def _unregister_toggles_keymap():
     toggles_keymap.clear()
 
 
-def toggle_me_keyboard_keymap(self, context):
+def toggle_me_keyboard_keymap(_pg: bpy.types.PropertyGroup, _context: bpy.types.Context):
     if addon_info.get_preferences().keymaps.is_mesh_keyboard_keymap_enabled:
         _register_me_keyboard_keymap()
     else:
         _unregister_me_keyboard_keymap()
 
 
-def toggle_me_mouse_keymap(self, context):
+def toggle_me_mouse_keymap(_pg: bpy.types.PropertyGroup, _context: bpy.types.Context):
     if addon_info.get_preferences().keymaps.is_mesh_mouse_keymap_enabled:
         _register_me_mouse_keymap()
     else:
         _unregister_me_mouse_keymap()
 
 
-def toggle_ob_keyboard_keymap(self, context):
+def toggle_ob_keyboard_keymap(_pg: bpy.types.PropertyGroup, _context: bpy.types.Context):
     if addon_info.get_preferences().keymaps.is_object_keyboard_keymap_enabled:
         _register_ob_keyboard_keymap()
     else:
         _unregister_ob_keyboard_keymap()
 
 
-def toggle_ob_mouse_keymap(self, context):
+def toggle_ob_mouse_keymap(_pg: bpy.types.PropertyGroup, _context: bpy.types.Context):
     if addon_info.get_preferences().keymaps.is_object_mouse_keymap_enabled:
         _register_ob_mouse_keymap()
     else:
         _unregister_ob_mouse_keymap()
 
 
-def toggle_toggles_keymap(self, context):
+def toggle_toggles_keymap(_pg: bpy.types.PropertyGroup, _context: bpy.types.Context):
     if addon_info.get_preferences().keymaps.is_toggles_keymap_enabled:
         _register_toggles_keymap()
     else:

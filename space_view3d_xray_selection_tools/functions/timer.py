@@ -3,7 +3,7 @@ import time
 
 
 @contextlib.contextmanager
-def time_section(label, prefix="", suffix="", debug=False):
+def time_section(label: str, prefix: str = "", suffix: str = "", debug: bool = False):
     """Context manager to measure elapsed time for a code block."""
     if not debug:
         yield

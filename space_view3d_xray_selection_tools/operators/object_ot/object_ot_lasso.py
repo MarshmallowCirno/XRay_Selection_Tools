@@ -2,6 +2,7 @@ import ctypes
 import itertools
 import math
 import time
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import bgl
 import bpy
@@ -14,8 +15,10 @@ from ...functions.intersections import object_intersect
 from ...functions.modals import object_modal
 from ...icon import lasso_cursor
 
+if TYPE_CHECKING:
+    from bpy._typing.rna_enums import OperatorReturnItems
 
-# noinspection PyTypeChecker
+
 class _UBO_struct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
@@ -98,7 +101,7 @@ _FILL_SHADER = gpu.shader.create_from_info(_shader_info)
 del _shader_info
 
 # Border shader.
-_vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # noqa
+_vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # pyright: ignore [reportCallIssue]
 _vert_out.smooth('FLOAT', "v_Len")
 
 _shader_info = gpu.types.GPUShaderCreateInfo()
@@ -137,7 +140,6 @@ del _vert_out
 del _shader_info
 
 
-# noinspection PyTypeChecker
 class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
     """Select items using lasso selection with x-ray"""
 
@@ -145,157 +147,174 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
     bl_label = "Lasso Select X-Ray"
     bl_options = {'REGISTER'}
 
-    mode: bpy.props.EnumProperty(
-        name="Mode",
-        items=[
-            ('SET', "Set", "Set a new selection", 'SELECT_SET', 1),
-            ('ADD', "Extend", "Extend existing selection", 'SELECT_EXTEND', 2),
-            ('SUB', "Subtract", "Subtract existing selection", 'SELECT_SUBTRACT', 3),
-            ('XOR', "Difference", "Inverts existing selection", 'SELECT_DIFFERENCE', 4),
-            ('AND', "Intersect", "Intersect existing selection", 'SELECT_INTERSECT', 5),
-        ],
-        default='SET',
-        options={'SKIP_SAVE'},
-    )
-    alt_mode: bpy.props.EnumProperty(
-        name="Alternate Mode",
-        description="Alternate selection mode",
-        items=[
-            ('SET', "Select", "Set a new selection", 'SELECT_SET', 1),
-            ('ADD', "Extend Selection", "Extend existing selection", 'SELECT_EXTEND', 2),
-            ('SUB', "Deselect", "Subtract existing selection", 'SELECT_SUBTRACT', 3),
-        ],
-        default='SUB',
-        options={'SKIP_SAVE'},
-    )
-    alt_mode_toggle_key: bpy.props.EnumProperty(
-        name="Alternate Mode Toggle Key",
-        description="Toggle selection mode by holding this key",
-        items=[
-            ('CTRL', "CTRL", ""),
-            ('ALT', "ALT", ""),
-            ('SHIFT', "SHIFT", ""),
-        ],
-        default='SHIFT',
-        options={'SKIP_SAVE'},
-    )
-    wait_for_input: bpy.props.BoolProperty(
-        name="Wait for input",
-        description=(
-            "Wait for mouse input or initialize lasso selection immediately "
-            "(enable when assigning the operator to a keyboard key)"
-        ),
-        default=False,
-    )
-    override_global_props: bpy.props.BoolProperty(
-        name="Override Global Properties",
-        description="Use properties in this keymaps item instead of properties in the global addon settings",
-        default=False,
-        options={'SKIP_SAVE'},
-    )
-    show_xray: bpy.props.BoolProperty(
-        name="Show X-Ray",
-        description="Enable x-ray shading during selection",
-        default=True,
-        options={'SKIP_SAVE'},
-    )
-    xray_toggle_key: bpy.props.EnumProperty(
-        name="X-Ray Toggle Key",
-        description="Toggle x-ray by holding this key",
-        items=[
-            ('CTRL', "CTRL", ""),
-            ('ALT', "ALT", ""),
-            ('SHIFT', "SHIFT", ""),
-            ('DISABLED', "DISABLED", ""),
-        ],
-        default='DISABLED',
-        options={'SKIP_SAVE'},
-    )
-    xray_toggle_type: bpy.props.EnumProperty(
-        name="Toggle X-Ray by Press or Hold",
-        description="Toggle x-ray by holding or by pressing key",
-        items=[
-            ('HOLD', "Holding", ""),
-            ('PRESS', "Pressing", ""),
-        ],
-        default='HOLD',
-        options={'SKIP_SAVE'},
-    )
-    hide_gizmo: bpy.props.BoolProperty(
-        name="Hide Gizmo",
-        description="Temporary hide gizmo of the active tool",
-        default=False,
-        options={'SKIP_SAVE'},
-    )
-    show_lasso_icon: bpy.props.BoolProperty(
-        name="Show Lasso Icon",
-        description="Show lasso cursor icon when wait_for_input is enabled",
-        default=True,
-        options={'SKIP_SAVE'},
-    )
-    behavior: bpy.props.EnumProperty(
-        name="Selection Behavior",
-        description="Selection behavior",
-        items=[
-            ('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
-            ('CONTAIN', "Contain", "Select only the objects fully contained in lasso", 'STICKY_UVS_LOC', 2),
-            ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
-            (
-                'DIRECTIONAL',
-                "Directional",
-                "Dragging left to right select contained, right to left select overlapped",
-                'UV_SYNC_SELECT',
-                4,
+    if TYPE_CHECKING:
+        mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND']
+        alt_mode: Literal['SET', 'ADD', 'SUB']
+        alt_mode_toggle_key: Literal['CTRL', 'ALT', 'SHIFT']
+        wait_for_input: bool
+        override_global_props: bool
+        show_xray: bool
+        xray_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'DISABLED']
+        xray_toggle_type: Literal['HOLD', 'PRESS']
+        hide_gizmo: bool
+        show_lasso_icon: bool
+        behavior: Literal['ORIGIN', 'CONTAIN', 'OVERLAP', 'DIRECTIONAL', 'DIRECTIONAL_REVERSED']
+    else:
+        mode: bpy.props.EnumProperty(
+            name="Mode",
+            items=[
+                ('SET', "Set", "Set a new selection", 'SELECT_SET', 1),
+                ('ADD', "Extend", "Extend existing selection", 'SELECT_EXTEND', 2),
+                ('SUB', "Subtract", "Subtract existing selection", 'SELECT_SUBTRACT', 3),
+                ('XOR', "Difference", "Inverts existing selection", 'SELECT_DIFFERENCE', 4),
+                ('AND', "Intersect", "Intersect existing selection", 'SELECT_INTERSECT', 5),
+            ],
+            default='SET',
+            options={'SKIP_SAVE'},
+        )
+        alt_mode: bpy.props.EnumProperty(
+            name="Alternate Mode",
+            description="Alternate selection mode",
+            items=[
+                ('SET', "Select", "Set a new selection", 'SELECT_SET', 1),
+                ('ADD', "Extend Selection", "Extend existing selection", 'SELECT_EXTEND', 2),
+                ('SUB', "Deselect", "Subtract existing selection", 'SELECT_SUBTRACT', 3),
+            ],
+            default='SUB',
+            options={'SKIP_SAVE'},
+        )
+        alt_mode_toggle_key: bpy.props.EnumProperty(
+            name="Alternate Mode Toggle Key",
+            description="Toggle selection mode by holding this key",
+            items=[
+                ('CTRL', "CTRL", ""),
+                ('ALT', "ALT", ""),
+                ('SHIFT', "SHIFT", ""),
+            ],
+            default='SHIFT',
+            options={'SKIP_SAVE'},
+        )
+        wait_for_input: bpy.props.BoolProperty(
+            name="Wait for input",
+            description=(
+                "Wait for mouse input or initialize lasso selection immediately "
+                "(enable when assigning the operator to a keyboard key)"
             ),
-            (
-                'DIRECTIONAL_REVERSED',
-                "Directional Reversed",
-                "Dragging left to right select overlapped, right to left select contained",
-                'UV_SYNC_SELECT',
-                5,
-            ),
-        ],
-        default='ORIGIN',
-    )
+            default=False,
+        )
+        override_global_props: bpy.props.BoolProperty(
+            name="Override Global Properties",
+            description="Use properties in this keymaps item instead of properties in the global addon settings",
+            default=False,
+            options={'SKIP_SAVE'},
+        )
+        show_xray: bpy.props.BoolProperty(
+            name="Show X-Ray",
+            description="Enable x-ray shading during selection",
+            default=True,
+            options={'SKIP_SAVE'},
+        )
+        xray_toggle_key: bpy.props.EnumProperty(
+            name="X-Ray Toggle Key",
+            description="Toggle x-ray by holding this key",
+            items=[
+                ('CTRL', "CTRL", ""),
+                ('ALT', "ALT", ""),
+                ('SHIFT', "SHIFT", ""),
+                ('DISABLED', "DISABLED", ""),
+            ],
+            default='DISABLED',
+            options={'SKIP_SAVE'},
+        )
+        xray_toggle_type: bpy.props.EnumProperty(
+            name="Toggle X-Ray by Press or Hold",
+            description="Toggle x-ray by holding or by pressing key",
+            items=[
+                ('HOLD', "Holding", ""),
+                ('PRESS', "Pressing", ""),
+            ],
+            default='HOLD',
+            options={'SKIP_SAVE'},
+        )
+        hide_gizmo: bpy.props.BoolProperty(
+            name="Hide Gizmo",
+            description="Temporary hide gizmo of the active tool",
+            default=False,
+            options={'SKIP_SAVE'},
+        )
+        show_lasso_icon: bpy.props.BoolProperty(
+            name="Show Lasso Icon",
+            description="Show lasso cursor icon when wait_for_input is enabled",
+            default=True,
+            options={'SKIP_SAVE'},
+        )
+        behavior: bpy.props.EnumProperty(
+            name="Selection Behavior",
+            description="Selection behavior",
+            items=[
+                ('ORIGIN', "Origin (Default)", "Select objects by origins", 'DOT', 1),
+                ('CONTAIN', "Contain", "Select only the objects fully contained in lasso", 'STICKY_UVS_LOC', 2),
+                ('OVERLAP', "Overlap", "Select objects overlapping lasso", 'SELECT_SUBTRACT', 3),
+                (
+                    'DIRECTIONAL',
+                    "Directional",
+                    "Dragging left to right select contained, right to left select overlapped",
+                    'UV_SYNC_SELECT',
+                    4,
+                ),
+                (
+                    'DIRECTIONAL_REVERSED',
+                    "Directional Reversed",
+                    "Dragging left to right select overlapped, right to left select contained",
+                    'UV_SYNC_SELECT',
+                    5,
+                ),
+            ],
+            default='ORIGIN',
+        )
 
     @classmethod
-    def poll(cls, context):
+    def poll(cls, context: bpy.types.Context) -> bool:
         return context.area.type == 'VIEW_3D' and context.mode == 'OBJECT'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         if bpy.app.version >= (4, 4, 0):
             super().__init__(*args, **kwargs)
 
-        self.path = None
-        self.stage = None
-        self.curr_mode = self.mode
-        self.curr_behavior = self.behavior
-
-        self.lasso_poly = []
-        self.lasso_xmin = 0
-        self.lasso_xmax = 0
-        self.lasso_ymin = 0
-        self.lasso_ymax = 0
-
-        self.last_mouse_region_x = 0
-        self.last_mouse_region_y = 0
-
-        self.init_overlays = None
-
-        self.override_wait_for_input = True
-        self.override_selection = False
-        self.override_intersect_tests = False
-
-        self.xray_toggle_key_list = object_modal.get_xray_toggle_key_list()
-
-        self.handler = None
-        self.icon_batch = None
-        self.UBO_data = _UBO_struct()
-        self.UBO = gpu.types.GPUUniformBuf(
-            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # noqa
+        self.path: list[dict[str, Any]] = []
+        self.stage: Literal['CUSTOM_WAIT_FOR_INPUT', 'CUSTOM_SELECTION', 'INBUILT_OP'] = 'CUSTOM_WAIT_FOR_INPUT'
+        self.curr_mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND'] = self.mode
+        self.curr_behavior: Literal['ORIGIN', 'CONTAIN', 'OVERLAP', 'DIRECTIONAL', 'DIRECTIONAL_REVERSED'] = (
+            self.behavior
         )
 
-    def invoke(self, context, event):
+        self.lasso_poly: list[tuple[int, int]] = []
+        self.lasso_xmin: int = 0
+        self.lasso_xmax: int = 0
+        self.lasso_ymin: int = 0
+        self.lasso_ymax: int = 0
+
+        self.last_mouse_region_x: int = 0
+        self.last_mouse_region_y: int = 0
+
+        self.init_overlays: dict[str, Any] = dict()
+
+        self.override_wait_for_input: bool = True
+        self.override_selection: bool = False
+        self.override_intersect_tests: bool = False
+
+        self.xray_toggle_key_list: set[
+            Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']
+        ] = object_modal.get_xray_toggle_key_list()
+
+        self.handler: Any | None = None
+        self.icon_batch: gpu.types.GPUBatch | None = None
+        self.UBO_data: _UBO_struct = _UBO_struct()
+        self.UBO: gpu.types.GPUUniformBuf = gpu.types.GPUUniformBuf(
+            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
+        )
+
+    def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
         object_modal.set_properties(self, tool='LASSO')
 
         self.override_intersect_tests = self.behavior != 'ORIGIN'
@@ -326,7 +345,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             self.invoke_inbuilt_lasso_select()
         return {'RUNNING_MODAL'}
 
-    def modal(self, context, event):
+    def modal(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
         if self.stage == 'CUSTOM_WAIT_FOR_INPUT':
             # Update shader.
             if event.type == 'MOUSEMOVE':
@@ -367,8 +386,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
                         {"name": "", "loc": (event.mouse_region_x, event.mouse_region_y), "time": time.time()}
                     )
                     self.lasso_poly.append((event.mouse_region_x, event.mouse_region_y))
-                    self.lasso_xmin, self.lasso_xmax, self.lasso_ymin, self.lasso_ymax = geometry_tests.polygon_bbox(
-                        self.lasso_poly
+                    self.lasso_xmin, self.lasso_xmax, self.lasso_ymin, self.lasso_ymax = map(
+                        int, geometry_tests.polygon_bbox(self.lasso_poly)
                     )
 
                     self.update_directional_behavior()
@@ -416,13 +435,13 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
         return {'RUNNING_MODAL'}
 
-    def begin_custom_wait_for_input_stage(self, context, event):
+    def begin_custom_wait_for_input_stage(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         """Set cursor and status text, draw wait_for_input shader."""
         self.stage = 'CUSTOM_WAIT_FOR_INPUT'
         context.window.cursor_modal_set('CROSSHAIR')
-        enum_items = self.properties.bl_rna.properties["mode"].enum_items
+        enum_items = cast(bpy.types.EnumProperty, self.properties.bl_rna.properties["mode"]).enum_items
         curr_mode_name = enum_items[self.curr_mode].name
-        enum_items = self.properties.bl_rna.properties["alt_mode"].enum_items
+        enum_items = cast(bpy.types.EnumProperty, self.properties.bl_rna.properties["alt_mode"]).enum_items
         alt_mode_name = enum_items[self.alt_mode].name
 
         status_text = f"RMB, ESC: Cancel  |  LMB: {curr_mode_name}  |  {self.alt_mode_toggle_key}+LMB: {alt_mode_name}"
@@ -432,10 +451,10 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
         if self.show_lasso_icon:
             self.build_icon_shader()
-            self.handler = context.space_data.draw_handler_add(self.draw_icon_shader, (), 'WINDOW', 'POST_PIXEL')
+            self.handler = context.space_data.draw_handler_add(self.draw_icon_shader, (), 'WINDOW', 'POST_PIXEL')  # pyright: ignore [reportArgumentType]
             self.update_shader_position(context, event)
 
-    def finish_custom_wait_for_input_stage(self, context):
+    def finish_custom_wait_for_input_stage(self, context: bpy.types.Context) -> None:
         """Restore cursor and status text, remove wait_for_input shader."""
         self.wait_for_input = False
         context.window.cursor_modal_restore()
@@ -444,7 +463,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             context.space_data.draw_handler_remove(self.handler, 'WINDOW')
             context.region.tag_redraw()
 
-    def begin_custom_selection_stage(self, context, event):
+    def begin_custom_selection_stage(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.stage = 'CUSTOM_SELECTION'
         context.window.cursor_modal_set('CROSSHAIR')
         status_text = "RMB, ESC: Cancel"
@@ -460,35 +479,38 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.last_mouse_region_y = event.mouse_region_y
 
         if bpy.app.version >= (4, 0, 0):
-            self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader, (), 'WINDOW', 'POST_PIXEL')
+            self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader, (), 'WINDOW', 'POST_PIXEL')  # pyright: ignore [reportArgumentType]
         else:
             self.handler = context.space_data.draw_handler_add(
-                self.draw_lasso_shader_bgl, (context,), 'WINDOW', 'POST_PIXEL'
+                self.draw_lasso_shader_bgl,  # pyright: ignore [reportArgumentType]
+                (context,),
+                'WINDOW',
+                'POST_PIXEL',
             )
         self.update_shader_position(context, event)
 
-    def finish_custom_selection_stage(self, context):
+    def finish_custom_selection_stage(self, context: bpy.types.Context) -> None:
         context.window.cursor_modal_restore()
         context.workspace.status_text_set(text=None)
         context.space_data.draw_handler_remove(self.handler, 'WINDOW')
         context.region.tag_redraw()
 
-    def invoke_inbuilt_lasso_select(self):
+    def invoke_inbuilt_lasso_select(self) -> None:
         self.stage = 'INBUILT_OP'
         bpy.ops.view3d.select_lasso('INVOKE_DEFAULT', mode=self.curr_mode)
 
-    def exec_inbuilt_lasso_select(self):
-        bpy.ops.view3d.select_lasso(path=self.path, mode=self.curr_mode)
+    def exec_inbuilt_lasso_select(self) -> None:
+        bpy.ops.view3d.select_lasso(path=self.path, mode=self.curr_mode)  # pyright: ignore [reportArgumentType]
 
-    def begin_custom_intersect_tests(self, context):
+    def begin_custom_intersect_tests(self, context: bpy.types.Context) -> None:
         object_intersect.select_obs_in_lasso(
-            context, mode=self.curr_mode, lasso_poly=self.lasso_poly, behavior=self.curr_behavior
+            context, mode=self.curr_mode, lasso_poly=tuple(self.lasso_poly), behavior=self.curr_behavior
         )
 
-    def finish_modal(self, context):
+    def finish_modal(self, context: bpy.types.Context) -> None:
         object_modal.restore_overlays(self, context)
 
-    def update_directional_behavior(self):
+    def update_directional_behavior(self) -> None:
         if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:
             start_x = self.lasso_poly[0][0]
             right_to_left = abs(self.lasso_xmin - start_x) < abs(self.lasso_xmax - start_x)
@@ -502,24 +524,24 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             else:
                 self.curr_behavior = 'CONTAIN'
 
-    def update_ubo(self):
-        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # noqa
+    def update_ubo(self) -> None:
+        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
 
-    def update_shader_position(self, context, event):
+    def update_shader_position(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.last_mouse_region_x = event.mouse_region_x
         self.last_mouse_region_y = event.mouse_region_y
         context.region.tag_redraw()
 
-    def build_icon_shader(self):
+    def build_icon_shader(self) -> None:
         vertices = lasso_cursor.lasso_cursor
 
-        lengths = [0]
+        lengths = [0.0]
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        self.icon_batch = batch.batch_for_shader(_ICON_SHADER, 'LINES', {"pos": vertices})
+        self.icon_batch = batch.batch_for_shader(_ICON_SHADER, 'LINES', {"pos": vertices})  # pyright: ignore [reportArgumentType]
 
-    def draw_icon_shader(self):
+    def draw_icon_shader(self) -> None:
         matrix = gpu.matrix.get_projection_matrix()
         segment_color = (1.0, 1.0, 1.0, 1.0)
 
@@ -531,17 +553,18 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.update_ubo()
 
         # Icon.
+        assert isinstance(self.icon_batch, gpu.types.GPUBatch)
         _ICON_SHADER.bind()
         _ICON_SHADER.uniform_block("ub", self.UBO)
-        _ICON_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        _ICON_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
         self.icon_batch.draw(_ICON_SHADER)
 
-    def draw_lasso_shader_bgl(self, context):
+    def draw_lasso_shader_bgl(self, context: bpy.types.Context) -> None:
         # Create batches.
         vertices = [mathutils.Vector(v) for v in self.lasso_poly]
         vertices.append(mathutils.Vector(self.lasso_poly[0]))
 
-        lengths = [0]
+        lengths = [0.0]
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
@@ -552,8 +575,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             (self.lasso_xmax, self.lasso_ymax),
         )
 
-        fill_batch = batch.batch_for_shader(_FILL_SHADER, 'TRI_FAN', {"pos": vertices})
-        border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        fill_batch = batch.batch_for_shader(_FILL_SHADER, 'TRI_FAN', {"pos": vertices})  # pyright: ignore [reportArgumentType]
+        border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})  # pyright: ignore [reportArgumentType]
         stencil_batch = batch.batch_for_shader(_FILL_SHADER, 'TRI_FAN', {"pos": bbox_vertices})
 
         matrix = gpu.matrix.get_projection_matrix()
@@ -573,28 +596,30 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         # Stencil mask.
         # https://stackoverflow.com/a/25468363/5106051
         bgl.glClear(bgl.GL_STENCIL_BUFFER_BIT)
-        bgl.glEnable(bgl.GL_STENCIL_TEST)
-        bgl.glColorMask(bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE)
-        bgl.glStencilFunc(bgl.GL_ALWAYS, 0, 1)
-        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_INVERT)
+        bgl.glEnable(bgl.GL_STENCIL_TEST)  # pyright: ignore [reportArgumentType]
+        bgl.glColorMask(bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE)  # pyright: ignore [reportArgumentType]
+        bgl.glStencilFunc(bgl.GL_ALWAYS, 0, 1)  # pyright: ignore [reportArgumentType]
+        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_INVERT)  # pyright: ignore [reportArgumentType]
         bgl.glStencilMask(1)
 
         _FILL_SHADER.bind()
         _FILL_SHADER.uniform_block("ub", self.UBO)
-        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
         fill_batch.draw(_FILL_SHADER)
 
-        if context.space_data.shading.type in {'MATERIAL', 'RENDERED'}:
-            bgl.glStencilFunc(bgl.GL_EQUAL, 0, 1)
+        sv3d = context.space_data
+        assert isinstance(sv3d, bpy.types.SpaceView3D)
+        if sv3d.shading.type in {'MATERIAL', 'RENDERED'}:
+            bgl.glStencilFunc(bgl.GL_EQUAL, 0, 1)  # pyright: ignore [reportArgumentType]
         else:
-            bgl.glStencilFunc(bgl.GL_EQUAL, 1, 1)
-        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_KEEP)
-        bgl.glColorMask(bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE)
+            bgl.glStencilFunc(bgl.GL_EQUAL, 1, 1)  # pyright: ignore [reportArgumentType]
+        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_KEEP)  # pyright: ignore [reportArgumentType]
+        bgl.glColorMask(bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE)  # pyright: ignore [reportArgumentType]
 
         # Fill.
-        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glEnable(bgl.GL_BLEND)  # pyright: ignore [reportArgumentType]
         stencil_batch.draw(_FILL_SHADER)
-        bgl.glDisable(bgl.GL_BLEND)
+        bgl.glDisable(bgl.GL_BLEND)  # pyright: ignore [reportArgumentType]
 
         # Border.
         if not dashed:
@@ -605,7 +630,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             gpu.state.line_width_set(3)
             _BORDER_SHADER.bind()
             _BORDER_SHADER.uniform_block("ub", self.UBO)
-            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
             border_batch.draw(_BORDER_SHADER)
             gpu.state.line_width_set(1)
 
@@ -613,19 +638,19 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             self.UBO_data.u_SegmentColor = segment_color
             self.update_ubo()
 
-            bgl.glDisable(bgl.GL_STENCIL_TEST)
+            bgl.glDisable(bgl.GL_STENCIL_TEST)  # pyright: ignore [reportArgumentType]
             _BORDER_SHADER.uniform_block("ub", self.UBO)
             border_batch.draw(_BORDER_SHADER)
 
         else:
             # Dashed border.
-            bgl.glDisable(bgl.GL_STENCIL_TEST)
+            bgl.glDisable(bgl.GL_STENCIL_TEST)  # pyright: ignore [reportArgumentType]
             _BORDER_SHADER.bind()
             _BORDER_SHADER.uniform_block("ub", self.UBO)
-            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
             border_batch.draw(_BORDER_SHADER)
 
-    def draw_lasso_shader(self):
+    def draw_lasso_shader(self) -> None:
         # Create batches.
         vertices = [mathutils.Vector(v) for v in self.lasso_poly]
         vertices.append(mathutils.Vector(self.lasso_poly[0]))
@@ -633,12 +658,12 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         indices = mathutils.geometry.tessellate_polygon((self.lasso_poly,))
         triangles = [self.lasso_poly[i] for i in itertools.chain.from_iterable(indices)]
 
-        lengths = [0]
+        lengths = [0.0]
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
         fill_batch = batch.batch_for_shader(_FILL_SHADER, 'TRIS', {"pos": triangles})
-        border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})  # pyright: ignore [reportArgumentType]
 
         matrix = gpu.matrix.get_projection_matrix()
         segment_color = (1.0, 1.0, 1.0, 1.0)
@@ -658,7 +683,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         gpu.state.blend_set('ALPHA')
         _FILL_SHADER.bind()
         _FILL_SHADER.uniform_block("ub", self.UBO)
-        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
         fill_batch.draw(_FILL_SHADER)
         gpu.state.blend_set('NONE')
 
@@ -671,7 +696,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             gpu.state.line_width_set(3)
             _BORDER_SHADER.bind()
             _BORDER_SHADER.uniform_block("ub", self.UBO)
-            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
             border_batch.draw(_BORDER_SHADER)
             gpu.state.line_width_set(1)
 
@@ -686,5 +711,5 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             # Dashed border.
             _BORDER_SHADER.bind()
             _BORDER_SHADER.uniform_block("ub", self.UBO)
-            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)
+            _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
             border_batch.draw(_BORDER_SHADER)

@@ -6,11 +6,10 @@ from ...operators import ot_keymap
 from . import keymap_ui
 
 if TYPE_CHECKING:
-    # Only imported for type-checking
     from ..addon_preferences import XRAYSELPreferences
 
 
-def draw_flow_vertical_separator(flow):
+def draw_flow_vertical_separator(flow: bpy.types.UILayout):
     row = flow.row()
     row.scale_y = 0.7
     row.label(text="")
@@ -49,7 +48,7 @@ def draw_object_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.ty
     flow.label(text="Box tool behavior")
     row = flow.row(align=True)
     row.prop(object_tools_props, "box_select_behavior", text="")
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "selection_behavior"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "selection_behavior"  # pyright: ignore[reportAttributeAccessIssue]
     flow.label(text="Circle tool behavior")
     row = flow.row(align=True)
     row.prop(object_tools_props, "circle_select_behavior", text="")
@@ -64,7 +63,7 @@ def draw_object_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.ty
     flow.label(text="Temporarily hide the gizmo of the active tool")
     row = flow.row(align=True)
     row.prop(object_tools_props, "hide_gizmo", text="Hide Gizmo", icon='GIZMO')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"  # pyright: ignore[reportAttributeAccessIssue]
 
     # Icon
     draw_flow_vertical_separator(flow)
@@ -73,7 +72,7 @@ def draw_object_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.ty
     split.prop(object_tools_props, "show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
     row = split.row(align=True)
     row.prop(object_tools_props, "show_lasso_icon", text="Show Lasso Icon", icon='RESTRICT_SELECT_OFF')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"  # pyright: ignore[reportAttributeAccessIssue]
 
     # Startup
     draw_flow_vertical_separator(flow)
@@ -85,4 +84,4 @@ def draw_object_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.ty
     flow.label(text="Group with built-in selection tools in the toolbar")
     row = flow.row(align=True)
     row.prop(object_tools_props, "group_with_builtins", text="Group with Builtins", icon='GROUP')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"  # pyright: ignore[reportAttributeAccessIssue]

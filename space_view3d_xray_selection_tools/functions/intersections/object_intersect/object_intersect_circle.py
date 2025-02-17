@@ -1,14 +1,26 @@
 from itertools import compress
+from typing import Literal
 
+import bpy
 import numpy as np
 
+from ....types import Bool1DArray
 from ... import geometry_tests
 from . import object_intersect_shared
 
 
-def _get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, center, radius, check_faces=False):
+def _get_obs_mask_overlap_selcircle(
+    obs: list[bpy.types.Object],
+    obs_mask_check: Bool1DArray,
+    depsgraph: bpy.types.Depsgraph,
+    region: bpy.types.Region,
+    rv3d: bpy.types.RegionView3D,
+    center: tuple[int, int],
+    radius: int,
+    check_faces: bool = False,
+):
     list_of_obs_to_check = compress(obs, obs_mask_check)
-    bool_list = []
+    bool_list: list[bool] = []
 
     for ob in list_of_obs_to_check:
         ob_eval = ob.evaluated_get(depsgraph)
@@ -26,14 +38,14 @@ def _get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d
                 bool_list.append(True)
             else:
                 if check_faces:
-                    face_vert_co_2d, face_cell_starts, face_cell_ends, face_loop_totals = (
+                    face_vert_co_2d, face_cell_starts, _face_cell_ends, face_loop_totals = (
                         object_intersect_shared.get_face_vert_co_2d(me, vert_co_2d)
                     )
                     if face_loop_totals.size > 0:
                         faces_mask_cursor_in = geometry_tests.point_inside_polygons_prefiltered(
                             center, face_vert_co_2d, face_cell_starts, face_loop_totals
                         )
-                        bool_list.append(np.any(faces_mask_cursor_in))
+                        bool_list.append(bool(np.any(faces_mask_cursor_in)))
                     else:
                         bool_list.append(False)
                 else:
@@ -44,9 +56,17 @@ def _get_obs_mask_overlap_selcircle(obs, obs_mask_check, depsgraph, region, rv3d
     return bools
 
 
-def _get_obs_mask_in_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, center, radius):
+def _get_obs_mask_in_selcircle(
+    obs: list[bpy.types.Object],
+    obs_mask_check: Bool1DArray,
+    depsgraph: bpy.types.Depsgraph,
+    region: bpy.types.Region,
+    rv3d: bpy.types.RegionView3D,
+    center: tuple[int, int],
+    radius: int,
+):
     list_of_obs_to_check = compress(obs, obs_mask_check)
-    bool_list = []
+    bool_list: list[bool] = []
 
     for ob in list_of_obs_to_check:
         ob_eval = ob.evaluated_get(depsgraph)
@@ -63,7 +83,13 @@ def _get_obs_mask_in_selcircle(obs, obs_mask_check, depsgraph, region, rv3d, cen
     return bools
 
 
-def select_obs_in_circle(context, mode, center, radius, behavior):
+def select_obs_in_circle(
+    context: bpy.types.Context,
+    mode: Literal['SET', 'ADD', 'SUB'],
+    center: tuple[int, int],
+    radius: int,
+    behavior: Literal['ORIGIN', 'CONTAIN', 'OVERLAP'],
+):
     region = context.region
     rv3d = context.region_data
     depsgraph = context.evaluated_depsgraph_get()

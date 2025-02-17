@@ -1,7 +1,9 @@
+import bpy
+
 from . import tools_dummy, tools_main, tools_utils
 
 
-def reload_tools(self, context):
+def reload_tools(_pg: bpy.types.PropertyGroup, _context: bpy.types.Context) -> None:
     """
     Reloads tools by unregistering and registering them again.
     This is used to update tool groups and position in toolbar.
@@ -15,7 +17,7 @@ def reload_tools(self, context):
     tools_dummy.register()
 
 
-def update_keymaps_of_tools(self, context) -> None:
+def update_keymaps_of_tools(_pg: bpy.types.PropertyGroup, _context: bpy.types.Context) -> None:
     """
     Apply changes of addon preferences keymap collection property to keyconfig tool keymaps.
     """

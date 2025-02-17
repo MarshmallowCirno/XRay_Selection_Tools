@@ -16,9 +16,9 @@ def transform_local_to_world_co(mat_world: mathutils.Matrix, co_local: Float3DAr
     Returns:
         Nx3 array of global/world coordinates after applying the transformation matrix.
     """
-    mat_world = np.array(mat_world)
-    mat = mat_world[:3, :3].T  # rotates backwards without T
-    loc = mat_world[:3, 3]
+    mat_world_np = np.array(mat_world)
+    mat = mat_world_np[:3, :3].T  # rotates backwards without T
+    loc = mat_world_np[:3, 3]
     co_world = co_local @ mat + loc
     return co_world
 
@@ -49,7 +49,7 @@ def transform_world_to_2d_co(
     rv3d: bpy.types.RegionView3D,
     co_world: Float3DArray,
     apply_clipping_mask: bool = True,
-) -> Float2DArray | tuple[Float2DArray, Bool1DArray]:
+) -> tuple[Float2DArray, Bool1DArray]:
     """
     Transform global/world coordinates to 2D coordinates using the viewport perspective matrix.
 
@@ -58,14 +58,13 @@ def transform_world_to_2d_co(
         rv3d: 3D region data, typically bpy.context.space_data.region_3d.
         co_world: Nx3 array of 3D world space coordinates.
         apply_clipping_mask:
-            - If True: Replace clipped values with `np.nan` and return the 2D coordinates.
-            - If False: Keep clipped values unchanged and return the 2D coordinates and a clipping mask.
+            - If True: Replace clipped values with `np.nan`.
+            - If False: Keep clipped values unchanged.
 
     Returns:
-        - If `apply_clipping` is True: Nx2 array of 2D coordinates with clipped values replaced by `np.nan`.
-        - If `apply_clipping` is False: A tuple containing:
-            1. Array of 2D coordinates.
-            2. Clipping mask (`np.True` for clipped values, `np.False` otherwise).
+        A tuple containing:
+            - Nx2 array of 2D coordinates.
+            - Clipping mask (`np.True` for clipped values, `np.False` otherwise).
 
     References:
         - Blender's implementation: https://github.com/blender/blender/blob/594f47ecd2d5367ca936cf6fc6ec8168c2b360d0/release/scripts/modules/bpy_extras/view3d_utils.py#L170
@@ -82,16 +81,16 @@ def transform_world_to_2d_co(
     height_half = region.height / 2.0
     prj_w = prj[:, 3]  # negative if coord is behind the origin of a perspective view
 
-    if not apply_clipping_mask:
-        mask_clip = prj_w <= 0
-        prj_w = np.abs(prj_w)
-        co_2d = np.empty((c, 2), "f")
-        co_2d[:, 0] = width_half * (1 + (prj[:, 0] / prj_w))
-        co_2d[:, 1] = height_half * (1 + (prj[:, 1] / prj_w))
-        return co_2d, mask_clip
-
     co_2d = np.empty((c, 2), "f")
+    mask_clip = prj_w <= 0
+
+    if not apply_clipping_mask:
+        prj_w = np.abs(prj_w)
+
     co_2d[:, 0] = width_half * (1 + (prj[:, 0] / prj_w))
     co_2d[:, 1] = height_half * (1 + (prj[:, 1] / prj_w))
-    co_2d[prj_w <= 0] = np.nan
-    return co_2d
+
+    if apply_clipping_mask:
+        co_2d[mask_clip] = np.nan
+
+    return co_2d, mask_clip

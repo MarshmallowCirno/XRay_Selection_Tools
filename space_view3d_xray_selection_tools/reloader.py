@@ -1,7 +1,7 @@
 import importlib
 import pathlib
 import types
-from typing import Iterator
+from collections.abc import Iterator
 
 
 def _module_children(module: types.ModuleType, package_dir: pathlib.Path) -> Iterator[types.ModuleType]:
@@ -18,10 +18,13 @@ def _module_children(module: types.ModuleType, package_dir: pathlib.Path) -> Ite
 
 def _package_modules(package: types.ModuleType) -> list[types.ModuleType]:
     """Returns a list of all modules within a package, including submodules."""
+    assert package.__file__ is not None
     package_dir = pathlib.Path(package.__file__).parent
-    modules = []
-    stack = [(package, _module_children(package, package_dir))]
-    visited = set()
+    modules: list[types.ModuleType] = []
+    stack: list[tuple[types.ModuleType, Iterator[types.ModuleType]]] = [
+        (package, _module_children(package, package_dir))
+    ]
+    visited: set[str] = set()
 
     # Postorder traversal
     while stack:
@@ -30,6 +33,7 @@ def _package_modules(package: types.ModuleType) -> list[types.ModuleType]:
             child = next(children)
             if child.__file__ in visited:
                 continue
+            assert child.__file__ is not None
             visited.add(child.__file__)
             stack.append((child, _module_children(child, package_dir)))
         except StopIteration:

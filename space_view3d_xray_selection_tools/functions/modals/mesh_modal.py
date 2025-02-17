@@ -1,76 +1,97 @@
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast
+
 import bpy
 
 from ... import addon_info
 
+if TYPE_CHECKING:
+    from ...operators.mesh_ot.mesh_ot_box import MESH_OT_select_box_xray
+    from ...operators.mesh_ot.mesh_ot_circle import MESH_OT_select_circle_xray
+    from ...operators.mesh_ot.mesh_ot_lasso import MESH_OT_select_lasso_xray
 
-def gather_overlays(context):
+
+_MESH_OTs: TypeAlias = "MESH_OT_select_box_xray | MESH_OT_select_circle_xray | MESH_OT_select_lasso_xray"
+
+
+def gather_overlays(context: bpy.types.Context) -> dict[str, Any]:
+    sv3d = context.space_data
+    assert isinstance(sv3d, bpy.types.SpaceView3D)
+
     overlays = {
-        "show_xray": context.space_data.shading.show_xray,
-        "show_xray_wireframe": context.space_data.shading.show_xray_wireframe,
-        "show_gizmo": context.space_data.show_gizmo,
+        "show_xray": sv3d.shading.show_xray,
+        "show_xray_wireframe": sv3d.shading.show_xray_wireframe,
+        "show_gizmo": sv3d.show_gizmo,
     }
     if bpy.app.version < (4, 1, 0):
         overlays.update(
             {
-                "xray_alpha": context.space_data.shading.xray_alpha,
-                "xray_alpha_wireframe": context.space_data.shading.xray_alpha_wireframe,
-                "backwire_opacity": context.space_data.overlay.backwire_opacity,
+                "xray_alpha": sv3d.shading.xray_alpha,
+                "xray_alpha_wireframe": sv3d.shading.xray_alpha_wireframe,
+                "backwire_opacity": sv3d.overlay.backwire_opacity,  # type: ignore
             }
         )
     if bpy.app.version >= (4, 1, 0):
-        overlays["show_face_center"] = context.space_data.overlay.show_face_center
+        overlays["show_face_center"] = sv3d.overlay.show_face_center
     return overlays
 
 
-def gather_modifiers(self, context):
-    mods = []
-    mods_to_hide = []
+def gather_modifiers(op: _MESH_OTs, context: bpy.types.Context) -> list[tuple[bpy.types.Modifier, bool]]:
+    mods: list[tuple[bpy.types.Modifier, bool]] = []
+    mods_to_hide: list[Literal['MIRROR', 'SOLIDIFY']] = []
 
-    if self.hide_mirror:
+    if op.hide_mirror:
         mods_to_hide.append('MIRROR')
-    if self.hide_solidify:
+    if op.hide_solidify:
         mods_to_hide.append('SOLIDIFY')
 
     sel_obs = context.selected_objects if context.selected_objects else [context.object]
     for ob in sel_obs:
+        assert isinstance(ob, bpy.types.Object)
         mods.extend([(m, m.show_in_editmode) for m in ob.modifiers if m.type in mods_to_hide])
     return mods
 
 
-def set_properties_from_preferences(self, tool):
+def set_properties_from_preferences(
+    op: _MESH_OTs,
+    tool: Literal['BOX', 'CIRCLE', 'LASSO'],
+) -> None:
     mesh_tools_props = addon_info.get_preferences().mesh_tools
     directions_props = mesh_tools_props.directions_properties
 
-    if not self.override_global_props:
-        if self.directional:  # for initial shading before direction is determined
-            self.select_through = directions_props[0].select_through and directions_props[1].select_through
-            self.show_xray = directions_props[0].show_xray and directions_props[1].show_xray and self.select_through
+    if not op.override_global_props:
+        if op.directional:  # for initial shading before direction is determined
+            op.select_through = directions_props[0].select_through and directions_props[1].select_through
+            op.show_xray = directions_props[0].show_xray and directions_props[1].show_xray and op.select_through
         else:
-            self.select_through = mesh_tools_props.select_through
-            self.default_color = mesh_tools_props.default_color
-            self.select_through_color = mesh_tools_props.select_through_color
-            self.show_xray = mesh_tools_props.show_xray
-            self.select_all_edges = mesh_tools_props.select_all_edges
-            self.select_all_faces = mesh_tools_props.select_all_faces
-            self.select_backfacing = mesh_tools_props.select_backfacing
+            op.select_through = mesh_tools_props.select_through
+            op.default_color = mesh_tools_props.default_color
+            op.select_through_color = mesh_tools_props.select_through_color
+            op.show_xray = mesh_tools_props.show_xray
+            op.select_all_edges = mesh_tools_props.select_all_edges
+            op.select_all_faces = mesh_tools_props.select_all_faces
+            op.select_backfacing = mesh_tools_props.select_backfacing
 
-        self.select_through_toggle_key = mesh_tools_props.select_through_toggle_key
-        self.select_through_toggle_type = mesh_tools_props.select_through_toggle_type
-        self.hide_mirror = mesh_tools_props.hide_mirror
-        self.hide_solidify = mesh_tools_props.hide_solidify
-        self.hide_gizmo = mesh_tools_props.hide_gizmo
+        op.select_through_toggle_key = mesh_tools_props.select_through_toggle_key
+        op.select_through_toggle_type = mesh_tools_props.select_through_toggle_type
+        op.hide_mirror = mesh_tools_props.hide_mirror
+        op.hide_solidify = mesh_tools_props.hide_solidify
+        op.hide_gizmo = mesh_tools_props.hide_gizmo
         match tool:
             case 'BOX':
-                self.show_crosshair = mesh_tools_props.show_crosshair
+                op = cast("MESH_OT_select_box_xray", op)
+                op.show_crosshair = mesh_tools_props.show_crosshair
             case 'LASSO':
-                self.show_lasso_icon = mesh_tools_props.show_lasso_icon
+                op = cast("MESH_OT_select_lasso_xray", op)
+                op.show_lasso_icon = mesh_tools_props.show_lasso_icon
+            case 'CIRCLE':
+                pass
 
 
-def initialize_shading_from_properties(self, context):
-    shading = context.space_data.shading
-    overlay = context.space_data.overlay
+def initialize_shading_from_properties(op: _MESH_OTs, context: bpy.types.Context) -> None:
+    sv3d = context.space_data
+    assert isinstance(sv3d, bpy.types.SpaceView3D)
 
-    if self.directional:
+    if op.directional:
         # If both directions have prop to show xray turned on
         # enable xray shading for wait for input stage.
         directions_props = addon_info.get_preferences().mesh_tools.directions_properties
@@ -80,65 +101,68 @@ def initialize_shading_from_properties(self, context):
             and directions_props[0].show_xray
             and directions_props[1].show_xray
         ):
-            shading.show_xray = True
-            shading.show_xray_wireframe = True
+            sv3d.shading.show_xray = True
+            sv3d.shading.show_xray_wireframe = True
     else:
-        if self.select_through:
+        if op.select_through:
             # Default xray shading should be turned on.
-            if self.show_xray:
-                shading.show_xray = True
-                shading.show_xray_wireframe = True
+            if op.show_xray:
+                sv3d.shading.show_xray = True
+                sv3d.shading.show_xray_wireframe = True
 
             if bpy.app.version < (4, 1, 0):
                 # Hidden xray shading should be turned on to select through if default xray shading is off.
-                if not self.override_intersect_tests:
+                if not op.override_intersect_tests:
                     if (
-                        shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}
-                        and not shading.show_xray
-                        or shading.type == 'WIREFRAME'
-                        and not shading.show_xray_wireframe
+                        sv3d.shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}
+                        and not sv3d.shading.show_xray
+                        or sv3d.shading.type == 'WIREFRAME'
+                        and not sv3d.shading.show_xray_wireframe
                     ):
-                        shading.show_xray = True
-                        shading.show_xray_wireframe = True
-                        shading.xray_alpha = 1.0  # default 0.5
-                        shading.xray_alpha_wireframe = 1.0  # default 0.0
-                        overlay.backwire_opacity = 0.0  # default 0.5
+                        sv3d.shading.show_xray = True
+                        sv3d.shading.show_xray_wireframe = True
+                        sv3d.shading.xray_alpha = 1.0  # default 0.5
+                        sv3d.shading.xray_alpha_wireframe = 1.0  # default 0.0
+                        sv3d.overlay.backwire_opacity = 0.0  # default 0.5  # pyright: ignore [reportAttributeAccessIssue]
 
             if bpy.app.version >= (4, 1, 0):
                 if context.tool_settings.mesh_select_mode[2]:
-                    if not self.select_all_faces and not self.show_xray:
-                        overlay.show_face_center = True
+                    if not op.select_all_faces and not op.show_xray:
+                        sv3d.overlay.show_face_center = True
 
-        if self.hide_gizmo:
-            context.space_data.show_gizmo = False
+        if op.hide_gizmo:
+            sv3d.show_gizmo = False
 
 
-def set_properties_from_direction(self, direction):
+def set_properties_from_direction(
+    op: _MESH_OTs,
+    direction: Literal['LEFT_TO_RIGHT', 'RIGHT_TO_LEFT'],
+) -> None:
     direction_props = addon_info.get_preferences().mesh_tools.directions_properties[direction]
-    self.select_through = direction_props.select_through
-    self.default_color = direction_props.default_color
-    self.select_through_color = direction_props.select_through_color
-    self.show_xray = direction_props.show_xray
-    self.select_all_edges = direction_props.select_all_edges
-    self.select_all_faces = direction_props.select_all_faces
-    self.select_backfacing = direction_props.select_backfacing
+    op.select_through = direction_props.select_through
+    op.default_color = direction_props.default_color
+    op.select_through_color = direction_props.select_through_color
+    op.show_xray = direction_props.show_xray
+    op.select_all_edges = direction_props.select_all_edges
+    op.select_all_faces = direction_props.select_all_faces
+    op.select_backfacing = direction_props.select_backfacing
 
 
-def set_shading_from_properties(self, context):
+def set_shading_from_properties(op: _MESH_OTs, context: bpy.types.Context) -> None:
     """For toggling overlays by hotkey or by changing dragging direction."""
-    shading = context.space_data.shading
-    overlay = context.space_data.overlay
+    sv3d = context.space_data
+    assert isinstance(sv3d, bpy.types.SpaceView3D)
 
     # In general avoiding here turning off xray shading and selecting through if xray shading is already enabled.
-    if not (self.directional and not self.direction):  # skip toggling until direction is determined
+    if not (op.directional and not op.direction):  # skip toggling until direction is determined
         # Enable xray shading when it is enabled in props.
-        if self.show_xray:
-            shading.show_xray = True
-            shading.show_xray_wireframe = True
+        if op.show_xray:
+            sv3d.shading.show_xray = True
+            sv3d.shading.show_xray_wireframe = True
         # Return initial xray shading when xray is off in props (don't hide xray when it is already enabled).
         else:
-            shading.show_xray = self.init_overlays["show_xray"]
-            shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
+            sv3d.shading.show_xray = op.init_overlays["show_xray"]
+            sv3d.shading.show_xray_wireframe = op.init_overlays["show_xray_wireframe"]
 
         if bpy.app.version < (4, 1, 0):
             # If select through is toggled on in props by direction or by key and intersect tests won't be used
@@ -146,90 +170,93 @@ def set_shading_from_properties(self, context):
             # don't use hidden xray shading if default xray shading is already enabled.
             if (
                 (
-                    self.select_through
-                    and not self.invert_select_through
-                    or not self.select_through
-                    and self.invert_select_through
+                    op.select_through
+                    and not op.invert_select_through
+                    or not op.select_through
+                    and op.invert_select_through
                 )
-                and not self.override_intersect_tests
+                and not op.override_intersect_tests
                 and (
-                    shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}
-                    and not shading.show_xray
-                    or shading.type == 'WIREFRAME'
-                    and not shading.show_xray_wireframe
+                    sv3d.shading.type in {'SOLID', 'MATERIAL', 'RENDERED'}
+                    and not sv3d.shading.show_xray
+                    or sv3d.shading.type == 'WIREFRAME'
+                    and not sv3d.shading.show_xray_wireframe
                 )
             ):
-                shading.show_xray = True
-                shading.show_xray_wireframe = True
-                shading.xray_alpha = 1.0  # default 0.5
-                shading.xray_alpha_wireframe = 1.0  # default 0.0
-                overlay.backwire_opacity = 0.0  # default 0.5
+                sv3d.shading.show_xray = True
+                sv3d.shading.show_xray_wireframe = True
+                sv3d.shading.xray_alpha = 1.0  # default 0.5
+                sv3d.shading.xray_alpha_wireframe = 1.0  # default 0.0
+                sv3d.overlay.backwire_opacity = 0.0  # default 0.5  # pyright: ignore [reportAttributeAccessIssue]
             else:
                 # If hidden xray shading should be off, restore initial overlay opacity.
-                shading.xray_alpha = self.init_overlays["xray_alpha"]
-                shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
-                overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+                sv3d.shading.xray_alpha = op.init_overlays["xray_alpha"]
+                sv3d.shading.xray_alpha_wireframe = op.init_overlays["xray_alpha_wireframe"]
+                sv3d.overlay.backwire_opacity = op.init_overlays["backwire_opacity"]  # pyright: ignore [reportAttributeAccessIssue]
 
         if bpy.app.version >= (4, 1, 0):
             # Show face centers in selection through with disabled xray shading.
             if context.tool_settings.mesh_select_mode[2]:
                 if (
                     (
-                        self.select_through
-                        and not self.invert_select_through
-                        or not self.select_through
-                        and self.invert_select_through
+                        op.select_through
+                        and not op.invert_select_through
+                        or not op.select_through
+                        and op.invert_select_through
                     )
-                    and not self.select_all_faces
-                    and not self.show_xray
+                    and not op.select_all_faces
+                    and not op.show_xray
                 ):
-                    overlay.show_face_center = True
+                    sv3d.overlay.show_face_center = True
                 else:
-                    overlay.show_face_center = self.init_overlays["show_face_center"]
+                    sv3d.overlay.show_face_center = op.init_overlays["show_face_center"]
 
         # If select through is toggled off in props by direction or by key
         # return initial xray shading.
-        if (not self.select_through and not self.invert_select_through) or (
-            self.select_through and self.invert_select_through
-        ):
-            shading.show_xray = self.init_overlays["show_xray"]
-            shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
+        if (not op.select_through and not op.invert_select_through) or (op.select_through and op.invert_select_through):
+            sv3d.shading.show_xray = op.init_overlays["show_xray"]
+            sv3d.shading.show_xray_wireframe = op.init_overlays["show_xray_wireframe"]
 
 
-def set_modifiers_from_properties(self):
+def set_modifiers_from_properties(op: _MESH_OTs) -> None:
     """Hide modifiers in editmode or restore initial visibility."""
-    if self.init_mods:
-        if self.select_through:
-            for mod, show_in_editmode in self.init_mods:
+    if op.init_mods:
+        if op.select_through:
+            for mod, show_in_editmode in op.init_mods:
                 if mod.show_in_editmode:
                     mod.show_in_editmode = False
         else:
-            for mod, show_in_editmode in self.init_mods:
+            for mod, show_in_editmode in op.init_mods:
                 if mod.show_in_editmode != show_in_editmode:
                     mod.show_in_editmode = show_in_editmode
 
 
-def restore_overlays(self, context):
-    if self.init_overlays:
-        context.space_data.shading.show_xray = self.init_overlays["show_xray"]
-        context.space_data.shading.show_xray_wireframe = self.init_overlays["show_xray_wireframe"]
-        context.space_data.show_gizmo = self.init_overlays["show_gizmo"]
+def restore_overlays(op: _MESH_OTs, context: bpy.types.Context) -> None:
+    sv3d = context.space_data
+    assert isinstance(sv3d, bpy.types.SpaceView3D)
+
+    if op.init_overlays:
+        sv3d.shading.show_xray = op.init_overlays["show_xray"]
+        sv3d.shading.show_xray_wireframe = op.init_overlays["show_xray_wireframe"]
+        sv3d.show_gizmo = op.init_overlays["show_gizmo"]
         if bpy.app.version < (4, 1, 0):
-            context.space_data.shading.xray_alpha = self.init_overlays["xray_alpha"]
-            context.space_data.shading.xray_alpha_wireframe = self.init_overlays["xray_alpha_wireframe"]
-            context.space_data.overlay.backwire_opacity = self.init_overlays["backwire_opacity"]
+            sv3d.shading.xray_alpha = op.init_overlays["xray_alpha"]
+            sv3d.shading.xray_alpha_wireframe = op.init_overlays["xray_alpha_wireframe"]
+            sv3d.overlay.backwire_opacity = op.init_overlays["backwire_opacity"]  # pyright: ignore [reportAttributeAccessIssue]
         if bpy.app.version >= (4, 1, 0):
-            context.space_data.overlay.show_face_center = self.init_overlays["show_face_center"]
+            sv3d.overlay.show_face_center = op.init_overlays["show_face_center"]
 
 
-def restore_modifiers(self):
-    if self.init_mods:
-        for mod, show_in_editmode in self.init_mods:
+def restore_modifiers(op: _MESH_OTs) -> None:
+    if op.init_mods:
+        for mod, show_in_editmode in op.init_mods:
             if mod.show_in_editmode != show_in_editmode:
                 mod.show_in_editmode = show_in_editmode
 
 
-def get_select_through_toggle_key_list():
+def get_select_through_toggle_key_list() -> (
+    set[Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']]
+):
     match addon_info.get_preferences().mesh_tools.select_through_toggle_key:
         case 'CTRL':
             return {'LEFT_CTRL', 'RIGHT_CTRL'}
@@ -241,20 +268,22 @@ def get_select_through_toggle_key_list():
             return {'DISABLED'}
 
 
-def toggle_alt_mode(self, event):
+def toggle_alt_mode(op: _MESH_OTs, event: bpy.types.Event) -> None:
     if (
         event.ctrl
-        and self.alt_mode_toggle_key == 'CTRL'
+        and op.alt_mode_toggle_key == 'CTRL'
         or event.alt
-        and self.alt_mode_toggle_key == 'ALT'
+        and op.alt_mode_toggle_key == 'ALT'
         or event.shift
-        and self.alt_mode_toggle_key == 'SHIFT'
+        and op.alt_mode_toggle_key == 'SHIFT'
     ):
-        self.curr_mode = self.alt_mode
+        op.curr_mode = op.alt_mode
     else:
-        self.curr_mode = self.mode
+        op.curr_mode = op.mode  # pyright: ignore [reportAttributeAccessIssue]
 
 
-def update_shader_color(self, context):
-    if self.select_through_color != self.default_color:
+def update_shader_color(
+    op: "MESH_OT_select_box_xray | MESH_OT_select_circle_xray | MESH_OT_select_lasso_xray", context: bpy.types.Context
+) -> None:
+    if op.select_through_color != op.default_color:
         context.region.tag_redraw()

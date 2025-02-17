@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 import numpy as np
 
 from ..types import Bool1DArray, Float1DArray, Float2DArray, Float2x2DArray, Int1DArray
@@ -21,7 +23,7 @@ def circle_bbox(center: tuple[float, float], radius: float) -> tuple[float, floa
     return xmin, xmax, ymin, ymax
 
 
-def polygon_bbox(poly: tuple[tuple[float, float], ...]) -> tuple[float, float, float, float]:
+def polygon_bbox(poly: Sequence[tuple[float, float]]) -> tuple[float, float, float, float]:
     """
     Computes the bounding box of a polygon.
 
@@ -432,7 +434,7 @@ def point_inside_polygons_prefiltered(
     prefiltered_poly_vert_co = poly_vert_co[poly_verts_mask_prefiltered]
 
     # Index of the first and the last polygon vertex in the polygon vertices sequence.
-    cumsum = prefiltered_poly_loop_totals.cumsum()
+    cumsum: Int1DArray = prefiltered_poly_loop_totals.cumsum()
     prefiltered_poly_cell_starts = np.insert(cumsum[:-1], 0, 0)
     prefiltered_poly_cell_ends = np.subtract(cumsum, 1)
 
@@ -447,7 +449,7 @@ def point_inside_polygons_prefiltered(
     return polys_mask_has
 
 
-def points_inside_polygon(co: Float2DArray, poly: tuple[tuple[float, float], ...]) -> Bool1DArray:
+def points_inside_polygon(co: Float2DArray, poly: Sequence[tuple[float, float]]) -> Bool1DArray:
     """
     Determines if multiple points lie inside a single polygon using the ray-casting method.
 
@@ -474,11 +476,12 @@ def points_inside_polygon(co: Float2DArray, poly: tuple[tuple[float, float], ...
     point_count = co.shape[0]
     points_mask_in = np.zeros(point_count, "?")
 
-    def loop(p1x, p1y, p2x, p2y):
+    def loop(p1x: float, p1y: float, p2x: float, p2y: float) -> None:
         xints = 0.0
 
         with np.errstate(invalid="ignore"):
-            idx = np.nonzero((y > min(p1y, p2y)) & (y <= max(p1y, p2y)) & (x <= max(p1x, p2x)))[0]
+            predicate: Bool1DArray = (y > min(p1y, p2y)) & (y <= max(p1y, p2y)) & (x <= max(p1x, p2x))
+            idx = np.nonzero(predicate)[0]
 
         if idx.size > 0:
             if p1y != p2y:
@@ -493,7 +496,7 @@ def points_inside_polygon(co: Float2DArray, poly: tuple[tuple[float, float], ...
     return points_mask_in
 
 
-def points_inside_polygon_prefiltered(co: Float2DArray, poly: tuple[tuple[float, float], ...]) -> Bool1DArray:
+def points_inside_polygon_prefiltered(co: Float2DArray, poly: Sequence[tuple[float, float]]) -> Bool1DArray:
     """
     Determines if multiple points lie inside a single polygon using the ray-casting method,
     with pre-filtering for efficiency.
@@ -523,7 +526,7 @@ def points_inside_polygon_prefiltered(co: Float2DArray, poly: tuple[tuple[float,
     return points_mask_in
 
 
-def segments_intersect_polygon(segment_co: Float2x2DArray, poly: tuple[tuple[float, float], ...]) -> Bool1DArray:
+def segments_intersect_polygon(segment_co: Float2x2DArray, poly: Sequence[tuple[float, float]]) -> Bool1DArray:
     """
     Determines if multiple line segments intersect a single polygon or lie fully inside it.
 
@@ -555,7 +558,7 @@ def segments_intersect_polygon(segment_co: Float2x2DArray, poly: tuple[tuple[flo
 
     # isect_seg_seg_v2_int
     # https://github.com/blender/blender/blob/594f47ecd2d5367ca936cf6fc6ec8168c2b360d0/source/blender/blenlib/intern/math_geom.c#L1105  # noqa
-    def loop(p1x, p1y, p2x, p2y):
+    def loop(p1x: Float1DArray, p1y: Float1DArray, p2x: Float1DArray, p2y: Float1DArray) -> Bool1DArray:
         dx0 = s1x - p1x
         dy0 = s1y - p1y
         dx1 = s2x - s1x
@@ -581,7 +584,7 @@ def segments_intersect_polygon(segment_co: Float2x2DArray, poly: tuple[tuple[flo
 
 
 def segments_intersect_polygon_prefiltered(
-    segment_co: Float2x2DArray, poly: tuple[tuple[float, float], ...]
+    segment_co: Float2x2DArray, poly: Sequence[tuple[float, float]]
 ) -> Bool1DArray:
     """
     Determines if multiple line segments intersect a single polygon or lie fully inside it,

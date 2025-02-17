@@ -26,15 +26,14 @@ def _activate_tool():
                         area.tag_redraw()
 
 
-def _activate_tool_on_startup(_):
+def _activate_tool_on_startup(_scene: bpy.types.Scene, _depsgraph: bpy.types.Depsgraph) -> None:
     if _activate_tool_on_startup in bpy.app.handlers.depsgraph_update_post:
         bpy.app.handlers.depsgraph_update_post.remove(_activate_tool_on_startup)
-
     _activate_tool()
 
 
 @bpy.app.handlers.persistent
-def _activate_tool_on_file_load(_) -> None:
+def _activate_tool_on_file_load(_scene: bpy.types.Scene) -> None:
     _activate_tool()
 
 

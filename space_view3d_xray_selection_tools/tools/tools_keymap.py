@@ -1,6 +1,12 @@
+from typing import TYPE_CHECKING, Literal, cast
+
 import bpy
 
 from .. import addon_info
+from ..types import WorkSpaceToolKeymapItem
+
+if TYPE_CHECKING:
+    from ..preferences.properties.keymaps_props import XRAYSELToolKmiPG
 
 FALLBACK_KEYMAP_DICT = {  # keymap_name, (keymap_item_idname, tool_type)
     "3D View Tool: Object, Select Box X-Ray (fallback)": ("object.select_box_xray", "BOX"),
@@ -30,7 +36,7 @@ DUMMY_FALLBACK_KEYMAP_DICT = {  # keymap_name, (keymap_item_idname, tool_type)
 }
 
 
-def add_fallback_keymap(keymap_dict: dict) -> None:
+def add_fallback_keymap(keymap_dict: dict[str, tuple[str, ...]]) -> None:
     """
     Create empty fallback keymap for every tool.
     """
@@ -40,18 +46,24 @@ def add_fallback_keymap(keymap_dict: dict) -> None:
         kc.keymaps.new(name=keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
 
 
-def add_fallback_keymap_items(keymap_dict: dict) -> None:
+def add_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
     """
     Fill tool fallback keymaps with keymap items from addon preferences.
     """
+    # keyconfig.preferences isn't available at blender startup if bpy.app.version < (4, 0, 0)
     kc = bpy.context.window_manager.keyconfigs.active
-    # keyconfig.preferences isn't available at blender startup
-    if kc.preferences is not None:
-        select_mouse = addon_info.get_preferences().select_mouse = kc.preferences.select_mouse
-        rmb_action = addon_info.get_preferences().rmb_action = kc.preferences.rmb_action
-    else:
+    if kc is None or kc.preferences is None:  # pyright: ignore[reportUnnecessaryComparison]
         select_mouse = addon_info.get_preferences().select_mouse
         rmb_action = addon_info.get_preferences().rmb_action
+    else:
+        select_mouse = addon_info.get_preferences().select_mouse = cast(
+            Literal['LEFT', 'RIGHT'],
+            kc.preferences.select_mouse,  # pyright: ignore [reportAttributeAccessIssue]
+        )
+        rmb_action = addon_info.get_preferences().rmb_action = cast(
+            Literal['TWEAK', 'FALLBACK_TOOL'],
+            kc.preferences.rmb_action,  # pyright: ignore [reportAttributeAccessIssue]
+        )
 
     kc = bpy.context.window_manager.keyconfigs.addon
     addon_prefs_keymaps = addon_info.get_preferences().keymaps.tools_keymaps
@@ -66,28 +78,30 @@ def add_fallback_keymap_items(keymap_dict: dict) -> None:
         addon_prefs_keymap = addon_prefs_keymaps[tool]
         addon_prefs_keymap_items = addon_prefs_keymap.kmis
 
-        for key, values in reversed(addon_prefs_keymap_items.items()):
-            if values["active"]:
+        for props_group in reversed(addon_prefs_keymap_items.values()):  # type: ignore
+            kmi_props = cast("XRAYSELToolKmiPG", props_group)
+
+            if kmi_props["active"]:
                 kmi = km.keymap_items.new(
                     keymap_item_idname,
                     event_type,
                     'CLICK_DRAG',
-                    ctrl=values["ctrl"],
-                    shift=values["shift"],
-                    alt=values["alt"],
+                    ctrl=kmi_props["ctrl"],
+                    shift=kmi_props["shift"],
+                    alt=kmi_props["alt"],
                 )
-                if values["name"] != 'DEF':
-                    kmi.properties.mode = values["name"]
+                if kmi_props["name"] != 'DEF':
+                    kmi.properties.mode = kmi_props["name"]  # pyright: ignore [reportAttributeAccessIssue]
 
                 if keymap_item_idname in {
                     "mesh.select_circle_xray",
                     "object.select_circle_xray",
                     "view3d.select_circle",
                 }:
-                    kmi.properties.wait_for_input = False
+                    kmi.properties.wait_for_input = False  # pyright: ignore [reportAttributeAccessIssue]
 
 
-def remove_fallback_keymap_items(keymap_dict: dict) -> None:
+def remove_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
     """
     Remove tool fallback keymap items.
     """
@@ -168,23 +182,23 @@ def populate_preferences_keymaps_of_tools() -> None:
             keymap_dict.pop("AND")
 
         kmis = addon_prefs_tool_keymap.kmis
-        for idname, values in keymap_dict.items():
-            if idname not in kmis.keys():
+        for mode, props in keymap_dict.items():
+            if mode not in kmis:
                 kmi = kmis.add()
-                kmi["name"] = idname
-                kmi["description"] = values["description"]
-                kmi["icon"] = values["icon"]
-                kmi["active"] = values["active"]
-                kmi["shift"] = values["shift"]
-                kmi["ctrl"] = values["ctrl"]
-                kmi["alt"] = values["alt"]
+                kmi["name"] = mode
+                kmi["description"] = props["description"]
+                kmi["icon"] = props["icon"]
+                kmi["active"] = props["active"]
+                kmi["shift"] = props["shift"]
+                kmi["ctrl"] = props["ctrl"]
+                kmi["alt"] = props["alt"]
 
 
-def get_tool_keymap_from_preferences(bl_operator: str) -> tuple:
+def get_tool_keymap_from_preferences(bl_operator: str) -> tuple[WorkSpaceToolKeymapItem, ...]:
     """
     Get tool keymap items from addon preferences keymap collection property.
     """
-    addon_prefs_tool_keymaps = addon_info.get_preferences().keymaps.tools_keymaps
+    addon_prefs_tool_keymaps = addon_info.get_preferences().keymaps.tools_keymaps  # Collection of tools keymaps.
     tool = {
         "mesh.select_box_xray": "BOX",
         "object.select_box_xray": "BOX",
@@ -196,31 +210,33 @@ def get_tool_keymap_from_preferences(bl_operator: str) -> tuple:
         "object.select_lasso_xray": "LASSO",
         "view3d.select_lasso": "LASSO",
     }[bl_operator]
-    addon_prefs_tool_keymap = addon_prefs_tool_keymaps[tool]
-    addon_prefs_tool_keymap_items = addon_prefs_tool_keymap.kmis
+    addon_prefs_tool_keymap = addon_prefs_tool_keymaps[tool]  # Collection of a tool KeymapItemGroups.
+    addon_prefs_tool_keymap_items = addon_prefs_tool_keymap.kmis  # KeymapItems for a tool selection mode.
 
-    keyconfig_tool_keymap_items = []
-    for idname, values in addon_prefs_tool_keymap_items.items():
-        if values["active"]:
+    bl_tool_keymap: list[WorkSpaceToolKeymapItem] = []  # Flattened KeymapItems for tool selection modes.
+    for idname, props_group in addon_prefs_tool_keymap_items.items():  # type: ignore
+        mode = cast(str, idname)
+        kmi_props = cast("XRAYSELToolKmiPG", props_group)
+
+        if kmi_props["active"]:
             kmi = (
                 bl_operator,
                 {
                     "type": 'LEFTMOUSE',
                     "value": 'CLICK_DRAG',
-                    "shift": values["shift"],
-                    "ctrl": values["ctrl"],
-                    "alt": values["alt"],
+                    "shift": kmi_props["shift"],
+                    "ctrl": kmi_props["ctrl"],
+                    "alt": kmi_props["alt"],
                 },
-                {"properties": [("mode", idname)]},
+                {"properties": [("mode", mode)]},
             )
-            if idname == "DEF":
+            if mode == "DEF":
                 kmi[2]["properties"] = []
 
             if tool == "CIRCLE":
-                kmi[2]["properties"].append(("wait_for_input", False))
+                kmi[2]["properties"].append(("wait_for_input", False))  # pyright: ignore [reportArgumentType]
 
-            keyconfig_tool_keymap_items.append(kmi)
+            bl_tool_keymap.append(kmi)
 
-    keyconfig_tool_keymap_items.reverse()
-    keyconfig_tool_keymap_items = tuple(keyconfig_tool_keymap_items)
-    return keyconfig_tool_keymap_items
+    bl_tool_keymap.reverse()
+    return tuple(bl_tool_keymap)

@@ -1,7 +1,8 @@
 import pathlib
+from typing import Any, cast
 
 import bpy
-from bl_ui import space_toolsystem_common
+from bl_ui import space_toolsystem_common, space_toolsystem_toolbar
 
 # Constants
 ICON_PATH = pathlib.Path(__file__).parent.parent / "icon"
@@ -22,19 +23,31 @@ def fix_ordering(bl_context_mode: str) -> None:
     """
     For some reason addon tool group is placed after cursor tool. So swap them.
     """
-    # noinspection PyProtectedMember, PyUnresolvedReferences
-    cls = space_toolsystem_common.ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
-    tools = cls._tools[bl_context_mode]
-
-    has_enough_tools = len(tools) >= 2
-    item1_is_tool = isinstance(tools[1], space_toolsystem_common.ToolDef) and tools[1].idname == "builtin.cursor"
-    item2_is_group = hasattr(tools[2], '__len__') and len(tools[2]) >= 1
-    item2_subitem_is_tool = isinstance(tools[2][0], space_toolsystem_common.ToolDef) and tools[2][0].idname.endswith(
-        "_box_xray"
+    # noinspection PyProtectedMember
+    cls = cast(
+        space_toolsystem_toolbar.VIEW3D_PT_tools_active | None,
+        space_toolsystem_common.ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D'),  # pyright: ignore [reportAttributeAccessIssue]
+    )
+    if cls is None:
+        return
+    tools = cast(
+        list[space_toolsystem_common.ToolDef | tuple[space_toolsystem_common.ToolDef, ...] | None],
+        cls._tools[bl_context_mode],  # pyright: ignore [reportAttributeAccessIssue]
     )
 
-    if has_enough_tools and item1_is_tool and item2_is_group and item2_subitem_is_tool:
-        tools[1], tools[2] = tools[2], tools[1]
+    # Toolbar has enough tools
+    if len(tools) < 2:
+        return
+    # Item #1 is the cursor tool
+    if not isinstance(tools[1], space_toolsystem_common.ToolDef) or tools[1].idname != "builtin.cursor":
+        return
+    # Item #2 is non-empty tool group
+    if not isinstance(tools[2], tuple) or len(tools[2]) == 0:
+        return
+    # Item #2 has xray selection tools
+    if not tools[2][0].idname.endswith("_box_xray"):
+        return
+    tools[1], tools[2] = tools[2], tools[1]
 
 
 def reset_active_tool() -> None:
@@ -45,17 +58,22 @@ def reset_active_tool() -> None:
         set_tool_in_mode(mode, "bultin.select")
 
     # Fallback.
-    # noinspection PyProtectedMember, PyUnresolvedReferences
-    cls = space_toolsystem_common.ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D')
-    cls._tool_group_active = {"bultin.select": 1}
+    # noinspection PyProtectedMember
+    cls = cast(
+        space_toolsystem_toolbar.VIEW3D_PT_tools_active | None,
+        space_toolsystem_common.ToolSelectPanelHelper._tool_class_from_space_type('VIEW_3D'),  # pyright: ignore[reportAttributeAccessIssue]
+    )
+    if cls is None:
+        return
+    cls._tool_group_active = {"bultin.select": 1}  # pyright: ignore[reportAttributeAccessIssue]
 
 
-def set_tool_in_mode(mode, idname) -> None:
-    def _make_func_dict(d=None, **kwargs):
+def set_tool_in_mode(mode: str, idname: str) -> None:
+    def make_func_dict(d: Any = None, **kwargs: Any):
         if d is None:
             d = {}
 
-        def func_dict(d=d, **kwargs):
+        def func_dict(d: Any = d, **kwargs: Any):
             func_dict.__dict__.update(d)
             func_dict.__dict__.update(kwargs)
             return func_dict.__dict__
@@ -70,6 +88,6 @@ def set_tool_in_mode(mode, idname) -> None:
         #     if active_tool.idname in {"builtin.move", "bultin.rotate", "builtin.scale", "builtin.transform"}:
         #         as_fallback = True
 
-        context_override = {"workspace": workspace, "mode": mode}
-        context_override = _make_func_dict(context_override)
+        data = {"workspace": workspace, "mode": mode}
+        context_override = make_func_dict(data)
         space_toolsystem_common.activate_by_id(context_override, space_type='VIEW_3D', idname=idname, as_fallback=False)

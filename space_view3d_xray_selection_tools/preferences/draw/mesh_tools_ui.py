@@ -6,11 +6,10 @@ from ...operators import ot_keymap
 from . import keymap_ui
 
 if TYPE_CHECKING:
-    # Only imported for type-checking
     from ..addon_preferences import XRAYSELPreferences
 
 
-def draw_flow_vertical_separator(flow):
+def draw_flow_vertical_separator(flow: bpy.types.UILayout):
     row = flow.row()
     row.scale_y = 0.7
     row.label(text="")
@@ -24,8 +23,8 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
     use_directional_props = addon_prefs.mesh_tools.directional_box_tool | addon_prefs.mesh_tools.directional_lasso_tool
     mesh_tools_props = addon_prefs.mesh_tools
 
-    dir_tools = []
-    def_tools = ["Circle"]
+    dir_tools: list[str] = []
+    def_tools: list[str] = ["Circle"]
     if mesh_tools_props.directional_box_tool:
         dir_tools.append("Box")
     else:
@@ -141,7 +140,7 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
         # All edges
         row = flow.row(align=True)
         row.label(text="Select all edges intersecting the selection region")
-        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_edges"
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_edges"  # pyright: ignore[reportAttributeAccessIssue]
         split = flow.split(align=True)
         row = split.row(align=True)
         row.active = rtl_select_through_available
@@ -156,7 +155,7 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
         # All faces
         row = flow.row(align=True)
         row.label(text="Select all faces intersecting the selection region")
-        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_faces"
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_faces"  # pyright: ignore[reportAttributeAccessIssue]
         split = flow.split(align=True)
         row = split.row(align=True)
         row.active = rtl_select_through_available
@@ -171,7 +170,7 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
         # Backfacing
         row = flow.row(align=True)
         row.label(text="Select elements with normals pointing away from the view")
-        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_backfacing"
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_backfacing"  # pyright: ignore[reportAttributeAccessIssue]
         split = flow.split(align=True)
         row = split.row(align=True)
         row.active = rtl_select_through_available
@@ -203,19 +202,19 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
         row = flow.row(align=True)
         row.active = def_select_through_available
         row.prop(mesh_tools_props, "select_all_edges", text="Select All Edges", icon='EDGESEL')
-        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_edges"
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_edges"  # pyright: ignore[reportAttributeAccessIssue]
 
         flow.label(text="Select all faces intersecting the selection region")
         row = flow.row(align=True)
         row.active = def_select_through_available
         row.prop(mesh_tools_props, "select_all_faces", text="Select All Faces", icon='FACESEL')
-        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_faces"
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_all_faces"  # pyright: ignore[reportAttributeAccessIssue]
 
         flow.label(text="Select elements with normals pointing away from the view")
         row = flow.row(align=True)
         row.active = def_select_through_available
         row.prop(mesh_tools_props, "select_backfacing", text="Select Backfacing", icon='NORMALS_FACE')
-        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_backfacing"
+        row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "select_backfacing"  # pyright: ignore[reportAttributeAccessIssue]
 
     # Directional toggles
     draw_flow_vertical_separator(flow)
@@ -224,7 +223,7 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
     split.prop(mesh_tools_props, "directional_box_tool", text="Directional Box", icon='UV_SYNC_SELECT')
     row = split.row(align=True)
     row.prop(mesh_tools_props, "directional_lasso_tool", text="Directional Lasso", icon='UV_SYNC_SELECT')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "drag_direction"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "drag_direction"  # pyright: ignore[reportAttributeAccessIssue]
 
     # Modifiers
     draw_flow_vertical_separator(flow)
@@ -237,14 +236,14 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
     split.prop(mesh_tools_props, "hide_mirror", text="Hide Mirror", icon='MOD_MIRROR')
     row = split.row(align=True)
     row.prop(mesh_tools_props, "hide_solidify", text="Hide Solidify", icon='MOD_SOLIDIFY')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_modifiers"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_modifiers"  # pyright: ignore[reportAttributeAccessIssue]
 
     # Gizmo
     draw_flow_vertical_separator(flow)
     flow.label(text="Temporarily hide the gizmo of the active tool")
     row = flow.row(align=True)
     row.prop(mesh_tools_props, "hide_gizmo", text="Hide Gizmo", icon='GIZMO')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "hide_gizmo"  # pyright: ignore[reportAttributeAccessIssue]
 
     # Icon
     draw_flow_vertical_separator(flow)
@@ -253,7 +252,7 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
     split.prop(mesh_tools_props, "show_crosshair", text="Show Crosshair", icon='RESTRICT_SELECT_OFF')
     row = split.row(align=True)
     row.prop(mesh_tools_props, "show_lasso_icon", text="Show Lasso Icon", icon='RESTRICT_SELECT_OFF')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "wait_for_input_cursor"  # pyright: ignore[reportAttributeAccessIssue]
 
     # Startup
     draw_flow_vertical_separator(flow)
@@ -265,4 +264,4 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
     flow.label(text="Group with built-in selection tools in the toolbar")
     row = flow.row(align=True)
     row.prop(mesh_tools_props, "group_with_builtins", text="Group with Builtins", icon='GROUP')
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"  # pyright: ignore[reportAttributeAccessIssue]

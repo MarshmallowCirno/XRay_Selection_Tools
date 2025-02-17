@@ -1,3 +1,5 @@
+from typing import cast
+
 import bpy
 import numpy as np
 
@@ -10,7 +12,7 @@ def center_coordinates(me: bpy.types.Mesh) -> Float3DArray:
     """
     poly_count = len(me.polygons)
     poly_center_co_local = np.empty((poly_count, 3), "f")
-    me.polygons.foreach_get("center", poly_center_co_local.reshape(-1))
+    me.polygons.foreach_get("center", poly_center_co_local.reshape(-1))  # pyright: ignore[reportArgumentType]
     return poly_center_co_local
 
 
@@ -20,7 +22,7 @@ def vertex_count(me: bpy.types.Mesh) -> Int1DArray:
     """
     poly_count = len(me.polygons)
     poly_loop_totals = np.empty(poly_count, "i")
-    me.polygons.foreach_get("loop_total", poly_loop_totals)
+    me.polygons.foreach_get("loop_total", poly_loop_totals)  # pyright: ignore[reportArgumentType]
     return poly_loop_totals
 
 
@@ -33,10 +35,10 @@ def visibility_mask(me: bpy.types.Mesh) -> Bool1DArray:
     if bpy.app.version >= (3, 4, 0):
         if ".hide_poly" not in me.attributes:
             me.attributes.new(name=".hide_poly", type="BOOLEAN", domain="FACE")
-        data = me.attributes[".hide_poly"].data
-        data.foreach_get("value", polys_mask_hid)
+        data = cast(bpy.types.BoolAttribute, me.attributes[".hide_poly"]).data
+        data.foreach_get("value", polys_mask_hid)  # pyright: ignore[reportArgumentType]
     else:
-        me.polygons.foreach_get("hide", polys_mask_hid)
+        me.polygons.foreach_get("hide", polys_mask_hid)  # pyright: ignore[reportArgumentType]
     return ~polys_mask_hid
 
 
@@ -46,7 +48,7 @@ def normal_vector(me: bpy.types.Mesh) -> Float3DArray:
     """
     poly_count = len(me.polygons)
     poly_normal = np.empty((poly_count, 3), "f")
-    me.polygons.foreach_get("normal", poly_normal.reshape(-1))
+    me.polygons.foreach_get("normal", poly_normal.reshape(-1))  # pyright: ignore[reportArgumentType]
     return poly_normal
 
 
@@ -59,8 +61,8 @@ def selection_mask(me: bpy.types.Mesh) -> Bool1DArray:
     if bpy.app.version >= (3, 4, 0):
         if ".select_poly" not in me.attributes:
             me.attributes.new(name=".select_poly", type="BOOLEAN", domain="FACE")
-        data = me.attributes[".select_poly"].data
-        data.foreach_get("value", polys_mask_sel)
+        data = cast(bpy.types.BoolAttribute, me.attributes[".select_poly"]).data
+        data.foreach_get("value", polys_mask_sel)  # pyright: ignore[reportArgumentType]
     else:
-        me.polygons.foreach_get("select", polys_mask_sel)
+        me.polygons.foreach_get("select", polys_mask_sel)  # pyright: ignore[reportArgumentType]
     return polys_mask_sel

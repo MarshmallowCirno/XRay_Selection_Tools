@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, cast
 
 import bpy
 import rna_keymap_ui
@@ -6,12 +6,19 @@ import rna_keymap_ui
 from ...operators import ot_keymap
 
 if TYPE_CHECKING:
+    from ...preferences.properties.keymaps_props import XRAYSELToolKmiPG
     from ..addon_preferences import XRAYSELPreferences
 
 
-def draw_keymap_items(col, km_name, keymap, map_type=None, allow_remove=False):
+def draw_keymap_items(
+    col: bpy.types.UILayout,
+    km_name: str,
+    keymap: list[tuple[bpy.types.KeyMap, bpy.types.KeyMapItem]],
+    map_type: set[Literal['MOUSE', 'TWEAK', 'KEYBOARD']] | None = None,
+    allow_remove: bool = False,
+):
     kc = bpy.context.window_manager.keyconfigs.user
-    km = kc.keymaps.get(km_name)
+    km = kc.keymaps[km_name]
     kmi_idnames = [km_tuple[1].idname for km_tuple in keymap]
     if allow_remove:
         col.context_pointer_set("keymap", km)
@@ -33,9 +40,10 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     col = box.column()
     row = col.row(align=True)
     row.label(text="Shortcuts for activating tools and modifying preferences")
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tools_keymaps"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tools_keymaps"  # pyright: ignore[reportAttributeAccessIssue]
 
     col = box.column()
+    icon: Literal['CHECKBOX_HLT', 'CHECKBOX_DEHLT']
 
     km_col = col.column(align=True)
     icon = 'CHECKBOX_HLT' if keymaps_props.is_mesh_keyboard_keymap_enabled else 'CHECKBOX_DEHLT'
@@ -83,7 +91,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     box.separator()
     row = box.row(align=True)
     row.label(text="Shortcuts for selection modes of toolbar tools")
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_selection_mode_keymaps"
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_selection_mode_keymaps"  # pyright: ignore[reportAttributeAccessIssue]
 
     col = box.column(align=True)
     row = col.row(align=True)
@@ -91,15 +99,15 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
 
     tool = keymaps_props.active_tab
     keymap = addon_prefs.keymaps.tools_keymaps[tool]
-    kmis = keymap.kmis
-    for mode in kmis.keys():
+    keymap_items = keymap.kmis
+    for props_group in keymap_items.values():  # type: ignore
+        kmi_props = cast("XRAYSELToolKmiPG", props_group)
+
         row = col.row(align=True)
-        description = kmis[mode].description
-        icon = kmis[mode].icon
-        row.prop(kmis[mode], "active", text=description, icon=icon)
+        row.prop(kmi_props, "active", text=kmi_props.description, icon=kmi_props.icon)
 
         sub = row.row(align=True)
-        sub.active = kmis[mode].active
-        sub.prop(kmis[mode], "shift", text="Shift", toggle=True)
-        sub.prop(kmis[mode], "ctrl", text="Ctrl", toggle=True)
-        sub.prop(kmis[mode], "alt", text="Alt", toggle=True)
+        sub.active = kmi_props.active
+        sub.prop(kmi_props, "shift", text="Shift", toggle=True)
+        sub.prop(kmi_props, "ctrl", text="Ctrl", toggle=True)
+        sub.prop(kmi_props, "alt", text="Alt", toggle=True)

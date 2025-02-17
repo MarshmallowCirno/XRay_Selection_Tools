@@ -22,7 +22,7 @@ _CLASSES = (
 
 
 def register():
-    from bpy.utils import register_class
+    from bpy.utils import register_class  # pyright: ignore[reportUnknownVariableType]
 
     for cls in _CLASSES:
         register_class(cls)
@@ -35,7 +35,7 @@ def unregister():
     addon_info.get_preferences().mesh_tools.directions_properties.clear()
     addon_info.get_preferences().keymaps.tools_keymaps.clear()
 
-    from bpy.utils import unregister_class
+    from bpy.utils import unregister_class  # pyright: ignore[reportUnknownVariableType]
 
     for cls in _CLASSES:
         unregister_class(cls)

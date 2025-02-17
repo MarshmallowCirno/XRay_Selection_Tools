@@ -31,7 +31,5 @@ def calculate_selection_mask(
             new_selection_mask = cur_selection_mask ^ inside_mask
         case 'AND':
             new_selection_mask = cur_selection_mask & inside_mask
-        case _:
-            raise ValueError("Mode is invalid")
 
     return new_selection_mask
