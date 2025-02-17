@@ -39,13 +39,13 @@ profile = ["gprof2dot (>=2022.7.29)"]
 
 [[package]]
 name = "fake-bpy-module"
-version = "20250104"
+version = "20250217"
 description = "Collection of the fake Blender Python API module for the code completion."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fake_bpy_module-20250104-py3-none-any.whl", hash = "sha256:1f0d4e357278ab83c1880c07a0c15ba0f7b10afcc837a249304f30f66ea3c511"},
-    {file = "fake_bpy_module-20250104.tar.gz", hash = "sha256:c882cf5da412f9bd70b478828033e9118f4750043ab319de4653d05ba7748f5d"},
+    {file = "fake_bpy_module-20250217-py3-none-any.whl", hash = "sha256:9a21df913d05e9d1af904f6495d23f43cd33b15ab75877f57898a9f8225e5595"},
+    {file = "fake_bpy_module-20250217.tar.gz", hash = "sha256:2b7bbe435b2f5a879bdaf6beaee822fb61bab448c9127c0d3a73add5be0c9b1b"},
 ]
 
 [[package]]
@@ -192,4 +192,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11.9"
-content-hash = "9d1d7d6b69fa26ac713d957053b91f5a89eb13fd5b63429179b65555c7f2bd58"
+content-hash = "c5e6f751586c5bae5a10913ea8b44bbcfe2e4705999e33fc1075349a35ed6831"
