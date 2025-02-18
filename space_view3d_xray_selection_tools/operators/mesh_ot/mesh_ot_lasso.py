@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from bpy._typing.rna_enums import OperatorReturnItems
 
 
-class _UBO_struct(ctypes.Structure):
+class _UBOStruct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
         ("u_X", ctypes.c_int),
@@ -34,7 +34,7 @@ class _UBO_struct(ctypes.Structure):
     ]
 
 
-_UBO_source = """
+_UBO_SOURCE = """
 struct Data
 {
   int u_X;
@@ -49,7 +49,7 @@ struct Data
 
 # Icon shader.
 _shader_info = gpu.types.GPUShaderCreateInfo()
-_shader_info.typedef_source(_UBO_source)
+_shader_info.typedef_source(_UBO_SOURCE)
 _shader_info.uniform_buf(0, "Data", "ub")
 _shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 _shader_info.vertex_in(0, 'VEC2', "pos")
@@ -72,12 +72,12 @@ _shader_info.fragment_source(
     }
     """
 )
-_ICON_SHADER = gpu.shader.create_from_info(_shader_info)
+_icon_shader = gpu.shader.create_from_info(_shader_info)
 del _shader_info
 
 # Fill shader.
 _shader_info = gpu.types.GPUShaderCreateInfo()
-_shader_info.typedef_source(_UBO_source)
+_shader_info.typedef_source(_UBO_SOURCE)
 _shader_info.uniform_buf(0, "Data", "ub")
 _shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 _shader_info.vertex_in(0, 'VEC2', "pos")
@@ -98,7 +98,7 @@ _shader_info.fragment_source(
     }
     """
 )
-_FILL_SHADER = gpu.shader.create_from_info(_shader_info)
+_fill_shader = gpu.shader.create_from_info(_shader_info)
 del _shader_info
 
 # Border shader.
@@ -106,7 +106,7 @@ _vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # pyright: ignore[r
 _vert_out.smooth('FLOAT', "v_Len")
 
 _shader_info = gpu.types.GPUShaderCreateInfo()
-_shader_info.typedef_source(_UBO_source)
+_shader_info.typedef_source(_UBO_SOURCE)
 _shader_info.uniform_buf(0, "Data", "ub")
 _shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 _shader_info.vertex_in(0, 'VEC2', "pos")
@@ -362,7 +362,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
         self.handler: Any | None = None
         self.icon_batch: gpu.types.GPUBatch | None = None
-        self.UBO_data: _UBO_struct = _UBO_struct()
+        self.UBO_data: _UBOStruct = _UBOStruct()
         self.UBO: gpu.types.GPUUniformBuf = gpu.types.GPUUniformBuf(
             gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
         )
@@ -619,13 +619,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         context.region.tag_redraw()
 
     def build_icon_shader(self) -> None:
-        vertices = lasso_cursor.lasso_cursor
-
-        lengths = [0.0]
-        for a, b in zip(vertices[:-1], vertices[1:]):
-            lengths.append(lengths[-1] + (a - b).length)
-
-        self.icon_batch = batch.batch_for_shader(_ICON_SHADER, 'LINES', {"pos": vertices})  # pyright: ignore [reportArgumentType]
+        vertices = lasso_cursor.LASSO_CURSOR
+        self.icon_batch = batch.batch_for_shader(_icon_shader, 'LINES', {"pos": vertices})
 
     def draw_icon_shader(self) -> None:
         matrix = gpu.matrix.get_projection_matrix()
@@ -648,10 +643,10 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
         # Icon.
         assert isinstance(self.icon_batch, gpu.types.GPUBatch)
-        _ICON_SHADER.bind()
-        _ICON_SHADER.uniform_block("ub", self.UBO)
-        _ICON_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore [reportArgumentType]
-        self.icon_batch.draw(_ICON_SHADER)
+        _icon_shader.bind()
+        _icon_shader.uniform_block("ub", self.UBO)
+        _icon_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore [reportArgumentType]
+        self.icon_batch.draw(_icon_shader)
 
     def draw_lasso_shader_bgl(self, context: bpy.types.Context) -> None:
         # Create batches.
@@ -670,8 +665,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         )
 
         border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})  # pyright: ignore [reportArgumentType]
-        fill_batch = batch.batch_for_shader(_FILL_SHADER, 'TRI_FAN', {"pos": vertices})  # pyright: ignore [reportArgumentType]
-        stencil_batch = batch.batch_for_shader(_FILL_SHADER, 'TRI_FAN', {"pos": bbox_vertices})
+        fill_batch = batch.batch_for_shader(_fill_shader, 'TRI_FAN', {"pos": vertices})  # pyright: ignore [reportArgumentType]
+        stencil_batch = batch.batch_for_shader(_fill_shader, 'TRI_FAN', {"pos": bbox_vertices})
 
         matrix = gpu.matrix.get_projection_matrix()
         if (
@@ -705,10 +700,10 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_INVERT)  # pyright: ignore [reportArgumentType]
         bgl.glStencilMask(1)
 
-        _FILL_SHADER.bind()
-        _FILL_SHADER.uniform_block("ub", self.UBO)
-        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore [reportArgumentType]
-        fill_batch.draw(_FILL_SHADER)
+        _fill_shader.bind()
+        _fill_shader.uniform_block("ub", self.UBO)
+        _fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore [reportArgumentType]
+        fill_batch.draw(_fill_shader)
 
         sv3d = context.space_data
         assert isinstance(sv3d, bpy.types.SpaceView3D)
@@ -721,7 +716,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
         # Fill.
         bgl.glEnable(bgl.GL_BLEND)  # pyright: ignore [reportArgumentType]
-        stencil_batch.draw(_FILL_SHADER)
+        stencil_batch.draw(_fill_shader)
         bgl.glDisable(bgl.GL_BLEND)  # pyright: ignore [reportArgumentType]
 
         # Border.
@@ -765,7 +760,7 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
         for a, b in zip(vertices[:-1], vertices[1:]):
             lengths.append(lengths[-1] + (a - b).length)
 
-        fill_batch = batch.batch_for_shader(_FILL_SHADER, 'TRIS', {"pos": triangles})
+        fill_batch = batch.batch_for_shader(_fill_shader, 'TRIS', {"pos": triangles})
         border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})  # pyright: ignore [reportArgumentType]
 
         matrix = gpu.matrix.get_projection_matrix()
@@ -793,10 +788,10 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
 
         # Fill.
         gpu.state.blend_set('ALPHA')
-        _FILL_SHADER.bind()
-        _FILL_SHADER.uniform_block("ub", self.UBO)
-        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
-        fill_batch.draw(_FILL_SHADER)
+        _fill_shader.bind()
+        _fill_shader.uniform_block("ub", self.UBO)
+        _fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
+        fill_batch.draw(_fill_shader)
         gpu.state.blend_set('NONE')
 
         # Border.

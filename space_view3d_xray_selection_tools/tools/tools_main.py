@@ -183,9 +183,9 @@ class ToolSelectLassoXrayObject(bpy.types.WorkSpaceTool):
         row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
 
-_BOX_TOOLS = (ToolSelectBoxXrayMesh, ToolSelectBoxXrayObject)
-_CIRCLE_TOOLS = (ToolSelectCircleXrayMesh, ToolSelectCircleXrayObject)
-_LASSO_TOOLS = (ToolSelectLassoXrayMesh, ToolSelectLassoXrayObject)
+_box_tools = (ToolSelectBoxXrayMesh, ToolSelectBoxXrayObject)
+_circle_tools = (ToolSelectCircleXrayMesh, ToolSelectCircleXrayObject)
+_lasso_tools = (ToolSelectLassoXrayMesh, ToolSelectLassoXrayObject)
 
 
 def register() -> None:
@@ -200,9 +200,9 @@ def register() -> None:
     ToolSelectLassoXrayObject.bl_keymap = tools_keymap.get_tool_keymap_from_preferences("object.select_lasso_xray")
 
     for box_tool, circle_tool, lasso_tool, use_builtins in zip(
-        _BOX_TOOLS,
-        _CIRCLE_TOOLS,
-        _LASSO_TOOLS,
+        _box_tools,
+        _circle_tools,
+        _lasso_tools,
         (
             addon_info.get_preferences().mesh_tools.group_with_builtins,
             addon_info.get_preferences().object_tools.group_with_builtins,
@@ -223,12 +223,12 @@ def register() -> None:
             tools_utils.fix_ordering(box_tool.bl_context_mode)
 
     # Fallback keymap - keymap for tool used as fallback tool
-    tools_keymap.add_fallback_keymap(tools_keymap.FALLBACK_KEYMAP_DICT)
-    tools_keymap.add_fallback_keymap_items(tools_keymap.FALLBACK_KEYMAP_DICT)
+    tools_keymap.add_fallback_keymap(tools_keymap.MAIN_FALLBACK_KEYMAP_TEMPLATES)
+    tools_keymap.add_fallback_keymap_items(tools_keymap.MAIN_FALLBACK_KEYMAP_TEMPLATES)
 
 
 def unregister() -> None:
-    tools_keymap.remove_fallback_keymap_items(tools_keymap.FALLBACK_KEYMAP_DICT)
+    tools_keymap.remove_fallback_keymap_items(tools_keymap.MAIN_FALLBACK_KEYMAP_TEMPLATES)
 
-    for tool in (*_BOX_TOOLS, *_CIRCLE_TOOLS, *_LASSO_TOOLS):
+    for tool in (*_box_tools, *_circle_tools, *_lasso_tools):
         bpy.utils.unregister_tool(tool)

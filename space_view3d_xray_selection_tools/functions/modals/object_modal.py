@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from ...operators.object_ot.object_ot_circle import OBJECT_OT_select_circle_xray
     from ...operators.object_ot.object_ot_lasso import OBJECT_OT_select_lasso_xray
 
-_OBJECT_OTs: TypeAlias = "OBJECT_OT_select_box_xray | OBJECT_OT_select_circle_xray | OBJECT_OT_select_lasso_xray"
+_OBJECT_OT: TypeAlias = "OBJECT_OT_select_box_xray | OBJECT_OT_select_circle_xray | OBJECT_OT_select_lasso_xray"
 
 
 def gather_overlays(context: bpy.types.Context) -> dict[str, Any]:
@@ -24,7 +24,7 @@ def gather_overlays(context: bpy.types.Context) -> dict[str, Any]:
     return overlays
 
 
-def set_properties(op: _OBJECT_OTs, tool: Literal['BOX', 'CIRCLE', 'LASSO']) -> None:
+def set_properties(op: _OBJECT_OT, tool: Literal['BOX', 'CIRCLE', 'LASSO']) -> None:
     object_tools_props = addon_info.get_preferences().object_tools
 
     if not op.override_global_props:
@@ -46,7 +46,7 @@ def set_properties(op: _OBJECT_OTs, tool: Literal['BOX', 'CIRCLE', 'LASSO']) -> 
                 op.behavior = op.curr_behavior = object_tools_props.lasso_select_behavior
 
 
-def sync_properties(op: _OBJECT_OTs, context: bpy.types.Context) -> None:
+def sync_properties(op: _OBJECT_OT, context: bpy.types.Context) -> None:
     """Sync operator parameters to current context shading. So if xray already enabled
     make sure it would be possible to toggle it regardless of operator parameters."""
     sv3d = context.space_data
@@ -61,7 +61,7 @@ def sync_properties(op: _OBJECT_OTs, context: bpy.types.Context) -> None:
         op.show_xray = True
 
 
-def toggle_overlays(op: _OBJECT_OTs, context: bpy.types.Context) -> None:
+def toggle_overlays(op: _OBJECT_OT, context: bpy.types.Context) -> None:
     sv3d = context.space_data
     assert isinstance(sv3d, bpy.types.SpaceView3D)
 
@@ -74,7 +74,7 @@ def toggle_overlays(op: _OBJECT_OTs, context: bpy.types.Context) -> None:
         sv3d.show_gizmo = False
 
 
-def restore_overlays(op: _OBJECT_OTs, context: bpy.types.Context) -> None:
+def restore_overlays(op: _OBJECT_OT, context: bpy.types.Context) -> None:
     sv3d = context.space_data
     assert isinstance(sv3d, bpy.types.SpaceView3D)
 
@@ -98,7 +98,7 @@ def get_xray_toggle_key_list() -> (
             return {'DISABLED'}
 
 
-def toggle_alt_mode(op: _OBJECT_OTs, event: bpy.types.Event) -> None:
+def toggle_alt_mode(op: _OBJECT_OT, event: bpy.types.Event) -> None:
     if (
         event.ctrl
         and op.alt_mode_toggle_key == 'CTRL'

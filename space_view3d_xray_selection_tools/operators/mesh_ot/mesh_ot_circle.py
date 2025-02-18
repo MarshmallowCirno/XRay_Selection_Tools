@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from bpy._typing.rna_enums import OperatorReturnItems
 
 
-class _UBO_struct(ctypes.Structure):
+class _UBOStruct(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
         ("u_X", ctypes.c_int),
@@ -27,7 +27,7 @@ class _UBO_struct(ctypes.Structure):
     ]
 
 
-_UBO_source = """
+_UBO_SOURCE = """
 struct Data
 {
   int u_X;
@@ -41,7 +41,7 @@ struct Data
 
 # Fill shader.
 _shader_info = gpu.types.GPUShaderCreateInfo()
-_shader_info.typedef_source(_UBO_source)
+_shader_info.typedef_source(_UBO_SOURCE)
 _shader_info.uniform_buf(0, "Data", "ub")
 _shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 _shader_info.vertex_in(0, 'VEC2', "pos")
@@ -62,7 +62,7 @@ _shader_info.fragment_source(
     }
     """
 )
-_FILL_SHADER = gpu.shader.create_from_info(_shader_info)
+_fill_shader = gpu.shader.create_from_info(_shader_info)
 del _shader_info
 
 # Border shader.
@@ -70,7 +70,7 @@ _vert_out = gpu.types.GPUStageInterfaceInfo("my_interface")  # pyright: ignore [
 _vert_out.smooth('FLOAT', "v_Len")
 
 _shader_info = gpu.types.GPUShaderCreateInfo()
-_shader_info.typedef_source(_UBO_source)
+_shader_info.typedef_source(_UBO_SOURCE)
 _shader_info.uniform_buf(0, "Data", "ub")
 _shader_info.push_constant('MAT4', "u_ViewProjectionMatrix")
 _shader_info.vertex_in(0, 'VEC2', "pos")
@@ -99,7 +99,7 @@ _shader_info.fragment_source(
     }
     """
 )
-_BORDER_SHADER = gpu.shader.create_from_info(_shader_info)
+_border_shader = gpu.shader.create_from_info(_shader_info)
 del _vert_out
 del _shader_info
 
@@ -314,7 +314,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.handler: Any | None = None
         self.border_batch: gpu.types.GPUBatch | None = None
         self.fill_batch: gpu.types.GPUBatch | None = None
-        self.UBO_data: _UBO_struct = _UBO_struct()
+        self.UBO_data: _UBOStruct = _UBOStruct()
         self.UBO: gpu.types.GPUUniformBuf = gpu.types.GPUUniformBuf(
             gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
         )
@@ -558,11 +558,11 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         vertices = self.get_circle_verts_orig(self.radius)
         segment = (mathutils.Vector(vertices[0]) - mathutils.Vector(vertices[1])).length
         lengths = [segment * i for i in range(32)]
-        self.border_batch = batch.batch_for_shader(_BORDER_SHADER, 'LINE_STRIP', {"pos": vertices, "len": lengths})
+        self.border_batch = batch.batch_for_shader(_border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch.batch_for_shader(_FILL_SHADER, 'TRI_FAN', {"pos": vertices})
+        self.fill_batch = batch.batch_for_shader(_fill_shader, 'TRI_FAN', {"pos": vertices})
 
     def draw_circle_shader(self) -> None:
         matrix = gpu.matrix.get_projection_matrix()
@@ -590,15 +590,15 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         # Fill.
         assert isinstance(self.fill_batch, gpu.types.GPUBatch)
         gpu.state.blend_set("ALPHA")
-        _FILL_SHADER.bind()
-        _FILL_SHADER.uniform_block("ub", self.UBO)
-        _FILL_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
-        self.fill_batch.draw(_FILL_SHADER)
+        _fill_shader.bind()
+        _fill_shader.uniform_block("ub", self.UBO)
+        _fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
+        self.fill_batch.draw(_fill_shader)
         gpu.state.blend_set("NONE")
 
         # Border.
         assert isinstance(self.border_batch, gpu.types.GPUBatch)
-        _BORDER_SHADER.bind()
-        _BORDER_SHADER.uniform_block("ub", self.UBO)
-        _BORDER_SHADER.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
-        self.border_batch.draw(_BORDER_SHADER)
+        _border_shader.bind()
+        _border_shader.uniform_block("ub", self.UBO)
+        _border_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
+        self.border_batch.draw(_border_shader)

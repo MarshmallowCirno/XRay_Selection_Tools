@@ -237,12 +237,12 @@ def register() -> None:
             tools_utils.fix_ordering(box_tool.bl_context_mode)
 
     # Fallback keymap - keymap for tool used as fallback tool
-    tools_keymap.add_fallback_keymap(tools_keymap.DUMMY_FALLBACK_KEYMAP_DICT)
-    tools_keymap.add_fallback_keymap_items(tools_keymap.DUMMY_FALLBACK_KEYMAP_DICT)
+    tools_keymap.add_fallback_keymap(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
+    tools_keymap.add_fallback_keymap_items(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
 
 
 def unregister() -> None:
-    tools_keymap.remove_fallback_keymap_items(tools_keymap.DUMMY_FALLBACK_KEYMAP_DICT)
+    tools_keymap.remove_fallback_keymap_items(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
 
     for tool in (*_box_tools, *_circle_tools, *_lasso_tools):
         bpy.utils.unregister_tool(tool)

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal, NamedTuple, cast
 
 import bpy
 
@@ -8,45 +8,53 @@ from ..types import WorkSpaceToolKeymapItem
 if TYPE_CHECKING:
     from ..preferences.properties.keymaps_props import XRAYSELToolKmiPG
 
-FALLBACK_KEYMAP_DICT = {  # keymap_name, (keymap_item_idname, tool_type)
-    "3D View Tool: Object, Select Box X-Ray (fallback)": ("object.select_box_xray", "BOX"),
-    "3D View Tool: Object, Select Circle X-Ray (fallback)": ("object.select_circle_xray", "CIRCLE"),
-    "3D View Tool: Object, Select Lasso X-Ray (fallback)": ("object.select_lasso_xray", "LASSO"),
-    "3D View Tool: Edit Mesh, Select Box X-Ray (fallback)": ("mesh.select_box_xray", "BOX"),
-    "3D View Tool: Edit Mesh, Select Circle X-Ray (fallback)": ("mesh.select_circle_xray", "CIRCLE"),
-    "3D View Tool: Edit Mesh, Select Lasso X-Ray (fallback)": ("mesh.select_lasso_xray", "LASSO"),
-}
 
-DUMMY_FALLBACK_KEYMAP_DICT = {  # keymap_name, (keymap_item_idname, tool_type)
-    "3D View Tool: Edit Curve, Select Box X-Ray (fallback)": ("view3d.select_box", "BOX"),
-    "3D View Tool: Edit Curve, Select Circle X-Ray (fallback)": ("view3d.select_circle", "CIRCLE"),
-    "3D View Tool: Edit Curve, Select Lasso X-Ray (fallback)": ("view3d.select_lasso", "LASSO"),
-    "3D View Tool: Edit Armature, Select Box X-Ray (fallback)": ("view3d.select_box", "BOX"),
-    "3D View Tool: Edit Armature, Select Circle X-Ray (fallback)": ("view3d.select_circle", "CIRCLE"),
-    "3D View Tool: Edit Armature, Select Lasso X-Ray (fallback)": ("view3d.select_lasso", "LASSO"),
-    "3D View Tool: Edit Metaball, Select Box X-Ray (fallback)": ("view3d.select_box", "BOX"),
-    "3D View Tool: Edit Metaball, Select Circle X-Ray (fallback)": ("view3d.select_circle", "CIRCLE"),
-    "3D View Tool: Edit Metaball, Select Lasso X-Ray (fallback)": ("view3d.select_lasso", "LASSO"),
-    "3D View Tool: Edit Lattice, Select Box X-Ray (fallback)": ("view3d.select_box", "BOX"),
-    "3D View Tool: Edit Lattice, Select Circle X-Ray (fallback)": ("view3d.select_circle", "CIRCLE"),
-    "3D View Tool: Edit Lattice, Select Lasso X-Ray (fallback)": ("view3d.select_lasso", "LASSO"),
-    "3D View Tool: Pose, Select Box X-Ray (fallback)": ("view3d.select_box", "BOX"),
-    "3D View Tool: Pose, Select Circle X-Ray (fallback)": ("view3d.select_circle", "CIRCLE"),
-    "3D View Tool: Pose, Select Lasso X-Ray (fallback)": ("view3d.select_lasso", "LASSO"),
-}
+class _FallbackKeymapTemplate(NamedTuple):
+    keymap_name: str
+    operator_idname: str
+    tool: Literal['BOX', 'CIRCLE', 'LASSO']
 
 
-def add_fallback_keymap(keymap_dict: dict[str, tuple[str, ...]]) -> None:
+_MAIN_DATA = (
+    ("3D View Tool: Object, Select Box X-Ray (fallback)", "object.select_box_xray", 'BOX'),
+    ("3D View Tool: Object, Select Circle X-Ray (fallback)", "object.select_circle_xray", 'CIRCLE'),
+    ("3D View Tool: Object, Select Lasso X-Ray (fallback)", "object.select_lasso_xray", 'LASSO'),
+    ("3D View Tool: Edit Mesh, Select Box X-Ray (fallback)", "mesh.select_box_xray", 'BOX'),
+    ("3D View Tool: Edit Mesh, Select Circle X-Ray (fallback)", "mesh.select_circle_xray", 'CIRCLE'),
+    ("3D View Tool: Edit Mesh, Select Lasso X-Ray (fallback)", "mesh.select_lasso_xray", 'LASSO'),
+)
+_DUMMY_DATA = (
+    ("3D View Tool: Edit Curve, Select Box X-Ray (fallback)", "view3d.select_box", "BOX"),
+    ("3D View Tool: Edit Curve, Select Circle X-Ray (fallback)", "view3d.select_circle", "CIRCLE"),
+    ("3D View Tool: Edit Curve, Select Lasso X-Ray (fallback)", "view3d.select_lasso", "LASSO"),
+    ("3D View Tool: Edit Armature, Select Box X-Ray (fallback)", "view3d.select_box", "BOX"),
+    ("3D View Tool: Edit Armature, Select Circle X-Ray (fallback)", "view3d.select_circle", "CIRCLE"),
+    ("3D View Tool: Edit Armature, Select Lasso X-Ray (fallback)", "view3d.select_lasso", "LASSO"),
+    ("3D View Tool: Edit Metaball, Select Box X-Ray (fallback)", "view3d.select_box", "BOX"),
+    ("3D View Tool: Edit Metaball, Select Circle X-Ray (fallback)", "view3d.select_circle", "CIRCLE"),
+    ("3D View Tool: Edit Metaball, Select Lasso X-Ray (fallback)", "view3d.select_lasso", "LASSO"),
+    ("3D View Tool: Edit Lattice, Select Box X-Ray (fallback)", "view3d.select_box", "BOX"),
+    ("3D View Tool: Edit Lattice, Select Circle X-Ray (fallback)", "view3d.select_circle", "CIRCLE"),
+    ("3D View Tool: Edit Lattice, Select Lasso X-Ray (fallback)", "view3d.select_lasso", "LASSO"),
+    ("3D View Tool: Pose, Select Box X-Ray (fallback)", "view3d.select_box", "BOX"),
+    ("3D View Tool: Pose, Select Circle X-Ray (fallback)", "view3d.select_circle", "CIRCLE"),
+    ("3D View Tool: Pose, Select Lasso X-Ray (fallback)", "view3d.select_lasso", "LASSO"),
+)
+MAIN_FALLBACK_KEYMAP_TEMPLATES = tuple(map(_FallbackKeymapTemplate._make, _MAIN_DATA))
+DUMMY_FALLBACK_KEYMAP_TEMPLATES = tuple(map(_FallbackKeymapTemplate._make, _DUMMY_DATA))
+
+
+def add_fallback_keymap(keymap_templates: tuple[_FallbackKeymapTemplate, ...]) -> None:
     """
     Create empty fallback keymap for every tool.
     """
     # https://developer.blender.org/rBc9d9bfa84ad
     kc = bpy.context.window_manager.keyconfigs.default
-    for keymap_name in keymap_dict.keys():
-        kc.keymaps.new(name=keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
+    for template in keymap_templates:
+        kc.keymaps.new(name=template.keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
 
 
-def add_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
+def add_fallback_keymap_items(keymap_templates: tuple[_FallbackKeymapTemplate, ...]) -> None:
     """
     Fill tool fallback keymaps with keymap items from addon preferences.
     """
@@ -73,9 +81,9 @@ def add_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
     else:
         event_type = 'LEFTMOUSE'
 
-    for keymap_name, (keymap_item_idname, tool) in keymap_dict.items():
-        km = kc.keymaps.new(name=keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
-        addon_prefs_keymap = addon_prefs_keymaps[tool]
+    for template in keymap_templates:
+        km = kc.keymaps.new(name=template.keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
+        addon_prefs_keymap = addon_prefs_keymaps[template.tool]
         addon_prefs_keymap_items = addon_prefs_keymap.kmis
 
         for props_group in reversed(addon_prefs_keymap_items.values()):  # type: ignore
@@ -83,7 +91,7 @@ def add_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
 
             if kmi_props["active"]:
                 kmi = km.keymap_items.new(
-                    keymap_item_idname,
+                    template.operator_idname,
                     event_type,
                     'CLICK_DRAG',
                     ctrl=kmi_props["ctrl"],
@@ -93,7 +101,7 @@ def add_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
                 if kmi_props["name"] != 'DEF':
                     kmi.properties.mode = kmi_props["name"]  # pyright: ignore [reportAttributeAccessIssue]
 
-                if keymap_item_idname in {
+                if template.operator_idname in {
                     "mesh.select_circle_xray",
                     "object.select_circle_xray",
                     "view3d.select_circle",
@@ -101,13 +109,13 @@ def add_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
                     kmi.properties.wait_for_input = False  # pyright: ignore [reportAttributeAccessIssue]
 
 
-def remove_fallback_keymap_items(keymap_dict: dict[str, tuple[str, ...]]) -> None:
+def remove_fallback_keymap_items(keymap_templates: tuple[_FallbackKeymapTemplate, ...]) -> None:
     """
     Remove tool fallback keymap items.
     """
-    for keymap_name in keymap_dict.keys():
-        kc = bpy.context.window_manager.keyconfigs.addon
-        km = kc.keymaps.get(keymap_name)
+    kc = bpy.context.window_manager.keyconfigs.addon
+    for template in keymap_templates:
+        km = kc.keymaps.get(template.keymap_name)
         if km is not None:
             for kmi in km.keymap_items:
                 km.keymap_items.remove(kmi)

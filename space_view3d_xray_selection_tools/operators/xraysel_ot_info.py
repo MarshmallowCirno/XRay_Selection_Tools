@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from bpy._typing.rna_enums import OperatorReturnItems
 
 
-_INFO_TEXTS: dict[str, tuple[str, ...]] = {
+_info_texts: dict[str, tuple[str, ...]] = {
     "select_all_edges": (
         "By default, in selection through mode tools select only edges, both vertices of which are inside a "
         "selection region. Enable this option if you want to select all edges, that overlap a selection region "
@@ -88,7 +88,7 @@ class XRAYSEL_OT_show_info_popup(bpy.types.Operator):
         button: bpy.props.StringProperty()
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
-        description = _INFO_TEXTS.get(self.button, ("Description not found",))
+        description = _info_texts.get(self.button, ("Description not found",))
         draw_func = partial(_draw_func, description=description)
         context.window_manager.popover(draw_func, ui_units_x=31, keymap=None, from_active_button=True)
         return {'FINISHED'}

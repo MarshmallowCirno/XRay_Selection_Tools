@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ...operators.mesh_ot.mesh_ot_lasso import MESH_OT_select_lasso_xray
 
 
-_MESH_OTs: TypeAlias = "MESH_OT_select_box_xray | MESH_OT_select_circle_xray | MESH_OT_select_lasso_xray"
+_MESH_OT: TypeAlias = "MESH_OT_select_box_xray | MESH_OT_select_circle_xray | MESH_OT_select_lasso_xray"
 
 
 def gather_overlays(context: bpy.types.Context) -> dict[str, Any]:
@@ -35,7 +35,7 @@ def gather_overlays(context: bpy.types.Context) -> dict[str, Any]:
     return overlays
 
 
-def gather_modifiers(op: _MESH_OTs, context: bpy.types.Context) -> list[tuple[bpy.types.Modifier, bool]]:
+def gather_modifiers(op: _MESH_OT, context: bpy.types.Context) -> list[tuple[bpy.types.Modifier, bool]]:
     mods: list[tuple[bpy.types.Modifier, bool]] = []
     mods_to_hide: list[Literal['MIRROR', 'SOLIDIFY']] = []
 
@@ -52,7 +52,7 @@ def gather_modifiers(op: _MESH_OTs, context: bpy.types.Context) -> list[tuple[bp
 
 
 def set_properties_from_preferences(
-    op: _MESH_OTs,
+    op: _MESH_OT,
     tool: Literal['BOX', 'CIRCLE', 'LASSO'],
 ) -> None:
     mesh_tools_props = addon_info.get_preferences().mesh_tools
@@ -87,7 +87,7 @@ def set_properties_from_preferences(
                 pass
 
 
-def initialize_shading_from_properties(op: _MESH_OTs, context: bpy.types.Context) -> None:
+def initialize_shading_from_properties(op: _MESH_OT, context: bpy.types.Context) -> None:
     sv3d = context.space_data
     assert isinstance(sv3d, bpy.types.SpaceView3D)
 
@@ -135,7 +135,7 @@ def initialize_shading_from_properties(op: _MESH_OTs, context: bpy.types.Context
 
 
 def set_properties_from_direction(
-    op: _MESH_OTs,
+    op: _MESH_OT,
     direction: Literal['LEFT_TO_RIGHT', 'RIGHT_TO_LEFT'],
 ) -> None:
     direction_props = addon_info.get_preferences().mesh_tools.directions_properties[direction]
@@ -148,7 +148,7 @@ def set_properties_from_direction(
     op.select_backfacing = direction_props.select_backfacing
 
 
-def set_shading_from_properties(op: _MESH_OTs, context: bpy.types.Context) -> None:
+def set_shading_from_properties(op: _MESH_OT, context: bpy.types.Context) -> None:
     """For toggling overlays by hotkey or by changing dragging direction."""
     sv3d = context.space_data
     assert isinstance(sv3d, bpy.types.SpaceView3D)
@@ -218,7 +218,7 @@ def set_shading_from_properties(op: _MESH_OTs, context: bpy.types.Context) -> No
             sv3d.shading.show_xray_wireframe = op.init_overlays["show_xray_wireframe"]
 
 
-def set_modifiers_from_properties(op: _MESH_OTs) -> None:
+def set_modifiers_from_properties(op: _MESH_OT) -> None:
     """Hide modifiers in editmode or restore initial visibility."""
     if op.init_mods:
         if op.select_through:
@@ -231,7 +231,7 @@ def set_modifiers_from_properties(op: _MESH_OTs) -> None:
                     mod.show_in_editmode = show_in_editmode
 
 
-def restore_overlays(op: _MESH_OTs, context: bpy.types.Context) -> None:
+def restore_overlays(op: _MESH_OT, context: bpy.types.Context) -> None:
     sv3d = context.space_data
     assert isinstance(sv3d, bpy.types.SpaceView3D)
 
@@ -247,7 +247,7 @@ def restore_overlays(op: _MESH_OTs, context: bpy.types.Context) -> None:
             sv3d.overlay.show_face_center = op.init_overlays["show_face_center"]
 
 
-def restore_modifiers(op: _MESH_OTs) -> None:
+def restore_modifiers(op: _MESH_OT) -> None:
     if op.init_mods:
         for mod, show_in_editmode in op.init_mods:
             if mod.show_in_editmode != show_in_editmode:
@@ -268,7 +268,7 @@ def get_select_through_toggle_key_list() -> (
             return {'DISABLED'}
 
 
-def toggle_alt_mode(op: _MESH_OTs, event: bpy.types.Event) -> None:
+def toggle_alt_mode(op: _MESH_OT, event: bpy.types.Event) -> None:
     if (
         event.ctrl
         and op.alt_mode_toggle_key == 'CTRL'

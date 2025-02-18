@@ -7,16 +7,16 @@ from bl_ui import space_toolsystem_common, space_toolsystem_toolbar
 # Constants
 ICON_PATH = pathlib.Path(__file__).parent.parent / "icon"
 EDIT_GPENCIL = 'EDIT_GREASE_PENCIL' if bpy.app.version >= (4, 3, 0) else 'EDIT_GPENCIL'
-EDIT_MODES = [
-    'EDIT_MESH',
+_TOOLS_CONTEXT_MODES = (
     'OBJECT',
+    'EDIT_MESH',
     'EDIT_CURVE',
     'EDIT_ARMATURE',
     'EDIT_METABALL',
     'EDIT_LATTICE',
-    'POSE',
     EDIT_GPENCIL,
-]
+    'POSE',
+)
 
 
 def fix_ordering(bl_context_mode: str) -> None:
@@ -54,7 +54,7 @@ def reset_active_tool() -> None:
     """
     Resets the active tool to the default 'builtin.select' for all used modes.
     """
-    for mode in EDIT_MODES:
+    for mode in _TOOLS_CONTEXT_MODES:
         set_tool_in_mode(mode, "bultin.select")
 
     # Fallback.

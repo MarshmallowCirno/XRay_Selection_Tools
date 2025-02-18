@@ -2,7 +2,7 @@ from . import ot_keymap, xraysel_ot_info
 from .mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
 from .object_ot import object_ot_box, object_ot_circle, object_ot_lasso
 
-_CLASSES = (
+_classes = (
     mesh_ot_box.MESH_OT_select_box_xray,
     mesh_ot_circle.MESH_OT_select_circle_xray,
     mesh_ot_lasso.MESH_OT_select_lasso_xray,
@@ -19,7 +19,7 @@ _CLASSES = (
 def register() -> None:
     from bpy.utils import register_class  # pyright: ignore[reportUnknownVariableType]
 
-    for cls in _CLASSES:
+    for cls in _classes:
         register_class(cls)
 
     ot_keymap.register()
@@ -30,5 +30,5 @@ def unregister() -> None:
 
     from bpy.utils import unregister_class  # pyright: ignore[reportUnknownVariableType]
 
-    for cls in _CLASSES:
+    for cls in _classes:
         unregister_class(cls)

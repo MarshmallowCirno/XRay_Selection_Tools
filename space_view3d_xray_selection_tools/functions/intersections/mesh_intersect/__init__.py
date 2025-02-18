@@ -31,7 +31,7 @@ def _lookup_isin(index_array: Int1DArray, lut: Bool1DArray) -> Bool1DArray:
     return mask
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class _ToolCoordinates:
     box_xmin: float = float()
     box_xmax: float = float()
