@@ -11,8 +11,8 @@ def populate_preferences_direction_properties():
 
 
 _classes = (
-    properties.XRAYSELToolKmiPG,
-    properties.XRAYSELToolKeymapPG,
+    properties.XRAYSELToolKeyMapItemPG,
+    properties.XRAYSELToolKeyMapItemsPG,
     properties.XRAYSELToolMeDirectionProps,
     properties.XRAYSELMeshToolsPreferencesPG,
     properties.XRAYSELObjectToolsPreferencesPG,
@@ -27,7 +27,7 @@ def register():
     for cls in _classes:
         register_class(cls)
 
-    tools_keymap.populate_preferences_keymaps_of_tools()
+    tools_keymap.populate_addon_preferences_keymaps()
     populate_preferences_direction_properties()
 
 

@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypeAlias
+from typing import Literal, TypeAlias
 
 import numpy as np
 
@@ -15,5 +15,3 @@ Int2DArray: TypeAlias = np.ndarray[tuple[int, Literal[2]], np.dtype[np.int32]]
 
 Bool1DArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.bool_]]
 Bool2DArray: TypeAlias = np.ndarray[tuple[int, Literal[2]], np.dtype[np.bool_]]
-
-WorkSpaceToolKeymapItem: TypeAlias = tuple[str, dict[str, Any], dict[str, list[tuple[str, Any]]]]

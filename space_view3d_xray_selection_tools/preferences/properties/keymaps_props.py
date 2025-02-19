@@ -9,7 +9,9 @@ if TYPE_CHECKING:
     from bpy._typing.rna_enums import IconItems
 
 
-class XRAYSELToolKmiPG(bpy.types.PropertyGroup):
+class XRAYSELToolKeyMapItemPG(bpy.types.PropertyGroup):
+    """Preferences of a single tool KeyMapItem entry."""
+
     if TYPE_CHECKING:
         description: str
         icon: IconItems
@@ -46,16 +48,18 @@ class XRAYSELToolKmiPG(bpy.types.PropertyGroup):
         )
 
 
-class XRAYSELToolKeymapPG(bpy.types.PropertyGroup):
+class XRAYSELToolKeyMapItemsPG(bpy.types.PropertyGroup):
+    """Collection of KeyMapItem preferences, grouped by a tool type."""
+
     if TYPE_CHECKING:
-        kmis: bpy.types.bpy_prop_collection_idprop[XRAYSELToolKmiPG]
+        kmis: bpy.types.bpy_prop_collection_idprop[XRAYSELToolKeyMapItemPG]
     else:
-        kmis: bpy.props.CollectionProperty(name="KMIS", type=XRAYSELToolKmiPG)
+        kmis: bpy.props.CollectionProperty(name="KMIS", type=XRAYSELToolKeyMapItemPG)
 
 
 class XRAYSELKeymapsPreferencesPG(bpy.types.PropertyGroup):
     if TYPE_CHECKING:
-        tools_keymaps: bpy.types.bpy_prop_collection_idprop[XRAYSELToolKeymapPG]
+        tools_keymaps: bpy.types.bpy_prop_collection_idprop[XRAYSELToolKeyMapItemsPG]
         is_mesh_keyboard_keymap_enabled: bool
         is_mesh_mouse_keymap_enabled: bool
         is_object_keyboard_keymap_enabled: bool
@@ -64,7 +68,7 @@ class XRAYSELKeymapsPreferencesPG(bpy.types.PropertyGroup):
         active_tab: Literal['BOX', 'CIRCLE', 'LASSO']
     else:
         tools_keymaps: bpy.props.CollectionProperty(
-            type=XRAYSELToolKeymapPG,
+            type=XRAYSELToolKeyMapItemsPG,
             name="Keymaps of Tools",
         )
         is_mesh_keyboard_keymap_enabled: bpy.props.BoolProperty(

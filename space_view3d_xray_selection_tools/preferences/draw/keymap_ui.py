@@ -6,7 +6,7 @@ import rna_keymap_ui
 from ...operators import ot_keymap
 
 if TYPE_CHECKING:
-    from ...preferences.properties.keymaps_props import XRAYSELToolKmiPG
+    from ...preferences.properties.keymaps_props import XRAYSELToolKeyMapItemPG
     from ..addon_preferences import XRAYSELPreferences
 
 
@@ -100,8 +100,8 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     tool = keymaps_props.active_tab
     keymap = addon_prefs.keymaps.tools_keymaps[tool]
     keymap_items = keymap.kmis
-    for props_group in keymap_items.values():  # type: ignore
-        kmi_props = cast("XRAYSELToolKmiPG", props_group)
+    for prop_group in keymap_items.values():  # type: ignore
+        kmi_props = cast("XRAYSELToolKeyMapItemPG", prop_group)
 
         row = col.row(align=True)
         row.prop(kmi_props, "active", text=kmi_props.description, icon=kmi_props.icon)

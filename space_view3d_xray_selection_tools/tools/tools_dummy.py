@@ -4,7 +4,6 @@ from typing import cast
 import bpy
 
 from .. import addon_info
-from ..types import WorkSpaceToolKeymapItem
 from . import tools_keymap, tools_utils
 
 # Box Tools
@@ -20,7 +19,7 @@ class ToolSelectBoxXrayTemplate(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_box_xray_icon")
     bl_widget = None
     bl_operator = "view3d.select_box"
-    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
+    bl_keymap: tuple[tools_keymap.WorkSpaceToolKeyMapItem, ...]
 
     @staticmethod
     def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
@@ -73,7 +72,7 @@ class ToolSelectCircleXrayTemplate(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_circle_xray_icon")
     bl_widget = None
     bl_operator = "view3d.select_circle"
-    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
+    bl_keymap: tuple[tools_keymap.WorkSpaceToolKeyMapItem, ...]
 
     @staticmethod
     def draw_cursor(_context: bpy.types.Context, tool: bpy.types.WorkSpaceTool, xy: Sequence[float]) -> None:
@@ -137,7 +136,7 @@ class ToolSelectLassoXrayTemplate(bpy.types.WorkSpaceTool):
     bl_icon = str(tools_utils.ICON_PATH / "addon.select_lasso_xray_icon")
     bl_widget = None
     bl_operator = "view3d.select_lasso"
-    bl_keymap: tuple[WorkSpaceToolKeymapItem, ...]
+    bl_keymap: tuple[tools_keymap.WorkSpaceToolKeyMapItem, ...]
 
     @staticmethod
     def draw_settings(_context: bpy.types.Context, layout: bpy.types.UILayout, tool: bpy.types.WorkSpaceTool) -> None:
@@ -206,15 +205,15 @@ _lasso_tools = (
 
 def register() -> None:
     # Set tool keymap to match the add-on preferences adv. keymap tab
-    box_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_box")
+    box_tool_keymap = tools_keymap.keymap_from_addon_preferences("view3d.select_box")
     for tool in _box_tools:
         tool.bl_keymap = box_tool_keymap
 
-    circle_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_circle")
+    circle_tool_keymap = tools_keymap.keymap_from_addon_preferences("view3d.select_circle")
     for tool in _circle_tools:
         tool.bl_keymap = circle_tool_keymap
 
-    lasso_tool_keymap = tools_keymap.get_tool_keymap_from_preferences("view3d.select_lasso")
+    lasso_tool_keymap = tools_keymap.keymap_from_addon_preferences("view3d.select_lasso")
     for tool in _lasso_tools:
         tool.bl_keymap = lasso_tool_keymap
 
@@ -237,12 +236,12 @@ def register() -> None:
             tools_utils.fix_ordering(box_tool.bl_context_mode)
 
     # Fallback keymap - keymap for tool used as fallback tool
-    tools_keymap.add_fallback_keymap(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
+    tools_keymap.add_fallback_keymaps(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
     tools_keymap.add_fallback_keymap_items(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
 
 
 def unregister() -> None:
-    tools_keymap.remove_fallback_keymap_items(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
+    tools_keymap.clear_fallback_keymaps(tools_keymap.DUMMY_FALLBACK_KEYMAP_TEMPLATES)
 
     for tool in (*_box_tools, *_circle_tools, *_lasso_tools):
         bpy.utils.unregister_tool(tool)

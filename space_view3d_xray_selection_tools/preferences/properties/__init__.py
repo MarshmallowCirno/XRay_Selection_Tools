@@ -1,2 +1,2 @@
-from .keymaps_props import XRAYSELKeymapsPreferencesPG, XRAYSELToolKeymapPG, XRAYSELToolKmiPG
+from .keymaps_props import XRAYSELKeymapsPreferencesPG, XRAYSELToolKeyMapItemsPG, XRAYSELToolKeyMapItemPG
 from .tools_props import XRAYSELMeshToolsPreferencesPG, XRAYSELObjectToolsPreferencesPG, XRAYSELToolMeDirectionProps
