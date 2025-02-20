@@ -4,9 +4,9 @@ from . import addon_preferences, properties
 
 
 def populate_addon_preferences_direction_properties():
-    left = addon_info.get_preferences().mesh_tools.directions_properties.add()
+    left = addon_info.get_preferences().mesh_tools.direction_properties.add()
     left.name = 'RIGHT_TO_LEFT'
-    left = addon_info.get_preferences().mesh_tools.directions_properties.add()
+    left = addon_info.get_preferences().mesh_tools.direction_properties.add()
     left.name = 'LEFT_TO_RIGHT'
 
 
@@ -32,8 +32,8 @@ def register():
 
 
 def unregister():
-    addon_info.get_preferences().mesh_tools.directions_properties.clear()
-    addon_info.get_preferences().keymaps.tools_keymaps.clear()
+    addon_info.get_preferences().mesh_tools.direction_properties.clear()
+    addon_info.get_preferences().keymaps.tool_keymaps.clear()
 
     from bpy.utils import unregister_class  # pyright: ignore[reportUnknownVariableType]
 

@@ -78,12 +78,12 @@ def add_fallback_keymap_items(keymap_templates: tuple[_FallbackKeymapTemplate, .
         event_type = 'LEFTMOUSE'
 
     kc = bpy.context.window_manager.keyconfigs.addon
-    addon_prefs_kms = addon_info.get_preferences().keymaps.tools_keymaps
+    addon_prefs_kms = addon_info.get_preferences().keymaps.tool_keymaps
 
     for template in keymap_templates:
         km = kc.keymaps.new(name=template.keymap_name, space_type='VIEW_3D', region_type='WINDOW', tool=True)
         addon_prefs_km = addon_prefs_kms[template.tool_type]
-        addon_prefs_km_items = addon_prefs_km.kmis
+        addon_prefs_km_items = addon_prefs_km.keymap_items
 
         for prop_group in reversed(addon_prefs_km_items.values()):  # type: ignore
             kmi_prefs = cast("XRAYSELToolKeyMapItemPG", prop_group)
@@ -124,7 +124,7 @@ def populate_addon_preferences_keymaps() -> None:
     """
     Fill empty preferences keymaps collection properties with default values.
     """
-    addon_prefs_kms = addon_info.get_preferences().keymaps.tools_keymaps
+    addon_prefs_kms = addon_info.get_preferences().keymaps.tool_keymaps
     default_km_config = {
         'DEF': {
             "description": "Active Mode",
@@ -182,7 +182,7 @@ def populate_addon_preferences_keymaps() -> None:
             addon_prefs_km = addon_prefs_kms.add()
             addon_prefs_km["name"] = tool_type
 
-        km_items = addon_prefs_km.kmis
+        km_items = addon_prefs_km.keymap_items
         for selection_mode, kmi_config in default_km_config.items():
             if selection_mode in km_items:
                 continue
@@ -235,9 +235,9 @@ def keymap_from_addon_preferences(operator: str) -> tuple[WorkSpaceToolKeyMapIte
     """
     tool_type = _tool_type_from_operator(operator)
     assert tool_type is not None
-    addon_prefs_kms = addon_info.get_preferences().keymaps.tools_keymaps  # Configs group of all tool types.
+    addon_prefs_kms = addon_info.get_preferences().keymaps.tool_keymaps  # Configs group of all tool types.
     addon_prefs_km = addon_prefs_kms[tool_type]  # Configs group of a single tool type.
-    addon_prefs_km_items = addon_prefs_km.kmis  # Configs of a single tool type.
+    addon_prefs_km_items = addon_prefs_km.keymap_items  # Configs of a single tool type.
 
     bl_keymap: list[WorkSpaceToolKeyMapItem] = []
     for prop_group_name, prop_group in addon_prefs_km_items.items():  # type: ignore

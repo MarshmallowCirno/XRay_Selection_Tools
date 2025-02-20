@@ -116,7 +116,7 @@ class XRAYSELMeshToolsPreferencesPG(ToolsSharedPreferences, XRAYSELToolMeDirecti
     """Properties of the mesh tools."""
 
     if TYPE_CHECKING:
-        directions_properties: bpy.types.bpy_prop_collection_idprop[XRAYSELToolMeDirectionProps]
+        direction_properties: bpy.types.bpy_prop_collection_idprop[XRAYSELToolMeDirectionProps]
         directional_box_tool: bool
         directional_lasso_tool: bool
         select_through_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'DISABLED']
@@ -124,7 +124,7 @@ class XRAYSELMeshToolsPreferencesPG(ToolsSharedPreferences, XRAYSELToolMeDirecti
         hide_mirror: bool
         hide_solidify: bool
     else:
-        directions_properties: bpy.props.CollectionProperty(
+        direction_properties: bpy.props.CollectionProperty(
             type=XRAYSELToolMeDirectionProps,
             name="Mesh Direction Props",
         )

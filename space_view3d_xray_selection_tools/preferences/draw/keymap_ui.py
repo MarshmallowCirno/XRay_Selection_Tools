@@ -40,7 +40,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     col = box.column()
     row = col.row(align=True)
     row.label(text="Shortcuts for activating tools and modifying preferences")
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tools_keymaps"  # pyright: ignore[reportAttributeAccessIssue]
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_keymaps"  # pyright: ignore[reportAttributeAccessIssue]
 
     col = box.column()
     icon: Literal['CHECKBOX_HLT', 'CHECKBOX_DEHLT']
@@ -98,8 +98,8 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     row.prop(keymaps_props, "active_tab", expand=True)
 
     tool = keymaps_props.active_tab
-    keymap = addon_prefs.keymaps.tools_keymaps[tool]
-    keymap_items = keymap.kmis
+    keymap = addon_prefs.keymaps.tool_keymaps[tool]
+    keymap_items = keymap.keymap_items
     for prop_group in keymap_items.values():  # type: ignore
         kmi_props = cast("XRAYSELToolKeyMapItemPG", prop_group)
 

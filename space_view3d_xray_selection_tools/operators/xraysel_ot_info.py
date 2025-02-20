@@ -53,7 +53,7 @@ _info_texts: dict[str, tuple[str, ...]] = {
         "    ○ Drag from right to left to select all objects entirely enclosed in the selection region (Contain).",
         "Note that every mode is slower than the default one on objects with a lot of geometry.",
     ),
-    "tools_keymaps": (
+    "tool_keymaps": (
         "Change, disable or enable shortcuts here. To edit shortcut properties independently of global addon "
         "settings, expand key item and check Override Global Properties.",
         "Deactivating header here will remove shortcuts below it from blender keyconfig.",

@@ -56,12 +56,12 @@ def set_properties_from_preferences(
     tool: Literal['BOX', 'CIRCLE', 'LASSO'],
 ) -> None:
     mesh_tools_props = addon_info.get_preferences().mesh_tools
-    directions_props = mesh_tools_props.directions_properties
+    direction_props = mesh_tools_props.direction_properties
 
     if not op.override_global_props:
         if op.directional:  # for initial shading before direction is determined
-            op.select_through = directions_props[0].select_through and directions_props[1].select_through
-            op.show_xray = directions_props[0].show_xray and directions_props[1].show_xray and op.select_through
+            op.select_through = direction_props[0].select_through and direction_props[1].select_through
+            op.show_xray = direction_props[0].show_xray and direction_props[1].show_xray and op.select_through
         else:
             op.select_through = mesh_tools_props.select_through
             op.default_color = mesh_tools_props.default_color
@@ -94,12 +94,12 @@ def initialize_shading_from_properties(op: _MESH_OT, context: bpy.types.Context)
     if op.directional:
         # If both directions have prop to show xray turned on
         # enable xray shading for wait for input stage.
-        directions_props = addon_info.get_preferences().mesh_tools.directions_properties
+        direction_props = addon_info.get_preferences().mesh_tools.direction_properties
         if (
-            directions_props[0].select_through
-            and directions_props[1].select_through
-            and directions_props[0].show_xray
-            and directions_props[1].show_xray
+            direction_props[0].select_through
+            and direction_props[1].select_through
+            and direction_props[0].show_xray
+            and direction_props[1].show_xray
         ):
             sv3d.shading.show_xray = True
             sv3d.shading.show_xray_wireframe = True
@@ -138,7 +138,7 @@ def set_properties_from_direction(
     op: _MESH_OT,
     direction: Literal['LEFT_TO_RIGHT', 'RIGHT_TO_LEFT'],
 ) -> None:
-    direction_props = addon_info.get_preferences().mesh_tools.directions_properties[direction]
+    direction_props = addon_info.get_preferences().mesh_tools.direction_properties[direction]
     op.select_through = direction_props.select_through
     op.default_color = direction_props.default_color
     op.select_through_color = direction_props.select_through_color
