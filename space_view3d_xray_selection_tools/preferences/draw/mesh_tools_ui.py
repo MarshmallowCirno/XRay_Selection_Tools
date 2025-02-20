@@ -37,11 +37,9 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
     rtl_props = mesh_tools_props.direction_properties["RIGHT_TO_LEFT"]
     ltr_props = mesh_tools_props.direction_properties["LEFT_TO_RIGHT"]
 
-    rtl_select_through_available = rtl_props.select_through or mesh_tools_props.select_through_toggle_key != 'DISABLED'
-    ltr_select_through_available = ltr_props.select_through or mesh_tools_props.select_through_toggle_key != 'DISABLED'
-    def_select_through_available = (
-        mesh_tools_props.select_through or mesh_tools_props.select_through_toggle_key != 'DISABLED'
-    )
+    rtl_select_through_available = rtl_props.select_through
+    ltr_select_through_available = ltr_props.select_through
+    def_select_through_available = mesh_tools_props.select_through
 
     # Keymap
     if addon_prefs.keymaps.is_mesh_keyboard_keymap_enabled:
