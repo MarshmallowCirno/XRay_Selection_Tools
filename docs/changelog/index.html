@@ -8,7 +8,7 @@
     <title>Changelog - X-Ray Selection Tools</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
         <link href="../css/extra.css" rel="stylesheet" />
     
       <script>
@@ -18,12 +18,11 @@
         var mkdocs_page_url = "/XRay_Selection_Tools/changelog/";
       </script>
     
-    <script src="../js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -35,7 +34,7 @@
           <a href=".." class="icon icon-home"> X-Ray Selection Tools
         </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
@@ -59,8 +58,10 @@
               </ul>
               <p class="caption"><span class="caption-text">Development</span></p>
               <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Changelog</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Changelog</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#480">4.8.0</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#470">4.7.0</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#461">4.6.1</a>
@@ -129,9 +130,9 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
-          <li>Development &raquo;</li>
-      <li>Changelog</li>
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Development</li>
+      <li class="breadcrumb-item active">Changelog</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -141,6 +142,46 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="_1"></h1>
+<h2 id="480">4.8.0</h2>
+<ul>
+<li><strong>UI</strong></li>
+<li>Buttons for unavailable properties are now always greyed out to reduce confusion.</li>
+<li>
+<p>Improved descriptions of properties, operator and labels.</p>
+</li>
+<li>
+<p><strong>Performance &amp; Optimization</strong></p>
+</li>
+<li>Optimized mesh attribute retrieval, improving efficiency when accessing vertex and loop data.</li>
+<li>
+<p>Improved mesh and object selection updates, making selection faster and more responsive in complex scenes.</p>
+</li>
+<li>
+<p><strong>Bug Fixes</strong></p>
+</li>
+<li>
+<p>Fixed an issue with the <code>Repeat Last</code> feature where add-on selection operators were added to the repeat history, preventing the previous action from being repeated.</p>
+</li>
+<li>
+<p><strong>Code &amp; Structure Enhancements</strong></p>
+</li>
+<li>Refactored multiple modules for better organization and maintainability.</li>
+<li>Added missing type hints and fixed type-checking issues.</li>
+<li>
+<p>Automated submodule reloading mechanism.</p>
+</li>
+<li>
+<p><strong>Development &amp; Dependency Updates</strong></p>
+</li>
+<li>Updated dependencies.</li>
+<li>
+<p>Integrated <code>Pyright</code> for better type checking and switched to <code>ruff</code> for code formatting.</p>
+</li>
+<li>
+<p><strong>Build &amp; Debugging</strong></p>
+</li>
+<li>Excluded development files from build.</li>
+</ul>
 <h2 id="470">4.7.0</h2>
 <ul>
 <li>Added compatibility with Blender 4.3 and 4.4 alpha.</li>
@@ -309,14 +350,15 @@ Drag from left to right to select all objects that are entirely contained in the
     
   </span>
 </div>
-    <script>var base_url = '..';</script>
-    <script src="../js/theme_extra.js" defer></script>
-    <script src="../js/theme.js" defer></script>
-      <script src="../search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>
