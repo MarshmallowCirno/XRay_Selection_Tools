@@ -252,7 +252,7 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
         self.fill_batch: gpu.types.GPUBatch | None = None
         self.UBO_data: _UBOStruct = _UBOStruct()
         self.UBO: gpu.types.GPUUniformBuf = gpu.types.GPUUniformBuf(
-            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
+            gpu.types.Buffer('UBYTE', ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
         )
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:

@@ -74,25 +74,25 @@ class XRAYSELKeymapsPreferencesPG(bpy.types.PropertyGroup):
         is_mesh_keyboard_keymap_enabled: bpy.props.BoolProperty(
             name="Mesh Mode Keyboard Shortcuts",
             description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
-            update=ot_keymap.toggle_me_keyboard_keymap,
+            update=ot_keymap.toggle_mesh_keyboard_keymap,
             default=True,
         )
         is_mesh_mouse_keymap_enabled: bpy.props.BoolProperty(
             name="Mesh Mode Mouse Shortcuts",
             description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
-            update=ot_keymap.toggle_me_mouse_keymap,
+            update=ot_keymap.toggle_mesh_mouse_keymap,
             default=False,
         )
         is_object_keyboard_keymap_enabled: bpy.props.BoolProperty(
             name="Object Mode Keyboard Shortcuts",
             description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
-            update=ot_keymap.toggle_ob_keyboard_keymap,
+            update=ot_keymap.toggle_object_keyboard_keymap,
             default=True,
         )
         is_object_mouse_keymap_enabled: bpy.props.BoolProperty(
             name="Object Mode Mouse Shortcuts",
             description="Enable to add shortcuts to the Blender keymap, or disable to remove them",
-            update=ot_keymap.toggle_ob_mouse_keymap,
+            update=ot_keymap.toggle_object_mouse_keymap,
             default=False,
         )
         is_toggles_keymap_enabled: bpy.props.BoolProperty(

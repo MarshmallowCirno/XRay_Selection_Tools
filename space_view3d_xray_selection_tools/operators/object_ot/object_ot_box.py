@@ -523,7 +523,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
                 self.override_intersect_tests = True
 
     def update_ubo(self) -> None:
-        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
+        self.UBO.update(gpu.types.Buffer('UBYTE', ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
 
     def update_shader_position(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.last_mouse_region_x = event.mouse_region_x
@@ -587,12 +587,12 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
 
         # Fill.
         assert isinstance(self.fill_batch, gpu.types.GPUBatch)
-        gpu.state.blend_set("ALPHA")
+        gpu.state.blend_set('ALPHA')
         _fill_shader.bind()
         _fill_shader.uniform_block("ub", self.UBO)
         _fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
         self.fill_batch.draw(_fill_shader)
-        gpu.state.blend_set("NONE")
+        gpu.state.blend_set('NONE')
 
         # Border.
         assert isinstance(self.border_batch, gpu.types.GPUBatch)

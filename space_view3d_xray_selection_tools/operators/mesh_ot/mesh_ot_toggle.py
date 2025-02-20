@@ -36,10 +36,6 @@ def _draw_text(
     blf.draw(font, text)
 
 
-def _get_text_dimensions(text: str, font: int = 0):
-    return blf.dimensions(font, text)
-
-
 def _get_safe_draw_x(context: bpy.types.Context, ui_width: int):
     """Maximum x position of ui left side that doesn't cause overlap width sidebar."""
     region_overlap = context.preferences.system.use_region_overlap

@@ -309,7 +309,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.invert_select_through: bool = False
         self.select_through_toggle_key_list: set[
             Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']
-        ] = mesh_modal.get_select_through_toggle_key_list()
+        ] = mesh_modal.get_select_through_toggle_keys()
 
         self.handler: Any | None = None
         self.border_batch: gpu.types.GPUBatch | None = None

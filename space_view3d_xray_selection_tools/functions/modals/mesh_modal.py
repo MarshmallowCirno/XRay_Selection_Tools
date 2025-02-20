@@ -37,12 +37,12 @@ def gather_overlays(context: bpy.types.Context) -> dict[str, Any]:
 
 def gather_modifiers(op: _MESH_OT, context: bpy.types.Context) -> list[tuple[bpy.types.Modifier, bool]]:
     mods: list[tuple[bpy.types.Modifier, bool]] = []
-    mods_to_hide: list[Literal['MIRROR', 'SOLIDIFY']] = []
+    mods_to_hide: set[Literal['MIRROR', 'SOLIDIFY']] = set()
 
     if op.hide_mirror:
-        mods_to_hide.append('MIRROR')
+        mods_to_hide.add('MIRROR')
     if op.hide_solidify:
-        mods_to_hide.append('SOLIDIFY')
+        mods_to_hide.add('SOLIDIFY')
 
     sel_obs = context.selected_objects if context.selected_objects else [context.object]
     for ob in sel_obs:
@@ -254,7 +254,7 @@ def restore_modifiers(op: _MESH_OT) -> None:
                 mod.show_in_editmode = show_in_editmode
 
 
-def get_select_through_toggle_key_list() -> (
+def get_select_through_toggle_keys() -> (
     set[Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']]
 ):
     match addon_info.get_preferences().mesh_tools.select_through_toggle_key:

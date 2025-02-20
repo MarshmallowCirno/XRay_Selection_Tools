@@ -16,7 +16,7 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         object_tools: properties.XRAYSELObjectToolsPreferencesPG
         keymaps: properties.XRAYSELKeymapsPreferencesPG
 
-        tabs: Literal['MESH_TOOLS', 'OBJECT_TOOLS', 'KEYMAP']
+        active_tab: Literal['MESH_TOOLS', 'OBJECT_TOOLS', 'KEYMAP']
         select_mouse: Literal['LEFT', 'RIGHT']
         rmb_action: Literal['TWEAK', 'FALLBACK_TOOL']
     else:
@@ -24,12 +24,12 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
         object_tools: bpy.props.PointerProperty(type=properties.XRAYSELObjectToolsPreferencesPG)
         keymaps: bpy.props.PointerProperty(type=properties.XRAYSELKeymapsPreferencesPG)
 
-        tabs: bpy.props.EnumProperty(
+        active_tab: bpy.props.EnumProperty(
             name="Tabs",
             items=[
                 ('MESH_TOOLS', "Mesh Tools", ""),
                 ('OBJECT_TOOLS', "Object Tools", ""),
-                ('KEYMAP', "Advanced Keymap", ""),
+                ('KEYMAP', "Keymaps", ""),
             ],
             default='MESH_TOOLS',
             options={'SKIP_SAVE'},
@@ -53,17 +53,16 @@ class XRAYSELPreferences(bpy.types.AddonPreferences):
             default='TWEAK',
         )
 
-    def draw(self, _):
-        layout = self.layout
-
-        col = layout.column(align=True)
+    def draw(self, _context: bpy.types.Context):
+        col = self.layout.column(align=True)
         row = col.row(align=True)
-        row.prop(self, "tabs", expand=True)
+        row.prop(self, "active_tab", expand=True)
         box = col.box()
 
-        if self.tabs == 'MESH_TOOLS':
-            draw.draw_mesh_tools_preferences(self, box)
-        elif self.tabs == 'OBJECT_TOOLS':
-            draw.draw_object_tools_preferences(self, box)
-        elif self.tabs == 'KEYMAP':
-            draw.draw_keymaps(self, box)
+        match self.active_tab:
+            case 'MESH_TOOLS':
+                draw.draw_mesh_tools_preferences(self, box)
+            case 'OBJECT_TOOLS':
+                draw.draw_object_tools_preferences(self, box)
+            case 'KEYMAP':
+                draw.draw_keymaps(self, box)

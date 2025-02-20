@@ -39,6 +39,7 @@ if "bpy" in locals():
 
 import bpy
 
+# Prevent loading in the background, since gpu shaders will not be available
 if not bpy.app.background:
     from . import operators, preferences, startup_handlers, tools
 

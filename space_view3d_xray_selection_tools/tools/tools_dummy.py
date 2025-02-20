@@ -9,7 +9,7 @@ from . import tools_keymap, tools_utils
 # Box Tools
 
 
-class ToolSelectBoxXrayTemplate(bpy.types.WorkSpaceTool):
+class _ToolSelectBoxXrayTemplate(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode: str
 
@@ -29,32 +29,32 @@ class ToolSelectBoxXrayTemplate(bpy.types.WorkSpaceTool):
         row.prop(cur_tool_props, "mode", text="", expand=True, icon_only=True)
 
 
-class ToolSelectBoxXrayCurve(ToolSelectBoxXrayTemplate):
+class ToolSelectBoxXrayCurve(_ToolSelectBoxXrayTemplate):
     bl_context_mode = 'EDIT_CURVE'
     bl_idname = "curve_tool.select_box_xray"
 
 
-class ToolSelectBoxXrayArmature(ToolSelectBoxXrayTemplate):
+class ToolSelectBoxXrayArmature(_ToolSelectBoxXrayTemplate):
     bl_context_mode = 'EDIT_ARMATURE'
     bl_idname = "armature_tool.select_box_xray"
 
 
-class ToolSelectBoxXrayMetaball(ToolSelectBoxXrayTemplate):
+class ToolSelectBoxXrayMetaball(_ToolSelectBoxXrayTemplate):
     bl_context_mode = 'EDIT_METABALL'
     bl_idname = "metaball_tool.select_box_xray"
 
 
-class ToolSelectBoxXrayLattice(ToolSelectBoxXrayTemplate):
+class ToolSelectBoxXrayLattice(_ToolSelectBoxXrayTemplate):
     bl_context_mode = 'EDIT_LATTICE'
     bl_idname = "lattice_tool.select_box_xray"
 
 
-class ToolSelectBoxXrayPose(ToolSelectBoxXrayTemplate):
+class ToolSelectBoxXrayPose(_ToolSelectBoxXrayTemplate):
     bl_context_mode = 'POSE'
     bl_idname = "pose_tool.select_box_xray"
 
 
-class ToolSelectBoxXrayGrease(ToolSelectBoxXrayTemplate):
+class ToolSelectBoxXrayGrease(_ToolSelectBoxXrayTemplate):
     bl_context_mode = tools_utils.EDIT_GPENCIL
     bl_idname = "grease_tool.select_box_xray"
 
@@ -62,7 +62,7 @@ class ToolSelectBoxXrayGrease(ToolSelectBoxXrayTemplate):
 # Circle Tools
 
 
-class ToolSelectCircleXrayTemplate(bpy.types.WorkSpaceTool):
+class _ToolSelectCircleXrayTemplate(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode: str
 
@@ -93,32 +93,32 @@ class ToolSelectCircleXrayTemplate(bpy.types.WorkSpaceTool):
         layout.prop(op_props, "radius")
 
 
-class ToolSelectCircleXrayCurve(ToolSelectCircleXrayTemplate):
+class ToolSelectCircleXrayCurve(_ToolSelectCircleXrayTemplate):
     bl_context_mode = 'EDIT_CURVE'
     bl_idname = "curve_tool.select_circle_xray"
 
 
-class ToolSelectCircleXrayArmature(ToolSelectCircleXrayTemplate):
+class ToolSelectCircleXrayArmature(_ToolSelectCircleXrayTemplate):
     bl_context_mode = 'EDIT_ARMATURE'
     bl_idname = "armature_tool.select_circle_xray"
 
 
-class ToolSelectCircleXrayMetaball(ToolSelectCircleXrayTemplate):
+class ToolSelectCircleXrayMetaball(_ToolSelectCircleXrayTemplate):
     bl_context_mode = 'EDIT_METABALL'
     bl_idname = "metaball_tool.select_circle_xray"
 
 
-class ToolSelectCircleXrayLattice(ToolSelectCircleXrayTemplate):
+class ToolSelectCircleXrayLattice(_ToolSelectCircleXrayTemplate):
     bl_context_mode = 'EDIT_LATTICE'
     bl_idname = "lattice_tool.select_circle_xray"
 
 
-class ToolSelectCircleXrayPose(ToolSelectCircleXrayTemplate):
+class ToolSelectCircleXrayPose(_ToolSelectCircleXrayTemplate):
     bl_context_mode = 'POSE'
     bl_idname = "pose_tool.select_circle_xray"
 
 
-class ToolSelectCircleXrayGrease(ToolSelectCircleXrayTemplate):
+class ToolSelectCircleXrayGrease(_ToolSelectCircleXrayTemplate):
     bl_context_mode = tools_utils.EDIT_GPENCIL
     bl_idname = "grease_tool.select_circle_xray"
 
@@ -126,7 +126,7 @@ class ToolSelectCircleXrayGrease(ToolSelectCircleXrayTemplate):
 # Lasso Tools
 
 
-class ToolSelectLassoXrayTemplate(bpy.types.WorkSpaceTool):
+class _ToolSelectLassoXrayTemplate(bpy.types.WorkSpaceTool):
     bl_space_type = 'VIEW_3D'
     bl_context_mode: str
 
@@ -147,32 +147,32 @@ class ToolSelectLassoXrayTemplate(bpy.types.WorkSpaceTool):
         row.prop(op_props, "mode", text="", expand=True, icon_only=True)
 
 
-class ToolSelectLassoXrayCurve(ToolSelectLassoXrayTemplate):
+class ToolSelectLassoXrayCurve(_ToolSelectLassoXrayTemplate):
     bl_context_mode = 'EDIT_CURVE'
     bl_idname = "curve_tool.select_lasso_xray"
 
 
-class ToolSelectLassoXrayArmature(ToolSelectLassoXrayTemplate):
+class ToolSelectLassoXrayArmature(_ToolSelectLassoXrayTemplate):
     bl_context_mode = 'EDIT_ARMATURE'
     bl_idname = "armature_tool.select_lasso_xray"
 
 
-class ToolSelectLassoXrayMetaball(ToolSelectLassoXrayTemplate):
+class ToolSelectLassoXrayMetaball(_ToolSelectLassoXrayTemplate):
     bl_context_mode = 'EDIT_METABALL'
     bl_idname = "metaball_tool.select_lasso_xray"
 
 
-class ToolSelectLassoXrayLattice(ToolSelectLassoXrayTemplate):
+class ToolSelectLassoXrayLattice(_ToolSelectLassoXrayTemplate):
     bl_context_mode = 'EDIT_LATTICE'
     bl_idname = "lattice_tool.select_lasso_xray"
 
 
-class ToolSelectLassoXrayPose(ToolSelectLassoXrayTemplate):
+class ToolSelectLassoXrayPose(_ToolSelectLassoXrayTemplate):
     bl_context_mode = 'POSE'
     bl_idname = "pose_tool.select_lasso_xray"
 
 
-class ToolSelectLassoXrayGrease(ToolSelectLassoXrayTemplate):
+class ToolSelectLassoXrayGrease(_ToolSelectLassoXrayTemplate):
     bl_context_mode = tools_utils.EDIT_GPENCIL
     bl_idname = "grease_tool.select_lasso_xray"
 

@@ -3,11 +3,11 @@ from ..tools import tools_keymap
 from . import addon_preferences, properties
 
 
-def populate_preferences_direction_properties():
+def populate_addon_preferences_direction_properties():
     left = addon_info.get_preferences().mesh_tools.directions_properties.add()
-    left.name = "RIGHT_TO_LEFT"
+    left.name = 'RIGHT_TO_LEFT'
     left = addon_info.get_preferences().mesh_tools.directions_properties.add()
-    left.name = "LEFT_TO_RIGHT"
+    left.name = 'LEFT_TO_RIGHT'
 
 
 _classes = (
@@ -28,7 +28,7 @@ def register():
         register_class(cls)
 
     tools_keymap.populate_addon_preferences_keymaps()
-    populate_preferences_direction_properties()
+    populate_addon_preferences_direction_properties()
 
 
 def unregister():

@@ -33,7 +33,7 @@ def draw_keymap_items(
 
 
 def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
-    """Advanced Keymap tab."""
+    """Keymaps tab."""
     keymaps_props = addon_prefs.keymaps
 
     # Object and Mesh Mode Keymap
@@ -51,7 +51,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     if keymaps_props.is_mesh_keyboard_keymap_enabled:
         sub_box = km_col.box()
         kmi_col = sub_box.column(align=True)
-        draw_keymap_items(kmi_col, "Mesh", ot_keymap.me_keyboard_keymap, {'KEYBOARD'}, True)
+        draw_keymap_items(kmi_col, "Mesh", ot_keymap.mesh_keyboard_keymap, {'KEYBOARD'}, True)
 
     km_col = col.column(align=True)
     icon = 'CHECKBOX_HLT' if keymaps_props.is_object_keyboard_keymap_enabled else 'CHECKBOX_DEHLT'
@@ -61,7 +61,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     if keymaps_props.is_object_keyboard_keymap_enabled:
         sub_box = km_col.box()
         kmi_col = sub_box.column(align=True)
-        draw_keymap_items(kmi_col, "Object Mode", ot_keymap.ob_keyboard_keymap, {'KEYBOARD'}, True)
+        draw_keymap_items(kmi_col, "Object Mode", ot_keymap.object_keyboard_keymap, {'KEYBOARD'}, True)
 
     km_col = col.column(align=True)
     icon = 'CHECKBOX_HLT' if keymaps_props.is_mesh_mouse_keymap_enabled else 'CHECKBOX_DEHLT'
@@ -69,7 +69,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     if keymaps_props.is_mesh_mouse_keymap_enabled:
         sub_box = km_col.box()
         kmi_col = sub_box.column(align=True)
-        draw_keymap_items(kmi_col, "Mesh", ot_keymap.me_mouse_keymap, {'MOUSE', 'TWEAK'}, True)
+        draw_keymap_items(kmi_col, "Mesh", ot_keymap.mesh_mouse_keymap, {'MOUSE', 'TWEAK'}, True)
 
     km_col = col.column(align=True)
     icon = 'CHECKBOX_HLT' if keymaps_props.is_object_mouse_keymap_enabled else 'CHECKBOX_DEHLT'
@@ -77,7 +77,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     if keymaps_props.is_object_mouse_keymap_enabled:
         sub = km_col.box()
         kmi_col = sub.column(align=True)
-        draw_keymap_items(kmi_col, "Object Mode", ot_keymap.ob_mouse_keymap, {'MOUSE', 'TWEAK'}, True)
+        draw_keymap_items(kmi_col, "Object Mode", ot_keymap.object_mouse_keymap, {'MOUSE', 'TWEAK'}, True)
 
     km_col = col.column(align=True)
     icon = 'CHECKBOX_HLT' if keymaps_props.is_toggles_keymap_enabled else 'CHECKBOX_DEHLT'

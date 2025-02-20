@@ -526,7 +526,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
                 self.curr_behavior = 'CONTAIN'
 
     def update_ubo(self) -> None:
-        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
+        self.UBO.update(gpu.types.Buffer('UBYTE', ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
 
     def update_shader_position(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.last_mouse_region_x = event.mouse_region_x

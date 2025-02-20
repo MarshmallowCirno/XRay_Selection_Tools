@@ -1,5 +1,6 @@
 import pathlib
-from typing import Any, cast
+from types import SimpleNamespace
+from typing import cast
 
 import bpy
 from bl_ui import space_toolsystem_common, space_toolsystem_toolbar
@@ -69,18 +70,6 @@ def reset_active_tool() -> None:
 
 
 def set_tool_in_mode(mode: str, idname: str) -> None:
-    def make_func_dict(d: Any = None, **kwargs: Any):
-        if d is None:
-            d = {}
-
-        def func_dict(d: Any = d, **kwargs: Any):
-            func_dict.__dict__.update(d)
-            func_dict.__dict__.update(kwargs)
-            return func_dict.__dict__
-
-        func_dict(d, **kwargs)
-        return func_dict
-
     for workspace in bpy.data.workspaces:
         # active_tool = workspace.tools.from_space_view3d_mode(mode)
         # as_fallback = False
@@ -89,5 +78,5 @@ def set_tool_in_mode(mode: str, idname: str) -> None:
         #         as_fallback = True
 
         data = {"workspace": workspace, "mode": mode}
-        context_override = make_func_dict(data)
+        context_override = SimpleNamespace(**data)
         space_toolsystem_common.activate_by_id(context_override, space_type='VIEW_3D', idname=idname, as_fallback=False)
