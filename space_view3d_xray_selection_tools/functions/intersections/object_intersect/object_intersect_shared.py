@@ -8,7 +8,7 @@ import bpy
 import numpy as np
 
 from ....types import Bool1DArray, Float1DArray, Float2DArray, Float2x2DArray, Int1DArray
-from ... import view3d
+from ... import view3d_utils
 from ...mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from .. import selection_utils
 
@@ -60,10 +60,10 @@ def get_ob_2dbboxes(
     ob_mats.shape = (mesh_ob_count, 4, 4)
 
     # Get world space coordinates of 3D object bounding boxes.
-    ob_3dbbox_co_world = view3d.batch_transform_local_to_world_co(ob_mats, ob_3dbbox_co_local)
+    ob_3dbbox_co_world = view3d_utils.batch_transform_local_to_world_co(ob_mats, ob_3dbbox_co_local)
 
     # Get 2D coordinates of 3D object bounding boxes.
-    ob_3dbbox_co_2d, ob_3dbbox_co_2d_mask_clip = view3d.transform_world_to_2d_co(
+    ob_3dbbox_co_2d, ob_3dbbox_co_2d_mask_clip = view3d_utils.transform_world_to_2d_co(
         region, rv3d, ob_3dbbox_co_world.reshape(mesh_ob_count * 8, 3), apply_clipping_mask=False
     )
     ob_3dbbox_co_2d.shape = (mesh_ob_count, 8, 2)
@@ -138,8 +138,8 @@ def get_vert_co_2d(
     vert_co_local = vert_attr.coordinates(me)
 
     # Get 2d coordinates of vertices.
-    vert_co_world = view3d.transform_local_to_world_co(ob.matrix_world, vert_co_local)
-    vert_co_2d = view3d.transform_world_to_2d_co(region, rv3d, vert_co_world)[0]
+    vert_co_world = view3d_utils.transform_local_to_world_co(ob.matrix_world, vert_co_local)
+    vert_co_2d = view3d_utils.transform_world_to_2d_co(region, rv3d, vert_co_world)[0]
     return vert_co_2d
 
 
@@ -183,7 +183,7 @@ def get_ob_loc_co_2d(
     ob_co_world = itertools.chain.from_iterable(ob_co_world)
     c = len(obs)
     ob_co_world = np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3))
-    ob_co_2d = view3d.transform_world_to_2d_co(region, rv3d, ob_co_world)[0]
+    ob_co_2d = view3d_utils.transform_world_to_2d_co(region, rv3d, ob_co_world)[0]
     return ob_co_2d
 
 

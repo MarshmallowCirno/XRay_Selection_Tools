@@ -10,7 +10,7 @@ import mathutils
 import numpy as np
 
 from ....types import Bool1DArray, Float2DArray, Int1DArray
-from ... import geometry_tests, timer, view3d
+from ... import geometry_tests, timer, view3d_utils
 from ...mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from .. import selection_utils
 
@@ -159,10 +159,10 @@ def select_mesh_elements(
                         # Local coordinates of visible vertices.
                         vis_vert_co_local = vert_co_local[verts_mask_vis]
                         # World coordinates of visible vertices.
-                        vis_vert_co_world = view3d.transform_local_to_world_co(ob.matrix_world, vis_vert_co_local)
+                        vis_vert_co_world = view3d_utils.transform_local_to_world_co(ob.matrix_world, vis_vert_co_local)
                         # 2d coordinates of visible vertices.
                         vert_co = np.full((vert_count, 2), np.nan, "f")
-                        vis_vert_co = view3d.transform_world_to_2d_co(region, rv3d, vis_vert_co_world)[0]
+                        vis_vert_co = view3d_utils.transform_world_to_2d_co(region, rv3d, vis_vert_co_world)[0]
                         vert_co[verts_mask_vis] = vis_vert_co
 
                     with timer.time_section("Calculate vertex intersection"):
@@ -352,11 +352,13 @@ def select_mesh_elements(
                             # Local coordinates of visible face centers.
                             vis_face_center_co_local = face_center_co_local[faces_mask_vis]
                             # world coordinates of visible face centers.
-                            vis_vert_co_world = view3d.transform_local_to_world_co(
+                            vis_vert_co_world = view3d_utils.transform_local_to_world_co(
                                 ob.matrix_world, vis_face_center_co_local
                             )
                             # 2d coordinates of visible face centers.
-                            vis_face_center_co = view3d.transform_world_to_2d_co(region, rv3d, vis_vert_co_world)[0]
+                            vis_face_center_co = view3d_utils.transform_world_to_2d_co(region, rv3d, vis_vert_co_world)[
+                                0
+                            ]
 
                             # Mask of face centers inside the selection region from visible faces.
                             match tool:
