@@ -433,7 +433,8 @@ class OBJECT_OT_select_circle_xray(bpy.types.Operator):
 
     def begin_custom_intersect_tests(self, context: bpy.types.Context) -> None:
         center = (self.last_mouse_region_x, self.last_mouse_region_y)
-        object_intersect.select_obs_in_circle(
+        assert self.behavior == 'CONTAIN' or self.behavior == 'OVERLAP'
+        object_intersect.select_objects_in_circle(
             context, mode=self.curr_mode, center=center, radius=self.radius, behavior=self.behavior
         )
         if self.curr_mode == 'SET':

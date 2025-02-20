@@ -503,7 +503,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         bpy.ops.view3d.select_lasso(path=self.path, mode=self.curr_mode)  # pyright: ignore [reportArgumentType]
 
     def begin_custom_intersect_tests(self, context: bpy.types.Context) -> None:
-        object_intersect.select_obs_in_lasso(
+        assert self.curr_behavior == 'CONTAIN' or self.curr_behavior == 'OVERLAP'
+        object_intersect.select_objects_in_lasso(
             context, mode=self.curr_mode, lasso_poly=tuple(self.lasso_poly), behavior=self.curr_behavior
         )
 

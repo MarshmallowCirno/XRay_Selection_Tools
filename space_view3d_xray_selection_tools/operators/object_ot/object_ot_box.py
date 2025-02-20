@@ -499,7 +499,8 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         xmax = max(self.start_mouse_region_x, self.last_mouse_region_x)
         ymin = min(self.start_mouse_region_y, self.last_mouse_region_y)
         ymax = max(self.start_mouse_region_y, self.last_mouse_region_y)
-        object_intersect.select_obs_in_box(
+        assert self.curr_behavior == 'ORIGIN' or self.curr_behavior == 'CONTAIN'
+        object_intersect.select_objects_in_box(
             context, mode=self.curr_mode, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, behavior=self.curr_behavior
         )
 
