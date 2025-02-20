@@ -155,7 +155,6 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
 
     bl_idname = "object.select_box_xray"
     bl_label = "Box Select X-Ray"
-    bl_options = {'REGISTER'}
 
     if TYPE_CHECKING:
         mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND']
