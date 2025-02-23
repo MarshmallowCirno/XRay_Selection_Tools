@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "xray-selection-tools"
-version = "4.8.1"
+version = "4.8.2"
 description = "Box, lasso and circle selection tools with x-ray"
 authors = ["MarshmallowCirno <marshmallowcirno@gmail.com>"]
 readme = "README.md"
