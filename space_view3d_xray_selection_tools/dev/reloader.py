@@ -46,5 +46,6 @@ def _package_modules(package: types.ModuleType) -> list[types.ModuleType]:
 def reload_package_modules(package: types.ModuleType) -> None:
     """Reloads all modules within a package."""
     assert hasattr(package, "__package__")
+    print([m.__name__ for m in _package_modules(package)])
     for module in _package_modules(package):
         importlib.reload(module)
