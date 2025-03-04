@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "xray_selection_tools"
-version = "4.8.2"
+version = "4.8.3"
 name = "X-Ray Selection Tools"
 tagline = "Box, lasso and circle selection tools with x-ray"
 maintainer = "MarshmallowCirno <MarshmallowCirno@gmail.com>"
