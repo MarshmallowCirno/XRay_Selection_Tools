@@ -333,6 +333,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         # Enable x-ray overlays.
         object_modal.toggle_overlays(self, context)
 
+        self.update_directional_behavior()
+
         context.window_manager.modal_handler_add(self)
 
         # Jump to.

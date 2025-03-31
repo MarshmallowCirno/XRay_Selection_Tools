@@ -343,6 +343,8 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         # Enable x-ray overlays.
         object_modal.toggle_overlays(self, context)
 
+        self.update_directional_behavior()
+
         context.window_manager.modal_handler_add(self)
 
         # Jump to.
@@ -402,9 +404,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
             if event.value == 'RELEASE' and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
                 self.finish_custom_selection_stage(context)
                 if self.override_intersect_tests:
-                    self.begin_custom_intersect_tests(
-                        context,
-                    )
+                    self.begin_custom_intersect_tests(context)
                     self.finish_modal(context)
                     bpy.ops.ed.undo_push(message="Box Select")
                     return {'FINISHED'}
