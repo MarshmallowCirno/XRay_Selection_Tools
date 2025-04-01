@@ -19,6 +19,7 @@ class XRAYSELToolKeyMapItemPG(bpy.types.PropertyGroup):
         shift: bool
         ctrl: bool
         alt: bool
+        oskey: bool
     else:
         description: bpy.props.StringProperty(name="Description")
         icon: bpy.props.StringProperty(name="Icon")
@@ -43,6 +44,12 @@ class XRAYSELToolKeyMapItemPG(bpy.types.PropertyGroup):
         alt: bpy.props.BoolProperty(
             name="Alt",
             description="Alt key is pressed",
+            update=tools.update_keymaps_of_tools,
+            default=False,
+        )
+        oskey: bpy.props.BoolProperty(
+            name="Cmd",
+            description="Operating system key is pressed",
             update=tools.update_keymaps_of_tools,
             default=False,
         )

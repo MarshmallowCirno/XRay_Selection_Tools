@@ -119,7 +119,7 @@ class XRAYSELMeshToolsPreferencesPG(ToolsSharedPreferences, XRAYSELToolMeDirecti
         direction_properties: bpy.types.bpy_prop_collection_idprop[XRAYSELToolMeDirectionProps]
         directional_box_tool: bool
         directional_lasso_tool: bool
-        select_through_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'DISABLED']
+        select_through_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'OSKEY', 'DISABLED']
         select_through_toggle_type: Literal['HOLD', 'PRESS']
         hide_mirror: bool
         hide_solidify: bool
@@ -145,6 +145,7 @@ class XRAYSELMeshToolsPreferencesPG(ToolsSharedPreferences, XRAYSELToolMeDirecti
                 ('CTRL', "CTRL", ""),
                 ('ALT', "ALT", ""),
                 ('SHIFT', "SHIFT", ""),
+                ('OSKEY', "CMD", ""),
                 ('DISABLED', "DISABLED", ""),
             ],
             default='DISABLED',
@@ -175,7 +176,7 @@ class XRAYSELObjectToolsPreferencesPG(bpy.types.PropertyGroup, ToolsSharedPrefer
 
     if TYPE_CHECKING:
         show_xray: bool
-        xray_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'DISABLED']
+        xray_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'OSKEY', 'DISABLED']
         xray_toggle_type: Literal['HOLD', 'PRESS']
         box_select_behavior: Literal['ORIGIN', 'CONTAIN', 'OVERLAP', 'DIRECTIONAL', 'DIRECTIONAL_REVERSED']
         circle_select_behavior: Literal['ORIGIN', 'CONTAIN', 'OVERLAP']
@@ -193,6 +194,7 @@ class XRAYSELObjectToolsPreferencesPG(bpy.types.PropertyGroup, ToolsSharedPrefer
                 ('CTRL', "CTRL", ""),
                 ('ALT', "ALT", ""),
                 ('SHIFT', "SHIFT", ""),
+                ('OSKEY', "CMD", ""),
                 ('DISABLED', "DISABLED", ""),
             ],
             default='DISABLED',

@@ -111,3 +111,4 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
         sub.prop(kmi_props, "shift", text="Shift", toggle=True)
         sub.prop(kmi_props, "ctrl", text="Ctrl", toggle=True)
         sub.prop(kmi_props, "alt", text="Alt", toggle=True)
+        sub.prop(kmi_props, "oskey", text="Cmd", toggle=True)

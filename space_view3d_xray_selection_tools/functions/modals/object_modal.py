@@ -85,7 +85,7 @@ def restore_overlays(op: _OBJECT_OT, context: bpy.types.Context) -> None:
 
 
 def get_xray_toggle_key_list() -> (
-    set[Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']]
+    set[Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'OSKEY', 'DISABLED']]
 ):
     match addon_info.get_preferences().object_tools.xray_toggle_key:
         case 'CTRL':
@@ -94,6 +94,8 @@ def get_xray_toggle_key_list() -> (
             return {'LEFT_ALT', 'RIGHT_ALT'}
         case 'SHIFT':
             return {'LEFT_SHIFT', 'RIGHT_SHIFT'}
+        case 'OSKEY':
+            return {'OSKEY'}
         case 'DISABLED':
             return {'DISABLED'}
 
@@ -106,6 +108,8 @@ def toggle_alt_mode(op: _OBJECT_OT, event: bpy.types.Event) -> None:
         and op.alt_mode_toggle_key == 'ALT'
         or event.shift
         and op.alt_mode_toggle_key == 'SHIFT'
+        or event.oskey
+        and op.alt_mode_toggle_key == 'OSKEY'
     ):
         op.curr_mode = op.alt_mode
     else:

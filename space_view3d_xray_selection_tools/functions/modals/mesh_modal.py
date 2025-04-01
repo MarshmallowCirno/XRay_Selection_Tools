@@ -123,7 +123,9 @@ def initialize_shading_from_properties(op: _MESH_OT, context: bpy.types.Context)
                         sv3d.shading.show_xray_wireframe = True
                         sv3d.shading.xray_alpha = 1.0  # default 0.5
                         sv3d.shading.xray_alpha_wireframe = 1.0  # default 0.0
-                        sv3d.overlay.backwire_opacity = 0.0  # default 0.5  # pyright: ignore [reportAttributeAccessIssue]
+                        sv3d.overlay.backwire_opacity = (  # pyright: ignore [reportAttributeAccessIssue]
+                            0.0  # default 0.5
+                        )
 
             if bpy.app.version >= (4, 1, 0):
                 if context.tool_settings.mesh_select_mode[2]:
@@ -255,7 +257,7 @@ def restore_modifiers(op: _MESH_OT) -> None:
 
 
 def get_select_through_toggle_keys() -> (
-    set[Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']]
+    set[Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'OSKEY', 'DISABLED']]
 ):
     match addon_info.get_preferences().mesh_tools.select_through_toggle_key:
         case 'CTRL':
@@ -264,6 +266,8 @@ def get_select_through_toggle_keys() -> (
             return {'LEFT_ALT', 'RIGHT_ALT'}
         case 'SHIFT':
             return {'LEFT_SHIFT', 'RIGHT_SHIFT'}
+        case 'OSKEY':
+            return {'OSKEY'}
         case 'DISABLED':
             return {'DISABLED'}
 
@@ -276,6 +280,8 @@ def toggle_alt_mode(op: _MESH_OT, event: bpy.types.Event) -> None:
         and op.alt_mode_toggle_key == 'ALT'
         or event.shift
         and op.alt_mode_toggle_key == 'SHIFT'
+        or event.oskey
+        and op.alt_mode_toggle_key == 'OSKEY'
     ):
         op.curr_mode = op.alt_mode
     else:

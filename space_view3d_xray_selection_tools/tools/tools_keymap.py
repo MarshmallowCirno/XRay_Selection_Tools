@@ -98,6 +98,7 @@ def add_fallback_keymap_items(keymap_templates: tuple[_FallbackKeymapTemplate, .
                 ctrl=kmi_prefs["ctrl"],
                 shift=kmi_prefs["shift"],
                 alt=kmi_prefs["alt"],
+                oskey=kmi_prefs["oskey"],
             )
             if kmi_prefs["name"] != 'DEF':
                 kmi.properties.mode = kmi_prefs["name"]  # pyright: ignore [reportAttributeAccessIssue]
@@ -133,6 +134,7 @@ def populate_addon_preferences_keymaps() -> None:
             "shift": False,
             "ctrl": False,
             "alt": False,
+            "oskey": False,
         },
         'SET': {
             "description": "Set",
@@ -141,6 +143,7 @@ def populate_addon_preferences_keymaps() -> None:
             "shift": False,
             "ctrl": False,
             "alt": False,
+            "oskey": False,
         },
         'ADD': {
             "description": "Extend",
@@ -149,6 +152,7 @@ def populate_addon_preferences_keymaps() -> None:
             "shift": True,
             "ctrl": False,
             "alt": False,
+            "oskey": False,
         },
         'SUB': {
             "description": "Subtract",
@@ -157,6 +161,7 @@ def populate_addon_preferences_keymaps() -> None:
             "shift": False,
             "ctrl": True,
             "alt": False,
+            "oskey": False,
         },
         'XOR': {
             "description": "Difference",
@@ -165,6 +170,7 @@ def populate_addon_preferences_keymaps() -> None:
             "shift": False,
             "ctrl": False,
             "alt": True,
+            "oskey": False,
         },
         'AND': {
             "description": "Intersect",
@@ -173,6 +179,7 @@ def populate_addon_preferences_keymaps() -> None:
             "shift": True,
             "ctrl": True,
             "alt": False,
+            "oskey": False,
         },
     }
 
@@ -205,6 +212,7 @@ class _WorkSpaceToolKeyMapItemEvent(TypedDict):
     shift: bool
     ctrl: bool
     alt: bool
+    oskey: bool
 
 
 class _WorkSpaceToolKeyMapItemProperties(TypedDict):
@@ -255,6 +263,7 @@ def keymap_from_addon_preferences(operator: str) -> tuple[WorkSpaceToolKeyMapIte
                 "shift": kmi_prefs["shift"],
                 "ctrl": kmi_prefs["ctrl"],
                 "alt": kmi_prefs["alt"],
+                "oskey": kmi_prefs["oskey"],
             },
             {"properties": []},
         )
