@@ -191,19 +191,18 @@ def populate_addon_preferences_keymaps() -> None:
 
         km_items = addon_prefs_km.keymap_items
         for selection_mode, kmi_config in default_km_config.items():
-            if selection_mode in km_items:
-                continue
             if tool_type == 'CIRCLE' and selection_mode in {'XOR', 'AND'}:
                 continue
 
-            kmi = km_items.add()
-            kmi["name"] = selection_mode
-            kmi["description"] = kmi_config["description"]
-            kmi["icon"] = kmi_config["icon"]
-            kmi["active"] = kmi_config["active"]
-            kmi["shift"] = kmi_config["shift"]
-            kmi["ctrl"] = kmi_config["ctrl"]
-            kmi["alt"] = kmi_config["alt"]
+            if selection_mode not in km_items:
+                kmi = km_items.add()
+                kmi["name"] = selection_mode
+            else:
+                kmi = km_items[selection_mode]
+
+            for key in ("description", "icon", "active", "shift", "ctrl", "alt", "oskey"):
+                if key not in kmi:
+                    kmi[key] = kmi_config[key]
 
 
 class _WorkSpaceToolKeyMapItemEvent(TypedDict):
