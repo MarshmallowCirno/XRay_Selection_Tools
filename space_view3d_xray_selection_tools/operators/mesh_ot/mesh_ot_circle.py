@@ -113,12 +113,12 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
     if TYPE_CHECKING:
         mode: Literal['SET', 'ADD', 'SUB']
         alt_mode: Literal['SET', 'ADD', 'SUB']
-        alt_mode_toggle_key: Literal['CTRL', 'ALT', 'SHIFT']
+        alt_mode_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'OSKEY']
         radius: int
         wait_for_input: bool
         override_global_props: bool
         select_through: bool
-        select_through_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'DISABLED']
+        select_through_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'OSKEY', 'DISABLED']
         select_through_toggle_type: Literal['HOLD', 'PRESS']
         default_color: tuple[float, float, float]
         select_through_color: tuple[float, float, float]
@@ -159,6 +159,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                 ('CTRL', "CTRL", ""),
                 ('ALT', "ALT", ""),
                 ('SHIFT', "SHIFT", ""),
+                ('OSKEY', "CMD", ""),
             ],
             default='SHIFT',
             options={'SKIP_SAVE'},
@@ -197,6 +198,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
                 ('CTRL', "CTRL", ""),
                 ('ALT', "ALT", ""),
                 ('SHIFT', "SHIFT", ""),
+                ('OSKEY', "CMD", ""),
                 ('DISABLED', "DISABLED", ""),
             ],
             default='DISABLED',
@@ -307,7 +309,9 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
         self.invert_select_through: bool = False
         self.select_through_toggle_key_list: set[
-            Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']
+            Literal[
+                'LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'OSKEY', 'DISABLED'
+            ]
         ] = mesh_modal.get_select_through_toggle_keys()
 
         self.handler: Any | None = None

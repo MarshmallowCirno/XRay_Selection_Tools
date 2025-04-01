@@ -159,11 +159,11 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
     if TYPE_CHECKING:
         mode: Literal['SET', 'ADD', 'SUB', 'XOR', 'AND']
         alt_mode: Literal['SET', 'ADD', 'SUB']
-        alt_mode_toggle_key: Literal['CTRL', 'ALT', 'SHIFT']
+        alt_mode_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'OSKEY']
         wait_for_input: bool
         override_global_props: bool
         show_xray: bool
-        xray_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'DISABLED']
+        xray_toggle_key: Literal['CTRL', 'ALT', 'SHIFT', 'OSKEY', 'DISABLED']
         xray_toggle_type: Literal['HOLD', 'PRESS']
         hide_gizmo: bool
         show_crosshair: bool
@@ -199,6 +199,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
                 ('CTRL', "CTRL", ""),
                 ('ALT', "ALT", ""),
                 ('SHIFT', "SHIFT", ""),
+                ('OSKEY', "CMD", ""),
             ],
             default='SHIFT',
             options={'SKIP_SAVE'},
@@ -231,6 +232,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
                 ('CTRL', "CTRL", ""),
                 ('ALT', "ALT", ""),
                 ('SHIFT', "SHIFT", ""),
+                ('OSKEY', "CMD", ""),
                 ('DISABLED', "DISABLED", ""),
             ],
             default='DISABLED',
@@ -309,7 +311,9 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         self.override_intersect_tests: bool = False
 
         self.xray_toggle_key_list: set[
-            Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'DISABLED']
+            Literal[
+                'LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'OSKEY', 'DISABLED'
+            ]
         ] = object_modal.get_xray_toggle_key_list()
 
         self.handler: Any | None = None
