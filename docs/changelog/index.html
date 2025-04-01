@@ -60,6 +60,10 @@
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">Changelog</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#490">4.9.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#483">4.8.3</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#482">4.8.2</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#481">4.8.1</a>
@@ -146,17 +150,31 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="_1"></h1>
+<h2 id="490">4.9.0</h2>
+<ul>
+<li><strong>Features</strong><ul>
+<li>Added support for using the operating system key (Command key on macOS or Windows key on Windows) as a modifier key, similar to Ctrl, Alt, and Shift</li>
+</ul>
+</li>
+</ul>
+<h2 id="483">4.8.3</h2>
+<ul>
+<li><strong>Bug Fixes</strong><ul>
+<li>Fixed an error when loading the add-on in Blender 4.2 caused by the manifest version being higher than the Blender version.</li>
+</ul>
+</li>
+</ul>
 <h2 id="482">4.8.2</h2>
 <ul>
 <li><strong>Code &amp; Structure Enhancements</strong><ul>
-<li>Removed the use of the depsgraph handler, as the existing load_post handler is sufficient for tool startup activation.</li>
+<li>Removed the use of the depsgraph handler, as the existing <code>load_post</code> handler is sufficient for tool startup activation.</li>
 </ul>
 </li>
 </ul>
 <h2 id="481">4.8.1</h2>
 <ul>
 <li><strong>Code &amp; Structure Enhancements</strong><ul>
-<li>Use a precomputed module reload order instead of generating it automatically on each reload.</li>
+<li>Implemented a precomputed module reload order instead of generating it dynamically on each reload.</li>
 </ul>
 </li>
 </ul>
