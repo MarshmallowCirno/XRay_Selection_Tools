@@ -482,15 +482,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.last_mouse_region_x = event.mouse_region_x
         self.last_mouse_region_y = event.mouse_region_y
 
-        if bpy.app.version >= (4, 0, 0):
-            self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader, (), 'WINDOW', 'POST_PIXEL')  # pyright: ignore [reportArgumentType]
-        else:
-            self.handler = context.space_data.draw_handler_add(
-                self.draw_lasso_shader_bgl,  # pyright: ignore [reportArgumentType]
-                (context,),
-                'WINDOW',
-                'POST_PIXEL',
-            )
+        self.handler = context.space_data.draw_handler_add(self.draw_lasso_shader, (), 'WINDOW', 'POST_PIXEL')  # pyright: ignore [reportArgumentType]
         self.update_shader_position(context, event)
 
     def finish_custom_selection_stage(self, context: bpy.types.Context) -> None:
@@ -558,99 +550,6 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         _icon_shader.uniform_block("ub", self.UBO)
         _icon_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
         self.icon_batch.draw(_icon_shader)
-
-    def draw_lasso_shader_bgl(self, context: bpy.types.Context) -> None:
-        import bgl
-
-        # Create batches.
-        vertices = [mathutils.Vector(v) for v in self.lasso_poly]
-        vertices.append(mathutils.Vector(self.lasso_poly[0]))
-
-        lengths = [0.0]
-        for a, b in zip(vertices[:-1], vertices[1:]):
-            lengths.append(lengths[-1] + (a - b).length)
-
-        bbox_vertices = (
-            (self.lasso_xmin, self.lasso_ymax),
-            (self.lasso_xmin, self.lasso_ymin),
-            (self.lasso_xmax, self.lasso_ymin),
-            (self.lasso_xmax, self.lasso_ymax),
-        )
-
-        fill_batch = batch.batch_for_shader(_fill_shader, 'TRI_FAN', {"pos": vertices})  # pyright: ignore [reportArgumentType]
-        border_batch = batch.batch_for_shader(_border_shader, 'LINE_STRIP', {"pos": vertices, "len": lengths})  # pyright: ignore [reportArgumentType]
-        stencil_batch = batch.batch_for_shader(_fill_shader, 'TRI_FAN', {"pos": bbox_vertices})
-
-        matrix = gpu.matrix.get_projection_matrix()
-        segment_color = (1.0, 1.0, 1.0, 1.0)
-        gap_color = (0.2, 0.2, 0.2, 1.0)
-        shadow_color = (0.3, 0.3, 0.3, 1.0)
-        fill_color = (1.0, 1.0, 1.0, 0.04)
-        dashed = not self.curr_behavior == 'CONTAIN'
-
-        # UBO.
-        self.UBO_data.u_FillColor = fill_color
-        self.UBO_data.u_Dashed = dashed
-        self.UBO_data.u_GapColor = gap_color
-        self.UBO_data.u_SegmentColor = segment_color
-        self.update_ubo()
-
-        # Stencil mask.
-        # https://stackoverflow.com/a/25468363/5106051
-        bgl.glClear(bgl.GL_STENCIL_BUFFER_BIT)
-        bgl.glEnable(bgl.GL_STENCIL_TEST)  # pyright: ignore [reportArgumentType]
-        bgl.glColorMask(bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE, bgl.GL_FALSE)  # pyright: ignore [reportArgumentType]
-        bgl.glStencilFunc(bgl.GL_ALWAYS, 0, 1)  # pyright: ignore [reportArgumentType]
-        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_INVERT)  # pyright: ignore [reportArgumentType]
-        bgl.glStencilMask(1)
-
-        _fill_shader.bind()
-        _fill_shader.uniform_block("ub", self.UBO)
-        _fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
-        fill_batch.draw(_fill_shader)
-
-        sv3d = context.space_data
-        assert isinstance(sv3d, bpy.types.SpaceView3D)
-        if sv3d.shading.type in {'MATERIAL', 'RENDERED'}:
-            bgl.glStencilFunc(bgl.GL_EQUAL, 0, 1)  # pyright: ignore [reportArgumentType]
-        else:
-            bgl.glStencilFunc(bgl.GL_EQUAL, 1, 1)  # pyright: ignore [reportArgumentType]
-        bgl.glStencilOp(bgl.GL_KEEP, bgl.GL_KEEP, bgl.GL_KEEP)  # pyright: ignore [reportArgumentType]
-        bgl.glColorMask(bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE, bgl.GL_TRUE)  # pyright: ignore [reportArgumentType]
-
-        # Fill.
-        bgl.glEnable(bgl.GL_BLEND)  # pyright: ignore [reportArgumentType]
-        stencil_batch.draw(_fill_shader)
-        bgl.glDisable(bgl.GL_BLEND)  # pyright: ignore [reportArgumentType]
-
-        # Border.
-        if not dashed:
-            # Solid border shadow.
-            self.UBO_data.u_SegmentColor = shadow_color
-            self.update_ubo()
-
-            gpu.state.line_width_set(3)
-            _border_shader.bind()
-            _border_shader.uniform_block("ub", self.UBO)
-            _border_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
-            border_batch.draw(_border_shader)
-            gpu.state.line_width_set(1)
-
-            # Solid border.
-            self.UBO_data.u_SegmentColor = segment_color
-            self.update_ubo()
-
-            bgl.glDisable(bgl.GL_STENCIL_TEST)  # pyright: ignore [reportArgumentType]
-            _border_shader.uniform_block("ub", self.UBO)
-            border_batch.draw(_border_shader)
-
-        else:
-            # Dashed border.
-            bgl.glDisable(bgl.GL_STENCIL_TEST)  # pyright: ignore [reportArgumentType]
-            _border_shader.bind()
-            _border_shader.uniform_block("ub", self.UBO)
-            _border_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
-            border_batch.draw(_border_shader)
 
     def draw_lasso_shader(self) -> None:
         # Create batches.
