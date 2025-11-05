@@ -4,7 +4,6 @@ import math
 import time
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-import bgl
 import bpy
 import gpu
 import mathutils
@@ -561,6 +560,8 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         self.icon_batch.draw(_icon_shader)
 
     def draw_lasso_shader_bgl(self, context: bpy.types.Context) -> None:
+        import bgl
+
         # Create batches.
         vertices = [mathutils.Vector(v) for v in self.lasso_poly]
         vertices.append(mathutils.Vector(self.lasso_poly[0]))
