@@ -55,6 +55,7 @@ def _get_safe_draw_x(context: bpy.types.Context, ui_width: int):
 
 class _ToggleBase(bpy.types.Operator):
     def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
         self.handler: Any | None = None
         self.timer: bpy.types.Timer | None = None
         self.text: str = NotImplemented
