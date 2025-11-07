@@ -396,6 +396,8 @@ class MESH_OT_select_lasso_xray(bpy.types.Operator):
             or self.override_intersect_tests
         )
 
+        self.override_wait_for_input = not self.show_lasso_icon or self.override_selection
+
         self.init_mods = mesh_modal.gather_modifiers(self, context)  # save initial modifier states
         self.init_overlays = mesh_modal.gather_overlays(context)  # save initial x-ray overlay states
 
