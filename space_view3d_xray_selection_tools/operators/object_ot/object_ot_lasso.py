@@ -299,7 +299,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
         self.init_overlays: dict[str, Any] = dict()
 
-        self.override_wait_for_input: bool = False
+        self.override_wait_for_input: bool = True  # always, inbuilt operator doesn't have `Wait for input` property
         self.override_selection: bool = False
         self.override_intersect_tests: bool = False
 
@@ -327,8 +327,6 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             or self.alt_mode != 'SUB'
             or self.override_intersect_tests
         )
-
-        self.override_wait_for_input = not self.show_lasso_icon or self.override_selection
 
         self.init_overlays = object_modal.gather_overlays(context)  # save initial x-ray overlay states
 
