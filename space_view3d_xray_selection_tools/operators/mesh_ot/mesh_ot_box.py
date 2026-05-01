@@ -10,7 +10,7 @@ from ...functions.intersections import mesh_intersect
 from ...functions.modals import mesh_modal
 
 if TYPE_CHECKING:
-    from bpy._typing.rna_enums import OperatorReturnItems
+    from bpy.stub_internal.rna_enums import OperatorReturnItems
 
 
 # https://docs.blender.org/api/blender2.8/gpu.html#custom-shader-for-dotted-3d-line
@@ -374,7 +374,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         self.fill_batch: gpu.types.GPUBatch | None = None
         self.UBO_data: _UBOStruct = _UBOStruct()
         self.UBO: gpu.types.GPUUniformBuf = gpu.types.GPUUniformBuf(
-            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
+            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue, reportArgumentType]
         )
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
@@ -534,7 +534,6 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
 
     def begin_custom_selection_stage(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.stage = 'CUSTOM_SELECTION'
-
         status_text = "RMB, ESC: Cancel"
         if self.select_through_toggle_key != 'DISABLED':
             status_text += f"  |  {self.select_through_toggle_key}: Toggle Select Through"
@@ -608,7 +607,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 mesh_modal.set_shading_from_properties(self, context)
 
     def update_ubo(self) -> None:
-        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
+        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue, reportArgumentType]
 
     def update_shader_position(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.last_mouse_region_x = event.mouse_region_x

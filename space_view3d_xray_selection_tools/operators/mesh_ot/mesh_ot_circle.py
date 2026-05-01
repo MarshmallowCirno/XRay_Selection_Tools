@@ -11,7 +11,7 @@ from ...functions.intersections import mesh_intersect
 from ...functions.modals import mesh_modal
 
 if TYPE_CHECKING:
-    from bpy._typing.rna_enums import OperatorReturnItems
+    from bpy.stub_internal.rna_enums import OperatorReturnItems
 
 
 class _UBOStruct(ctypes.Structure):
@@ -319,7 +319,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
         self.fill_batch: gpu.types.GPUBatch | None = None
         self.UBO_data: _UBOStruct = _UBOStruct()
         self.UBO: gpu.types.GPUUniformBuf = gpu.types.GPUUniformBuf(
-            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
+            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue, reportArgumentType]
         )
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
@@ -533,10 +533,10 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
     def finish_modal(self, context: bpy.types.Context) -> None:
         mesh_modal.restore_overlays(self, context)
         mesh_modal.restore_modifiers(self)
-        context.window_manager.operator_properties_last("mesh.select_circle_xray").radius = self.radius  # pyright: ignore [reportAttributeAccessIssue]
+        context.window_manager.operator_properties_last("mesh.select_circle_xray").radius = self.radius
 
     def update_ubo(self) -> None:
-        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
+        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue, reportArgumentType]
 
     def update_shader_position(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.last_mouse_region_x = event.mouse_region_x
@@ -565,7 +565,7 @@ class MESH_OT_select_circle_xray(bpy.types.Operator):
 
         vertices.append(vertices[0])  # ending triangle
         vertices.insert(0, (0, 0))  # starting vert of triangle fan
-        self.fill_batch = batch.batch_for_shader(_fill_shader, 'TRI_FAN', {"pos": vertices})
+        self.fill_batch = batch.batch_for_shader(_fill_shader, 'TRI_FAN', {"pos": vertices})  # pyright: ignore[reportArgumentType]
 
     def draw_circle_shader(self) -> None:
         matrix = gpu.matrix.get_projection_matrix()

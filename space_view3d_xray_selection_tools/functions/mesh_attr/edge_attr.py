@@ -11,14 +11,14 @@ def vertex_indices(me: bpy.types.Mesh) -> Int2DArray:
     Retrieve indices of edge vertices.
     """
     edge_count = len(me.edges)
-    edge_vert_indices = np.empty((edge_count, 2), "i")
+    edge_vert_indices = cast(Int2DArray, np.empty((edge_count, 2), "i"))
     if bpy.app.version >= (3, 6, 0):
         if ".edge_verts" not in me.attributes:
             me.attributes.new(name=".edge_verts", type="INT32_2D", domain="EDGE")
         data = cast(bpy.types.Int2Attribute, me.attributes[".edge_verts"]).data
-        data.foreach_get("value", edge_vert_indices.reshape(-1))  # pyright: ignore[reportArgumentType]
+        data.foreach_get("value", edge_vert_indices.reshape(-1))
     else:
-        me.edges.foreach_get("vertices", edge_vert_indices.reshape(-1))  # pyright: ignore[reportArgumentType]
+        me.edges.foreach_get("vertices", edge_vert_indices.reshape(-1))
     return edge_vert_indices
 
 
@@ -32,9 +32,9 @@ def visibility_mask(me: bpy.types.Mesh) -> Bool1DArray:
         if ".hide_edge" not in me.attributes:
             me.attributes.new(name=".hide_edge", type="BOOLEAN", domain="EDGE")
         data = cast(bpy.types.BoolAttribute, me.attributes[".hide_edge"]).data
-        data.foreach_get("value", edges_mask_hid)  # pyright: ignore[reportArgumentType]
+        data.foreach_get("value", edges_mask_hid)
     else:
-        me.edges.foreach_get("hide", edges_mask_hid)  # pyright: ignore[reportArgumentType]
+        me.edges.foreach_get("hide", edges_mask_hid)
     return ~edges_mask_hid
 
 
@@ -48,7 +48,7 @@ def selection_mask(me: bpy.types.Mesh) -> Bool1DArray:
         if ".select_edge" not in me.attributes:
             me.attributes.new(name=".select_edge", type="BOOLEAN", domain="EDGE")
         data = cast(bpy.types.BoolAttribute, me.attributes[".select_edge"]).data
-        data.foreach_get("value", edges_mask_sel)  # pyright: ignore[reportArgumentType]
+        data.foreach_get("value", edges_mask_sel)
     else:
-        me.edges.foreach_get("select", edges_mask_sel)  # pyright: ignore[reportArgumentType]
+        me.edges.foreach_get("select", edges_mask_sel)
     return edges_mask_sel

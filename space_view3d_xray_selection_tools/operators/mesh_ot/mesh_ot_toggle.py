@@ -6,7 +6,7 @@ import bpy
 from ... import addon_info
 
 if TYPE_CHECKING:
-    from bpy._typing.rna_enums import OperatorReturnItems
+    from bpy.stub_internal.rna_enums import OperatorReturnItems
 
 
 def _draw_text(

@@ -11,7 +11,7 @@ from ...functions.intersections import object_intersect
 from ...functions.modals import object_modal
 
 if TYPE_CHECKING:
-    from bpy._typing.rna_enums import OperatorReturnItems
+    from bpy.stub_internal.rna_enums import OperatorReturnItems
 
 
 class _UBOStruct(ctypes.Structure):

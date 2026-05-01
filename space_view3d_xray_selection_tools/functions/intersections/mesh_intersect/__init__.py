@@ -75,18 +75,18 @@ def select_mesh_elements(
     rv3d = context.region_data
 
     if TYPE_CHECKING:
-        eye_co_world = cast(mathutils.Vector, None)
-        eye_co_local = cast(mathutils.Vector, None)
-        facing_vec_world = cast(mathutils.Vector, None)
-        cam = cast(bpy.types.Object, None)
-        verts_mask_visin = cast(Bool1DArray, None)
-        edges_mask_visin = cast(Bool1DArray, None)
-        vis_edges_mask_in = cast(Bool1DArray, None)
-        vert_co = cast(Float2DArray, None)
+        eye_co_world = cast(mathutils.Vector, cast(object, None))
+        eye_co_local = cast(mathutils.Vector, cast(object, None))
+        facing_vec_world = cast(mathutils.Vector, cast(object, None))
+        cam = cast(bpy.types.Object, cast(object, None))
+        verts_mask_visin = cast(Bool1DArray, cast(object, None))
+        edges_mask_visin = cast(Bool1DArray, cast(object, None))
+        vis_edges_mask_in = cast(Bool1DArray, cast(object, None))
+        vert_co = cast(Float2DArray, cast(object, None))
         me: bpy.types.Mesh | None = None
 
     # View vector
-    match rv3d.view_perspective:
+    match rv3d.view_perspective:  # pyright: ignore [reportMatchNotExhaustive]
         case 'PERSP':
             eye = mathutils.Vector(rv3d.view_matrix[2][:3])
             eye.length = rv3d.view_distance
@@ -107,7 +107,7 @@ def select_mesh_elements(
             assert isinstance(ob.data, bpy.types.Mesh)
 
             # View vector
-            match rv3d.view_perspective:
+            match rv3d.view_perspective:  # pyright: ignore [reportMatchNotExhaustive]
                 case 'PERSP' | 'CAMERA':
                     eye_co_local = ob.matrix_world.inverted() @ eye_co_world
                 case 'ORTHO':
@@ -194,10 +194,10 @@ def select_mesh_elements(
                             )
                             update_mask = cur_selection_mask ^ new_selection_mask
 
-                            update_list: list[bool] = update_mask.tolist()
-                            state_list: list[bool] = new_selection_mask.tolist()
+                            vert_update_list: list[bool] = update_mask.tolist()
+                            vert_state_list: list[bool] = new_selection_mask.tolist()
 
-                            for v, state in itertools.compress(zip(bm.verts, state_list), update_list):
+                            for v, state in itertools.compress(zip(bm.verts, vert_state_list), vert_update_list):
                                 v.select = state
                 # EDGE PASS
                 if mesh_select_mode[1] or (mesh_select_mode[2] and select_all_faces):
@@ -309,10 +309,10 @@ def select_mesh_elements(
                             )
                             update_mask = cur_selection_mask ^ new_selection_mask
 
-                            update_list: list[bool] = update_mask.tolist()
-                            state_list: list[bool] = new_selection_mask.tolist()
+                            edge_update_list: list[bool] = update_mask.tolist()
+                            edge_state_list: list[bool] = new_selection_mask.tolist()
 
-                            for e, state in itertools.compress(zip(bm.edges, state_list), update_list):
+                            for e, state in itertools.compress(zip(bm.edges, edge_state_list), edge_update_list):
                                 e.select = state
 
                 # FACE PASS
@@ -504,10 +504,10 @@ def select_mesh_elements(
                         )
                         update_mask = cur_selection_mask ^ new_selection_mask
 
-                        update_list: list[bool] = update_mask.tolist()
-                        state_list: list[bool] = new_selection_mask.tolist()
+                        poly_update_list: list[bool] = update_mask.tolist()
+                        poly_state_list: list[bool] = new_selection_mask.tolist()
 
-                        for f, state in itertools.compress(zip(bm.faces, state_list), update_list):
+                        for f, state in itertools.compress(zip(bm.faces, poly_state_list), poly_update_list):
                             f.select = state
 
                 with timer.time_section("Finalize", prefix=">> END\n"):

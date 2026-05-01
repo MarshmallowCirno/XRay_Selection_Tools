@@ -1,13 +1,13 @@
 import contextlib
 import itertools
 import operator
-from collections.abc import Sequence
-from typing import Any, Callable, Generator, Iterable, Literal
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Any, Literal, cast
 
 import bpy
 import numpy as np
 
-from ....types import Bool1DArray, Float1DArray, Float2DArray, Float2x2DArray, Int1DArray
+from ....types import Bool1DArray, Float1DArray, Float2DArray, Float2x2DArray, Float3DArray, Int1DArray
 from ... import view3d_utils
 from ...mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
 from .. import selection_utils
@@ -34,7 +34,7 @@ def partition(items: Iterable[Any], predicate: Callable[[Any], bool] = bool) -> 
 
 
 def get_ob_2dbboxes(
-    mesh_obs: list[bpy.types.Object], mesh_ob_count: int, region: bpy.types.Region, rv3d: bpy.types.RegionView3D
+    mesh_obs: Sequence[bpy.types.Object], mesh_ob_count: int, region: bpy.types.Region, rv3d: bpy.types.RegionView3D
 ) -> tuple[Float1DArray, Float1DArray, Float1DArray, Float1DArray, Float2DArray, Float2x2DArray, Bool1DArray]:
     """
     Get coordinates of object's 2D bounding boxes.
@@ -48,15 +48,15 @@ def get_ob_2dbboxes(
          - Coordinates of the bounding box segments, where each segment is ((x1, y1), (x2, y2)).
          - Clipping mask (`np.True` for objects with bounding box entirely clipped, `np.False` otherwise).
     """
-    ob_3dbbox_list = map(operator.attrgetter("bound_box"), mesh_obs)
-    ob_3dbbox_flat_list = itertools.chain.from_iterable(itertools.chain.from_iterable(ob_3dbbox_list))
-    ob_3dbbox_co_local = np.fromiter(ob_3dbbox_flat_list, "f", mesh_ob_count * 24)
+    ob_3dbboxes = map(operator.attrgetter("bound_box"), mesh_obs)
+    ob_3dbboxes_flat = itertools.chain.from_iterable(itertools.chain.from_iterable(ob_3dbboxes))
+    ob_3dbbox_co_local = np.fromiter(ob_3dbboxes_flat, "f", mesh_ob_count * 24)
     ob_3dbbox_co_local.shape = (mesh_ob_count, 8, 3)
 
     # Get object matrices.
-    ob_mat_list = map(operator.attrgetter("matrix_world"), mesh_obs)
-    ob_mat_flat_list = itertools.chain.from_iterable(itertools.chain.from_iterable(ob_mat_list))
-    ob_mats = np.fromiter(ob_mat_flat_list, "f", mesh_ob_count * 16)
+    ob_mats = map(operator.attrgetter("matrix_world"), mesh_obs)
+    ob_mats_flat = itertools.chain.from_iterable(itertools.chain.from_iterable(ob_mats))
+    ob_mats = np.fromiter(ob_mats_flat, "f", mesh_ob_count * 16)
     ob_mats.shape = (mesh_ob_count, 4, 4)
 
     # Get world space coordinates of 3D object bounding boxes.
@@ -64,7 +64,7 @@ def get_ob_2dbboxes(
 
     # Get 2D coordinates of 3D object bounding boxes.
     ob_3dbbox_co_2d, ob_3dbbox_co_2d_mask_clip = view3d_utils.transform_world_to_2d_co(
-        region, rv3d, ob_3dbbox_co_world.reshape(mesh_ob_count * 8, 3), apply_clipping_mask=False
+        region, rv3d, cast(Float3DArray, ob_3dbbox_co_world.reshape(mesh_ob_count * 8, 3)), apply_clipping_mask=False
     )
     ob_3dbbox_co_2d.shape = (mesh_ob_count, 8, 2)
     ob_3dbbox_co_2d_mask_clip.shape = (mesh_ob_count, 8)
@@ -176,13 +176,13 @@ def get_face_vert_co_2d(
 
 
 def get_ob_loc_co_2d(
-    obs: list[bpy.types.Object], region: bpy.types.Region, rv3d: bpy.types.RegionView3D
+    obs: Sequence[bpy.types.Object], region: bpy.types.Region, rv3d: bpy.types.RegionView3D
 ) -> Float2DArray:
     """2D coordinates of object location."""
     ob_co_world = map(operator.attrgetter("location"), obs)
     ob_co_world = itertools.chain.from_iterable(ob_co_world)
     c = len(obs)
-    ob_co_world = np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3))
+    ob_co_world = cast(Float3DArray, np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3)))
     ob_co_2d = view3d_utils.transform_world_to_2d_co(region, rv3d, ob_co_world)[0]
     return ob_co_2d
 

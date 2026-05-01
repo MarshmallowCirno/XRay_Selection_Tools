@@ -6,7 +6,7 @@ from ... import tools
 from ...operators import ot_keymap
 
 if TYPE_CHECKING:
-    from bpy._typing.rna_enums import IconItems
+    from bpy.stub_internal.rna_enums import IconItems
 
 
 class XRAYSELToolKeyMapItemPG(bpy.types.PropertyGroup):

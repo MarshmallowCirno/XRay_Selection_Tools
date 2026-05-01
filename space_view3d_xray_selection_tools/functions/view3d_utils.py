@@ -1,3 +1,5 @@
+from typing import cast
+
 import bpy
 import mathutils
 import numpy as np
@@ -81,7 +83,7 @@ def transform_world_to_2d_co(
     height_half = region.height / 2.0
     prj_w = prj[:, 3]  # negative if coord is behind the origin of a perspective view
 
-    co_2d = np.empty((c, 2), "f")
+    co_2d = cast(Float2DArray, np.empty((c, 2), "f"))
     mask_clip = prj_w <= 0
 
     if not apply_clipping_mask:

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal
 
 import bpy
 import rna_keymap_ui
@@ -6,7 +6,6 @@ import rna_keymap_ui
 from ...operators import ot_keymap
 
 if TYPE_CHECKING:
-    from ...preferences.properties.keymaps_props import XRAYSELToolKeyMapItemPG
     from ..addon_preferences import XRAYSELPreferences
 
 
@@ -40,7 +39,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     col = box.column()
     row = col.row(align=True)
     row.label(text="Shortcuts for activating tools and modifying preferences")
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_keymaps"  # pyright: ignore[reportAttributeAccessIssue]
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_keymaps"
 
     col = box.column()
     icon: Literal['CHECKBOX_HLT', 'CHECKBOX_DEHLT']
@@ -91,7 +90,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     box.separator()
     row = box.row(align=True)
     row.label(text="Shortcuts for selection modes of toolbar tools")
-    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_selection_mode_keymaps"  # pyright: ignore[reportAttributeAccessIssue]
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "tool_selection_mode_keymaps"
 
     col = box.column(align=True)
     row = col.row(align=True)
@@ -101,7 +100,7 @@ def draw_keymaps(addon_prefs: "XRAYSELPreferences", box: bpy.types.UILayout):
     keymap = addon_prefs.keymaps.tool_keymaps[tool]
     keymap_items = keymap.keymap_items
     for prop_group in keymap_items.values():  # type: ignore
-        kmi_props = cast("XRAYSELToolKeyMapItemPG", prop_group)
+        kmi_props = prop_group
 
         row = col.row(align=True)
         row.prop(kmi_props, "active", text=kmi_props.description, icon=kmi_props.icon)

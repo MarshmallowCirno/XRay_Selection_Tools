@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import bpy
 
 if TYPE_CHECKING:
-    from bpy._typing.rna_enums import OperatorReturnItems
+    from bpy.stub_internal.rna_enums import OperatorReturnItems
 
 
 _info_texts: dict[str, tuple[str, ...]] = {
@@ -37,7 +37,7 @@ _info_texts: dict[str, tuple[str, ...]] = {
         "a keyboard shortcut.",
     ),
     "hide_gizmo": (
-        "Hide gizmo of the active tool for the duration of the selection and restore it after " "finishing selection.",
+        "Hide gizmo of the active tool for the duration of the selection and restore it after finishing selection.",
     ),
     "group_with_builtins": (
         "Enable to place tools inside the group with builtin selection tools, disable to create a new separate group.",
@@ -59,8 +59,7 @@ _info_texts: dict[str, tuple[str, ...]] = {
         "Deactivating header here will remove shortcuts below it from blender keyconfig.",
     ),
     "tool_selection_mode_keymaps": (
-        "Keys that change selection mode when held down before using a box, lasso or circle xray tool in the "
-        "toolbar.",
+        "Keys that change selection mode when held down before using a box, lasso or circle xray tool in the toolbar.",
         "Deactivating selection mode here will remove its shortcut from xray selection tool.",
         "Active Mode corresponds to active selection mode button in blender header or Active Tool tab in "
         "blender properties area.",
@@ -71,6 +70,7 @@ _info_texts: dict[str, tuple[str, ...]] = {
 def _draw_func(self: bpy.types.Operator, _context: bpy.types.Context, description: tuple[str, ...]):
     for paragraph in description:
         lines = textwrap.wrap(paragraph, 115)
+        assert self.layout is not None
         col = self.layout.column(align=True)
         for line in lines:
             col.label(text=line)

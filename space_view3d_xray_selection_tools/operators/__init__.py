@@ -17,7 +17,7 @@ _classes = (
 
 
 def register() -> None:
-    from bpy.utils import register_class  # pyright: ignore[reportUnknownVariableType]
+    from bpy.utils import register_class
 
     for cls in _classes:
         register_class(cls)
@@ -28,7 +28,7 @@ def register() -> None:
 def unregister() -> None:
     ot_keymap.unregister()
 
-    from bpy.utils import unregister_class  # pyright: ignore[reportUnknownVariableType]
+    from bpy.utils import unregister_class
 
     for cls in _classes:
         unregister_class(cls)

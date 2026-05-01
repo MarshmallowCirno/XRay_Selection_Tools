@@ -256,9 +256,9 @@ def restore_modifiers(op: _MESH_OT) -> None:
                 mod.show_in_editmode = show_in_editmode
 
 
-def get_select_through_toggle_keys() -> (
-    set[Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'OSKEY', 'DISABLED']]
-):
+def get_select_through_toggle_keys() -> set[
+    Literal['LEFT_CTRL', 'RIGHT_CTRL', 'LEFT_ALT', 'RIGHT_ALT', 'LEFT_SHIFT', 'RIGHT_SHIFT', 'OSKEY', 'DISABLED']
+]:
     match addon_info.get_preferences().mesh_tools.select_through_toggle_key:
         case 'CTRL':
             return {'LEFT_CTRL', 'RIGHT_CTRL'}

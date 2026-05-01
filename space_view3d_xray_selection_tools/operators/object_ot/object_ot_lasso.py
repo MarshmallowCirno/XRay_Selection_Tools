@@ -15,7 +15,7 @@ from ...functions.modals import object_modal
 from ...icon import lasso_cursor
 
 if TYPE_CHECKING:
-    from bpy._typing.rna_enums import OperatorReturnItems
+    from bpy.stub_internal.rna_enums import OperatorReturnItems
 
 
 class _UBOStruct(ctypes.Structure):

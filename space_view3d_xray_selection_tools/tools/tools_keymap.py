@@ -1,11 +1,8 @@
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypedDict, cast
+from typing import Any, Literal, NamedTuple, TypedDict, cast
 
 import bpy
 
 from .. import addon_info
-
-if TYPE_CHECKING:
-    from ..preferences.properties.keymaps_props import XRAYSELToolKeyMapItemPG
 
 
 class _FallbackKeymapTemplate(NamedTuple):
@@ -59,17 +56,17 @@ def add_fallback_keymap_items(keymap_templates: tuple[_FallbackKeymapTemplate, .
     """
     # keyconfig.preferences isn't available at blender startup if bpy.app.version < (4, 0, 0)
     kc = bpy.context.window_manager.keyconfigs.active
-    if kc is None or kc.preferences is None:  # pyright: ignore[reportUnnecessaryComparison]
+    if kc is None or kc.preferences is None:
         select_mouse = addon_info.get_preferences().select_mouse
         rmb_action = addon_info.get_preferences().rmb_action
     else:
         select_mouse = addon_info.get_preferences().select_mouse = cast(
             Literal['LEFT', 'RIGHT'],
-            kc.preferences.select_mouse,  # pyright: ignore [reportAttributeAccessIssue]
+            kc.preferences.select_mouse,
         )
         rmb_action = addon_info.get_preferences().rmb_action = cast(
             Literal['TWEAK', 'FALLBACK_TOOL'],
-            kc.preferences.rmb_action,  # pyright: ignore [reportAttributeAccessIssue]
+            kc.preferences.rmb_action,
         )
 
     if select_mouse == 'RIGHT' and rmb_action == 'FALLBACK_TOOL':
@@ -85,8 +82,8 @@ def add_fallback_keymap_items(keymap_templates: tuple[_FallbackKeymapTemplate, .
         addon_prefs_km = addon_prefs_kms[template.tool_type]
         addon_prefs_km_items = addon_prefs_km.keymap_items
 
-        for prop_group in reversed(addon_prefs_km_items.values()):  # type: ignore
-            kmi_prefs = cast("XRAYSELToolKeyMapItemPG", prop_group)
+        for prop_group in reversed(addon_prefs_km_items.values()):
+            kmi_prefs = prop_group
 
             if not kmi_prefs["active"]:
                 continue
@@ -101,13 +98,13 @@ def add_fallback_keymap_items(keymap_templates: tuple[_FallbackKeymapTemplate, .
                 oskey=kmi_prefs["oskey"],
             )
             if kmi_prefs["name"] != 'DEF':
-                kmi.properties.mode = kmi_prefs["name"]  # pyright: ignore [reportAttributeAccessIssue]
+                kmi.properties.mode = kmi_prefs["name"]
             if template.operator_idname in {
                 "mesh.select_circle_xray",
                 "object.select_circle_xray",
                 "view3d.select_circle",
             }:
-                kmi.properties.wait_for_input = False  # pyright: ignore [reportAttributeAccessIssue]
+                kmi.properties.wait_for_input = False
 
 
 def clear_fallback_keymaps(keymap_templates: tuple[_FallbackKeymapTemplate, ...]) -> None:
@@ -233,7 +230,7 @@ def _tool_type_from_operator(bl_operator: str) -> Literal['BOX', 'CIRCLE', 'LASS
         case "mesh.select_lasso_xray" | "object.select_lasso_xray" | "view3d.select_lasso":
             return 'LASSO'
         case _:
-            return
+            return None
 
 
 def keymap_from_addon_preferences(operator: str) -> tuple[WorkSpaceToolKeyMapItem, ...]:
@@ -247,9 +244,9 @@ def keymap_from_addon_preferences(operator: str) -> tuple[WorkSpaceToolKeyMapIte
     addon_prefs_km_items = addon_prefs_km.keymap_items  # Configs of a single tool type.
 
     bl_keymap: list[WorkSpaceToolKeyMapItem] = []
-    for prop_group_name, prop_group in addon_prefs_km_items.items():  # type: ignore
-        selection_mode = cast(str, prop_group_name)
-        kmi_prefs = cast("XRAYSELToolKeyMapItemPG", prop_group)
+    for prop_group_name, prop_group in addon_prefs_km_items.items():
+        selection_mode = prop_group_name
+        kmi_prefs = prop_group
 
         if not kmi_prefs["active"]:
             continue

@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from itertools import compress
-from typing import Literal
+from typing import Literal, cast
 
 import bpy
 import numpy as np
@@ -144,7 +145,7 @@ def select_objects_in_circle(
     rv3d = context.region_data
     depsgraph = context.evaluated_depsgraph_get()
 
-    selectable_obs = context.selectable_objects
+    selectable_obs = cast(Sequence[bpy.types.Object], context.selectable_objects)
     mesh_obs, nonmesh_obs = object_intersect_shared.partition(
         selectable_obs, lambda ob: ob.type in {'MESH', 'CURVE', 'FONT'}
     )

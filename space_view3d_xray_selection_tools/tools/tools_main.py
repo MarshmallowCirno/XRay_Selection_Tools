@@ -75,10 +75,10 @@ class ToolSelectCircleXrayMesh(bpy.types.WorkSpaceTool):
 
     @staticmethod
     def draw_cursor(_context: bpy.types.Context, tool: bpy.types.WorkSpaceTool, xy: Sequence[float]) -> None:
-        from gpu_extras.presets import draw_circle_2d  # pyright: ignore[reportUnknownVariableType]
+        from gpu_extras.presets import draw_circle_2d
 
         op_props = tool.operator_properties("mesh.select_circle_xray")
-        radius = cast(int, op_props.radius)  # pyright: ignore[reportAttributeAccessIssue]
+        radius = cast(int, op_props.radius)
         draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     @staticmethod
@@ -113,10 +113,10 @@ class ToolSelectCircleXrayObject(bpy.types.WorkSpaceTool):
 
     @staticmethod
     def draw_cursor(_context: bpy.types.Context, tool: bpy.types.WorkSpaceTool, xy: Sequence[float]) -> None:
-        from gpu_extras.presets import draw_circle_2d  # pyright: ignore[reportUnknownVariableType]
+        from gpu_extras.presets import draw_circle_2d
 
         op_props = tool.operator_properties("object.select_circle_xray")
-        radius = cast(int, op_props.radius)  # pyright: ignore[reportAttributeAccessIssue]
+        radius = cast(int, op_props.radius)
         draw_circle_2d(xy, (1.0,) * 4, radius, segments=32)
 
     @staticmethod
