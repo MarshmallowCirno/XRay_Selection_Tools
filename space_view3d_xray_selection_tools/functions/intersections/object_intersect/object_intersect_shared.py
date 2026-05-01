@@ -179,7 +179,7 @@ def get_ob_loc_co_2d(
     obs: Sequence[bpy.types.Object], region: bpy.types.Region, rv3d: bpy.types.RegionView3D
 ) -> Float2DArray:
     """2D coordinates of object location."""
-    ob_co_world = map(operator.attrgetter("location"), obs)
+    ob_co_world = map(operator.attrgetter("matrix_world.translation"), obs)
     ob_co_world = itertools.chain.from_iterable(ob_co_world)
     c = len(obs)
     ob_co_world = cast(Float3DArray, np.fromiter(ob_co_world, "f", c * 3).reshape((c, 3)))
