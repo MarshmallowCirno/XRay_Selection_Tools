@@ -336,7 +336,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
         # Enable x-ray overlays.
         object_modal.toggle_overlays(self, context)
 
-        self.update_directional_behavior()
+        self.init_directional_behavior()
 
         context.window_manager.modal_handler_add(self)
 
@@ -347,6 +347,7 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
             self.begin_custom_selection_stage(context, event)
         else:
             self.invoke_inbuilt_lasso_select()
+
         return {'RUNNING_MODAL'}
 
     def modal(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
@@ -506,6 +507,10 @@ class OBJECT_OT_select_lasso_xray(bpy.types.Operator):
 
     def finish_modal(self, context: bpy.types.Context) -> None:
         object_modal.restore_overlays(self, context)
+
+    def init_directional_behavior(self) -> None:
+        if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:
+            self.curr_behavior = 'OVERLAP'
 
     def update_directional_behavior(self) -> None:
         if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:

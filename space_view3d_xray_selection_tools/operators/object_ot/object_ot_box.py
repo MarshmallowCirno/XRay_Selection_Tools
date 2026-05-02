@@ -347,7 +347,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         # Enable x-ray overlays.
         object_modal.toggle_overlays(self, context)
 
-        self.update_directional_behavior()
+        self.init_directional_behavior()
 
         context.window_manager.modal_handler_add(self)
 
@@ -509,6 +509,11 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
 
     def finish_modal(self, context: bpy.types.Context) -> None:
         object_modal.restore_overlays(self, context)
+
+    def init_directional_behavior(self) -> None:
+        if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:
+            self.curr_behavior = 'OVERLAP'
+            self.override_intersect_tests = False
 
     def update_directional_behavior(self) -> None:
         if self.behavior in {'DIRECTIONAL', 'DIRECTIONAL_REVERSED'}:
