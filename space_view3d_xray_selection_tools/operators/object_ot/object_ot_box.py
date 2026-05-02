@@ -322,7 +322,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
         self.fill_batch: gpu.types.GPUBatch | None = None
         self.UBO_data: _UBOStruct = _UBOStruct()
         self.UBO: gpu.types.GPUUniformBuf = gpu.types.GPUUniformBuf(
-            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue]
+            gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data)  # pyright: ignore [reportCallIssue, reportArgumentType]
         )
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set["OperatorReturnItems"]:
@@ -531,7 +531,7 @@ class OBJECT_OT_select_box_xray(bpy.types.Operator):
                 self.override_intersect_tests = True
 
     def update_ubo(self) -> None:
-        self.UBO.update(gpu.types.Buffer('UBYTE', ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue]
+        self.UBO.update(gpu.types.Buffer('UBYTE', ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue, reportArgumentType]
 
     def update_shader_position(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.last_mouse_region_x = event.mouse_region_x
