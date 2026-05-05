@@ -108,7 +108,7 @@ class XRAYSELToolMeDirectionProps(bpy.types.PropertyGroup):
         select_backfacing: bpy.props.BoolProperty(
             name="Select Backfacing",
             description=(
-                "Select elements with normals pointing away from the view. Works only in \"Select Through\" mode",
+                "Select elements with normals pointing away from the view. Works only in \"Select Through\" mode"
             ),
             default=True,
         )
