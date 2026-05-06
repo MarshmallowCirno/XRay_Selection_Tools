@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "xray_selection_tools"
-version = "4.9.2"
+version = "4.10.0"
 name = "X-Ray Selection Tools"
 tagline = "Box, lasso and circle selection tools with x-ray"
 maintainer = "MarshmallowCirno <MarshmallowCirno@gmail.com>"
@@ -9,13 +9,13 @@ type = "add-on"
 website = "https://blenderartists.org/t/x-ray-selection-tools/1212316"
 tags = ["3D View"]
 
-blender_version_min = "4.5.2"
+blender_version_min = "5.1.1"
 license = ["SPDX:GPL-3.0-or-later"]
 
 [build]
 paths_exclude_pattern = [
-  "__pycache__/",
-  ".*",
-  "*.zip",
-  "dev/",
+    "__pycache__/",
+    ".*",
+    "*.zip",
+    "dev/",
 ]
