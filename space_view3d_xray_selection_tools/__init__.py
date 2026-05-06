@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 # pyright: reportUnusedImport = false
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
@@ -112,7 +113,7 @@ else:
         from .tools import tools_dummy, tools_keymap, tools_main, tools_utils
         from .ui import header_buttons
 
-import bpy
+import bpy  # noqa: E402
 
 # Prevent loading in the background, since gpu shaders will not be available
 if not bpy.app.background:
