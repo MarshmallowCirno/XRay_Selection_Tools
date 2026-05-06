@@ -32,7 +32,6 @@ bl_info = {
 _RELOADABLE_MODULE_NAMES = (
     "addon_info",
     "types",
-    "lasso_cursor",
     "ot_keymap",
     "xraysel_ot_info",
     "geometry_tests",
@@ -47,6 +46,7 @@ _RELOADABLE_MODULE_NAMES = (
     "mesh_modal",
     "mesh_ot_box",
     "mesh_ot_circle",
+    "lasso_cursor",
     "mesh_ot_lasso",
     "mesh_ot_toggle",
     "object_intersect_shared",
@@ -85,37 +85,32 @@ if "bpy" in locals():
     for module_name in _RELOADABLE_MODULE_NAMES:
         if module_name in locals():
             importlib.reload(locals()[module_name])
+
 else:
     import bpy
 
     # Prevent imports when run in the background, since gpu shaders will not be available
     if not bpy.app.background:
-        from . import addon_info, types  # noqa
-        from .icon import lasso_cursor
-        from .operators import ot_keymap, xraysel_ot_info
+        from . import addon_info, operators, preferences, startup_handlers, tools, types, ui
         from .functions import geometry_tests, timer, view3d_utils
-        from .functions.mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
-        from .functions.intersections import selection_utils, mesh_intersect, object_intersect
-        from .functions.modals import mesh_modal
-        from .operators.mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
+        from .functions.intersections import mesh_intersect, object_intersect, selection_utils
         from .functions.intersections.object_intersect import (
-            object_intersect_shared,
             object_intersect_box,
             object_intersect_circle,
             object_intersect_lasso,
+            object_intersect_shared,
         )
-        from .functions.intersections import object_intersect
-        from .functions.modals import object_modal
+        from .functions.mesh_attr import edge_attr, loop_attr, poly_attr, vert_attr
+        from .functions.modals import mesh_modal, object_modal
+        from .icon import lasso_cursor
+        from .operators import ot_keymap, xraysel_ot_info
+        from .operators.mesh_ot import mesh_ot_box, mesh_ot_circle, mesh_ot_lasso, mesh_ot_toggle
         from .operators.object_ot import object_ot_box, object_ot_circle, object_ot_lasso
-        from . import operators
-        from .tools import tools_keymap, tools_utils, tools_dummy, tools_main
-        from . import tools
+        from .preferences import addon_preferences, draw, properties
         from .preferences.draw import keymap_ui, mesh_tools_ui, object_tools_ui
-        from .preferences import draw
         from .preferences.properties import keymaps_props, tools_props
-        from .preferences import addon_preferences
+        from .tools import tools_dummy, tools_keymap, tools_main, tools_utils
         from .ui import header_buttons
-        from . import preferences, startup_handlers, ui
 
 import bpy
 
