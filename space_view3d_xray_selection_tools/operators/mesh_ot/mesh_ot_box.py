@@ -587,9 +587,9 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
     def update_direction_and_properties(self, context: bpy.types.Context) -> None:
         if self.directional and self.last_mouse_region_x != self.start_mouse_region_x:
             if self.last_mouse_region_x - self.start_mouse_region_x > 0:
-                direction = "LEFT_TO_RIGHT"
+                direction = 'LEFT_TO_RIGHT'
             else:
-                direction = "RIGHT_TO_LEFT"
+                direction = 'RIGHT_TO_LEFT'
 
             if direction != self.direction:
                 self.direction = direction
@@ -607,7 +607,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
                 mesh_modal.set_shading_from_properties(self, context)
 
     def update_ubo(self) -> None:
-        self.UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue, reportArgumentType]
+        self.UBO.update(gpu.types.Buffer('UBYTE', ctypes.sizeof(self.UBO_data), self.UBO_data))  # pyright: ignore [reportCallIssue, reportArgumentType]
 
     def update_shader_position(self, context: bpy.types.Context, event: bpy.types.Event) -> None:
         self.last_mouse_region_x = event.mouse_region_x
@@ -673,7 +673,7 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         shadow_color = (0.3, 0.3, 0.3, 1.0)
         width = self.last_mouse_region_x - self.start_mouse_region_x
         height = self.last_mouse_region_y - self.start_mouse_region_y
-        dashed = False if self.direction == "RIGHT_TO_LEFT" else True
+        dashed = False if self.direction == 'RIGHT_TO_LEFT' else True
 
         # UBO.
         self.UBO_data.u_X = self.start_mouse_region_x
@@ -692,12 +692,12 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
             or self.start_mouse_region_y == self.last_mouse_region_y
         ):
             assert isinstance(self.fill_batch, gpu.types.GPUBatch)
-            gpu.state.blend_set("ALPHA")
+            gpu.state.blend_set('ALPHA')
             _fill_shader.bind()
             _fill_shader.uniform_block("ub", self.UBO)
             _fill_shader.uniform_float("u_ViewProjectionMatrix", matrix)  # pyright: ignore[reportArgumentType]
             self.fill_batch.draw(_fill_shader)
-            gpu.state.blend_set("NONE")
+            gpu.state.blend_set('NONE')
 
         # Border.
         assert isinstance(self.border_batch, gpu.types.GPUBatch)
