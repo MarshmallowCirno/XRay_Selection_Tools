@@ -43,3 +43,4 @@ include = ["space_view3d_xray_selection_tools"]
 exclude = ["**/__pycache__"]
 typeCheckingMode = "strict"
 reportUnknownMemberType = false
+reportMissingModuleSource = false
