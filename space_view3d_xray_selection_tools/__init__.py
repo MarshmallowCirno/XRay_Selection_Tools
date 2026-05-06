@@ -74,6 +74,8 @@ _RELOADABLE_MODULE_NAMES = (
     "addon_preferences",
     "preferences",
     "startup_handlers",
+    "header_buttons",
+    "ui",
 )
 
 # Support reloading submodules
@@ -112,24 +114,27 @@ else:
         from .preferences import draw
         from .preferences.properties import keymaps_props, tools_props
         from .preferences import addon_preferences
-        from . import preferences, startup_handlers
+        from .ui import header_buttons
+        from . import preferences, startup_handlers, ui
 
 import bpy
 
 # Prevent loading in the background, since gpu shaders will not be available
 if not bpy.app.background:
-    from . import operators, preferences, startup_handlers, tools
+    from . import operators, preferences, startup_handlers, tools, ui
 
     def register():
         preferences.register()
         operators.register()
         tools.register()
         startup_handlers.register()
+        ui.register()
 
     def unregister():
         preferences.unregister()
         operators.unregister()
         tools.unregister()
         startup_handlers.unregister()
+        ui.unregister()
 else:
     register = unregister = lambda: None

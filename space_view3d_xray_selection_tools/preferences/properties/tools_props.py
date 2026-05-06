@@ -12,6 +12,7 @@ class ToolsSharedPreferences:
         show_lasso_icon: bool
         tool_to_activate: Literal['NONE', 'BOX', 'CIRCLE', 'LASSO']
         group_with_builtins: bool
+        display_header_buttons: bool
     else:
         hide_gizmo: bpy.props.BoolProperty(
             name="Hide Gizmo",
@@ -45,6 +46,11 @@ class ToolsSharedPreferences:
             description="Set tool behavior based on drag direction",
             default=True,
             update=tools.reload_tools,
+        )
+        display_header_buttons: bpy.props.BoolProperty(
+            name="Display Header Buttons",
+            description="Display tool buttons in the 3D View header",
+            default=False,
         )
 
 

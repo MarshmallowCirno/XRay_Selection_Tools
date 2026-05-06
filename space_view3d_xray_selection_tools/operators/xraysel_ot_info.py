@@ -42,6 +42,10 @@ _info_texts: dict[str, tuple[str, ...]] = {
     "group_with_builtins": (
         "Enable to place tools inside the group with builtin selection tools, disable to create a new separate group.",
     ),
+    "display_header_buttons": (
+        "Add quick-access buttons for the Box, Circle, and Lasso tools to the 3D View header, placed after "
+        "the 3D View menus.",
+    ),
     "selection_behavior": (
         "• In Origin mode you select only objects with origins within the selection region.",
         "• In Contain mode you select only objects entirely enclosed in the selection region.",

@@ -263,3 +263,10 @@ def draw_mesh_tools_preferences(addon_prefs: "XRAYSELPreferences", box: bpy.type
     row = flow.row(align=True)
     row.prop(mesh_tools_props, "group_with_builtins", text="Group with Builtins", icon='GROUP')
     row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "group_with_builtins"
+
+    # Header buttons
+    _draw_flow_vertical_separator(flow)
+    flow.label(text="Display tool buttons in the 3D View header")
+    row = flow.row(align=True)
+    row.prop(mesh_tools_props, "display_header_buttons", text="Display Header Buttons", icon='TOPBAR')
+    row.operator("xraysel.show_info_popup", text="", icon='QUESTION').button = "display_header_buttons"
