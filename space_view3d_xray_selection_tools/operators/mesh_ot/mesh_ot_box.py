@@ -560,6 +560,13 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         xmax = max(self.start_mouse_region_x, self.last_mouse_region_x)
         ymin = min(self.start_mouse_region_y, self.last_mouse_region_y)
         ymax = max(self.start_mouse_region_y, self.last_mouse_region_y)
+
+        # To prevent GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT error or crashes on Vulkan.
+        if xmin == xmax:
+            xmax += 1
+        if ymin == ymax:
+            ymax += 1
+
         bpy.ops.view3d.select_box(mode=self.curr_mode, wait_for_input=False, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
 
     def begin_custom_intersect_tests(self, context: bpy.types.Context) -> None:
@@ -568,6 +575,12 @@ class MESH_OT_select_box_xray(bpy.types.Operator):
         xmax = max(self.start_mouse_region_x, self.last_mouse_region_x)
         ymin = min(self.start_mouse_region_y, self.last_mouse_region_y)
         ymax = max(self.start_mouse_region_y, self.last_mouse_region_y)
+
+        # To prevent possible unpredictable behavior.
+        if xmin == xmax:
+            xmax += 1
+        if ymin == ymax:
+            ymax += 1
 
         # Do selection.
         mesh_intersect.select_mesh_elements(
