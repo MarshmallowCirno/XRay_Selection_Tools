@@ -32,7 +32,7 @@ def _activate_tool_on_file_load(_scene: bpy.types.Scene) -> None:
 
 
 def register():
-    if not _activate_tool_on_file_load in bpy.app.handlers.load_post:
+    if _activate_tool_on_file_load not in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(_activate_tool_on_file_load)
 
 

@@ -288,8 +288,6 @@ def toggle_alt_mode(op: _MESH_OT, event: bpy.types.Event) -> None:
         op.curr_mode = op.mode  # pyright: ignore [reportAttributeAccessIssue]
 
 
-def update_shader_color(
-    op: "MESH_OT_select_box_xray | MESH_OT_select_circle_xray | MESH_OT_select_lasso_xray", context: bpy.types.Context
-) -> None:
+def update_shader_color(op: _MESH_OT, context: bpy.types.Context) -> None:
     if op.select_through_color != op.default_color:
         context.region.tag_redraw()
