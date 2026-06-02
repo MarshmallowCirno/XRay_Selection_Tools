@@ -511,6 +511,9 @@ def select_mesh_elements(
                             f.select = state
 
                 with timer.time_section("Finalize", prefix=">> END\n"):
+                    if bpy.app.version >= (5, 0, 0):
+                        # Ignore current UV selection.
+                        bm.uv_select_sync_valid = False
                     # Flush face selection after selecting/deselecting edges and vertices.
                     bm.select_flush_mode()
                     bmesh.update_edit_mesh(ob.data, loop_triangles=False, destructive=False)
