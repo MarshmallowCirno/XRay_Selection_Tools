@@ -1,6 +1,6 @@
 [project]
 name = "xray-selection-tools"
-version = "4.10.1"
+version = "4.10.2"
 description = "Box, lasso and circle selection tools with x-ray"
 license = "GPL-3.0-or-later"
 readme = "README.md"
